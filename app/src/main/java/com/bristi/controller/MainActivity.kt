@@ -207,6 +207,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private val showOnboarding     = mutableStateOf(false)
 
     private val userApiKey       = mutableStateOf("")
+    private val availableApiKeys = mutableListOf<String>()
     private val selectedAiModel  = mutableStateOf(AiModelsList[0])
     private val isWakeWordMode   = mutableStateOf(false)
 
@@ -367,6 +368,11 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
         sharedPrefs = getSharedPreferences("JasicaSettings", Context.MODE_PRIVATE)
         userApiKey.value = sharedPrefs.getString("API_KEY", DEFAULT_API_KEY) ?: DEFAULT_API_KEY
+        val savedKeys = sharedPrefs.getString("AVAILABLE_KEYS", "") ?: ""
+        if (savedKeys.isNotBlank()) {
+            availableApiKeys.clear()
+            availableApiKeys.addAll(savedKeys.split(","))
+        }
         // Fetch dynamic icon and API key from portfolio
         fetchAppConfigFromPortfolio()
         selectedAiModel.value = "gemini-2.5-flash"
@@ -723,12 +729,35 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                             // Cleanly parse the JSON response
                             val json = org.json.JSONObject(responseBody)
                             
-                            // 1. Extract API Key if present
-                            val apiKey = json.optString("api_key", "")
-                            if (apiKey.startsWith("AIza")) {
-                                sharedPrefs.edit().putString("API_KEY", apiKey).apply()
-                                runOnUiThread {
-                                    userApiKey.value = apiKey
+                            // 1. Extract API Keys Array
+                            val apiKeysArray = json.optJSONArray("api_keys")
+                            if (apiKeysArray != null && apiKeysArray.length() > 0) {
+                                val keys = mutableListOf<String>()
+                                for (i in 0 until apiKeysArray.length()) {
+                                    keys.add(apiKeysArray.getString(i))
+                                }
+                                if (keys.isNotEmpty()) {
+                                    availableApiKeys.clear()
+                                    availableApiKeys.addAll(keys)
+                                    val keysString = keys.joinToString(",")
+                                    sharedPrefs.edit()
+                                        .putString("AVAILABLE_KEYS", keysString)
+                                        .putString("API_KEY", keys.first())
+                                        .apply()
+                                    runOnUiThread {
+                                        userApiKey.value = keys.first()
+                                    }
+                                }
+                            } else {
+                                // Fallback
+                                val apiKey = json.optString("api_key", "")
+                                if (apiKey.startsWith("AIza")) {
+                                    availableApiKeys.clear()
+                                    availableApiKeys.add(apiKey)
+                                    sharedPrefs.edit().putString("API_KEY", apiKey).apply()
+                                    runOnUiThread {
+                                        userApiKey.value = apiKey
+                                    }
                                 }
                             }
                             
@@ -926,32 +955,65 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
         currentAiJob = CoroutineScope(Dispatchers.IO).launch {
             try {
-                val model = GenerativeModel(
+                var model = GenerativeModel(
                     modelName        = selectedAiModel.value,
                     apiKey           = activeApiKey,
                     systemInstruction = content { text(getSystemInstruction()) }
                 )
 
-                val delays = listOf(1000L, 2000L, 4000L, 8000L, 16000L)
                 var reply = ""
                 var success = false
-
-                for (delayTime in delays) {
+                var currentKey = activeApiKey
+                
+                // Try up to the number of available keys (or at least 1 time if list is empty)
+                val maxAttempts = if (availableApiKeys.isNotEmpty()) availableApiKeys.size else 1
+                
+                for (attempt in 0 until maxAttempts) {
                     try {
                         val chat = model.startChat(history = conversationHistory.toList())
                         val response = chat.sendMessage(prompt)
                         reply = response.text ?: "Uh oh, something went wrong."
                         success = true
-                        break
+                        break // Success! Exit loop.
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
-                        delay(delayTime)
+                        val errorMsg = e.message?.lowercase() ?: ""
+                        android.util.Log.e("JasicaApp", "Gemini API error with key $currentKey: $errorMsg")
+                        
+                        // If it's a quota or rate limit error, switch to the next key instantly!
+                        if (errorMsg.contains("429") || errorMsg.contains("quota") || errorMsg.contains("exhausted")) {
+                            if (availableApiKeys.size > 1) {
+                                val currentIndex = availableApiKeys.indexOf(currentKey)
+                                val nextIndex = (currentIndex + 1) % availableApiKeys.size
+                                currentKey = availableApiKeys[nextIndex]
+                                
+                                // Save the new key
+                                sharedPrefs.edit().putString("API_KEY", currentKey).apply()
+                                runOnUiThread {
+                                    userApiKey.value = currentKey
+                                }
+                                
+                                // Re-initialize the model with the new key for the next attempt
+                                model = GenerativeModel(
+                                    modelName = selectedAiModel.value,
+                                    apiKey = currentKey,
+                                    systemInstruction = content { text(getSystemInstruction()) }
+                                )
+                                android.util.Log.d("JasicaApp", "Switched to next API key instantly!")
+                                continue // Retry immediately
+                            }
+                        }
+                        
+                        // If it's not a rate limit error, or we only have 1 key, we delay slightly and retry
+                        if (attempt < maxAttempts - 1) {
+                            delay(1000L) // only short delay before trying next
+                        }
                     }
                 }
 
                 if (!success) {
-                    throw Exception("API connection failed.")
+                    throw Exception("API connection failed. All keys exhausted or network error.")
                 }
 
                 conversationHistory.add(content(role = "user")  { text(prompt) })
