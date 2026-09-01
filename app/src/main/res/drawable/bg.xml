@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Modern iOS-style Mesh Gradient Background
+  Place this file in: res/drawable/bg.xml
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 1. Base Background Color (Light Gray/White) -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F2F2F7" />
+        </shape>
+    </item>
+
+    <!-- 2. Top Right Glowing Orb (Teal) -->
+    <item
+        android:bottom="200dp"
+        android:left="50dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="0.8"
+                android:centerY="0.1"
+                android:gradientRadius="500dp"
+                android:startColor="#555AC8FA"
+                android:endColor="#005AC8FA" />
+        </shape>
+    </item>
+
+    <!-- 3. Bottom Left Glowing Orb (Purple) -->
+    <item
+        android:top="300dp"
+        android:right="100dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="0.1"
+                android:centerY="0.9"
+                android:gradientRadius="600dp"
+                android:startColor="#44AF52DE"
+                android:endColor="#00AF52DE" />
+        </shape>
+    </item>
+
+    <!-- 4. Center Glowing Orb (Blue) -->
+    <item
+        android:top="150dp"
+        android:bottom="150dp"
+        android:left="50dp"
+        android:right="50dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="0.6"
+                android:centerY="0.6"
+                android:gradientRadius="450dp"
+                android:startColor="#33007AFF"
+                android:endColor="#00007AFF" />
+        </shape>
+    </item>
+
+</layer-list>

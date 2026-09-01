@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hey Robo - Setup Guide</title>
+    <style>
+        :root {
+            --bg-color: #F2F2F7;
+            --card-bg: #FFFFFF;
+            --text-main: #000000;
+            --text-sec: #8E8E93;
+            --blue: #007AFF;
+            --green: #34C759;
+            --red: #FF3B30;
+            --sep: #C6C6C8;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 40px;
+        }
+
+        .header {
+            background-color: var(--card-bg);
+            padding: 20px;
+            padding-top: 40px; /* Safe area for iOS/Android status bar */
+            border-bottom: 0.5px solid var(--sep);
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+        .header p { color: var(--text-sec); font-size: 14px; margin-top: 4px; }
+
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
+
+        .section-title {
+            font-size: 13px;
+            color: var(--text-sec);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            margin-top: 24px;
+            padding-left: 16px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card-row {
+            padding: 16px;
+            border-bottom: 0.5px solid var(--sep);
+            display: flex;
+            align-items: center;
+        }
+        .card-row:last-child { border-bottom: none; }
+
+        .icon-box {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            display: flex; justify-content: center; align-items: center;
+            margin-right: 14px;
+            font-size: 18px;
+            color: white;
+            flex-shrink: 0;
+        }
+        .bg-blue { background-color: var(--blue); }
+        .bg-orange { background-color: #FF9500; }
+        .bg-gray { background-color: #8E8E93; }
+
+        .row-text h3 { font-size: 17px; font-weight: 500; margin-bottom: 2px; }
+        .row-text p { font-size: 14px; color: var(--text-sec); }
+
+        .step {
+            padding: 16px;
+            border-bottom: 0.5px solid var(--sep);
+        }
+        .step:last-child { border-bottom: none; }
+        .step h3 { font-size: 17px; margin-bottom: 6px; display: flex; align-items: center;}
+        .step .badge {
+            background: var(--blue); color: white;
+            width: 24px; height: 24px; border-radius: 12px;
+            display: inline-flex; justify-content: center; align-items: center;
+            font-size: 14px; font-weight: bold; margin-right: 10px;
+        }
+        .step p { font-size: 15px; color: #3A3A3C; }
+
+        .diagram-container {
+            width: 100%;
+            background-color: #ffffff;
+            padding: 20px;
+            border-bottom: 0.5px solid var(--sep);
+            overflow-x: auto;
+        }
+
+        svg {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .code-container {
+            background-color: #282C34;
+            color: #ABB2BF;
+            padding: 16px;
+            font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .button-group {
+            display: flex;
+            padding: 16px;
+            gap: 12px;
+            background-color: var(--card-bg);
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:active { opacity: 0.7; }
+
+        .btn-primary { background-color: var(--blue); color: white; }
+        .btn-secondary { background-color: #F2F2F7; color: var(--blue); }
+
+        /* Code Syntax Highlighting basics */
+        .k { color: #C678DD; } /* Keyword */
+        .t { color: #E5C07B; } /* Type */
+        .f { color: #61AFEF; } /* Function */
+        .s { color: #98C379; } /* String */
+        .c { color: #7F848E; font-style: italic; } /* Comment */
+        .n { color: #D19A66; } /* Number */
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        .toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Hey Robo Setup</h1>
+    <p>Hardware Integration Guide</p>
+</div>
+
+<div class="container">
+
+    <div class="section-title">Requirements</div>
+    <div class="card">
+        <div class="card-row">
+            <div class="icon-box bg-blue">UNO</div>
+            <div class="row-text">
+                <h3>Arduino UNO</h3>
+                <p>The main microcontroller brain.</p>
+            </div>
+        </div>
+        <div class="card-row">
+            <div class="icon-box bg-blue">BT</div>
+            <div class="row-text">
+                <h3>HC-05 Bluetooth Module</h3>
+                <p>Receives voice commands from your Android.</p>
+            </div>
+        </div>
+        <div class="card-row">
+            <div class="icon-box bg-orange">RLY</div>
+            <div class="row-text">
+                <h3>4-Channel Relay Module</h3>
+                <p>Controls your physical lights and fans.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-title">Circuit Wiring</div>
+    <div class="card">
+        <div class="diagram-container">
+            <!-- SVG Wiring Diagram -->
+            <svg viewBox="0 0 500 320" xmlns="http://www.w3.org/2000/svg">
+                <rect width="500" height="320" fill="#ffffff"/>
+
+                <!-- Arduino -->
+                <rect x="50" y="50" width="160" height="220" rx="8" fill="#006468" stroke="#004346" stroke-width="2"/>
+                <text x="130" y="160" fill="white" font-family="sans-serif" font-weight="bold" font-size="20" text-anchor="middle" transform="rotate(-90 130,160)">ARDUINO UNO</text>
+
+                <!-- Arduino Pins Right (Digital) -->
+                <rect x="190" y="60" width="20" height="100" fill="#222"/>
+                <text x="175" y="72" fill="white" font-size="10">11</text>
+                <text x="175" y="84" fill="white" font-size="10">10</text>
+
+                <text x="180" y="120" fill="white" font-size="10">5</text>
+                <text x="180" y="132" fill="white" font-size="10">4</text>
+                <text x="180" y="144" fill="white" font-size="10">3</text>
+                <text x="180" y="156" fill="white" font-size="10">2</text>
+
+                <!-- Arduino Pins Bottom (Power) -->
+                <rect x="110" y="250" width="80" height="20" fill="#222"/>
+                <text x="155" y="240" fill="white" font-size="10">5V</text>
+                <text x="130" y="240" fill="white" font-size="10">GND</text>
+
+                <!-- HC-05 -->
+                <rect x="350" y="30" width="80" height="100" rx="4" fill="#1565C0" stroke="#0D47A1" stroke-width="2"/>
+                <text x="390" y="60" fill="white" font-family="sans-serif" font-weight="bold" font-size="14" text-anchor="middle">HC-05</text>
+                <rect x="340" y="70" width="10" height="40" fill="#222"/>
+                <text x="355" y="78" fill="white" font-size="9">RXD</text>
+                <text x="355" y="88" fill="white" font-size="9">TXD</text>
+                <text x="355" y="98" fill="white" font-size="9">GND</text>
+                <text x="355" y="108" fill="white" font-size="9">VCC</text>
+
+                <!-- Relay Module -->
+                <rect x="350" y="180" width="120" height="120" rx="4" fill="#C62828" stroke="#B71C1C" stroke-width="2"/>
+                <text x="410" y="210" fill="white" font-family="sans-serif" font-weight="bold" font-size="14" text-anchor="middle">4-CH RELAY</text>
+                <rect x="340" y="220" width="10" height="70" fill="#222"/>
+                <text x="355" y="230" fill="white" font-size="9">GND</text>
+                <text x="355" y="242" fill="white" font-size="9">IN4 (R.Fan)</text>
+                <text x="355" y="254" fill="white" font-size="9">IN3 (L.Fan)</text>
+                <text x="355" y="266" fill="white" font-size="9">IN2 (R.Light)</text>
+                <text x="355" y="278" fill="white" font-size="9">IN1 (L.Light)</text>
+                <text x="355" y="290" fill="white" font-size="9">VCC</text>
+
+                <!-- Wiring Paths -->
+                <!-- Power Lines (Red 5V) -->
+                <path d="M 160 270 L 160 310 L 480 310 L 480 105 L 350 105" fill="none" stroke="#FF3B30" stroke-width="2"/>
+                <path d="M 480 287 L 350 287" fill="none" stroke="#FF3B30" stroke-width="2"/>
+
+                <!-- Ground Lines (Black) -->
+                <path d="M 135 270 L 135 300 L 490 300 L 490 95 L 350 95" fill="none" stroke="#000000" stroke-width="2"/>
+                <path d="M 490 227 L 350 227" fill="none" stroke="#000000" stroke-width="2"/>
+
+                <!-- BT Serial -->
+                <path d="M 210 68 L 300 68 L 300 75 L 340 75" fill="none" stroke="#FF9500" stroke-width="2"/> <!-- Pin 11 to RXD -->
+                <path d="M 210 80 L 290 80 L 290 85 L 340 85" fill="none" stroke="#34C759" stroke-width="2"/> <!-- Pin 10 to TXD -->
+
+                <!-- Relay Control -->
+                <path d="M 210 116 L 310 116 L 310 239 L 340 239" fill="none" stroke="#AF52DE" stroke-width="1.5"/> <!-- Pin 5 to IN4 -->
+                <path d="M 210 128 L 300 128 L 300 251 L 340 251" fill="none" stroke="#5AC8FA" stroke-width="1.5"/> <!-- Pin 4 to IN3 -->
+                <path d="M 210 140 L 290 140 L 290 263 L 340 263" fill="none" stroke="#FFCC00" stroke-width="1.5"/> <!-- Pin 3 to IN2 -->
+                <path d="M 210 152 L 280 152 L 280 275 L 340 275" fill="none" stroke="#007AFF" stroke-width="1.5"/> <!-- Pin 2 to IN1 -->
+            </svg>
+        </div>
+
+        <div class="card-row">
+            <div class="icon-box bg-gray">⚡</div>
+            <div class="row-text">
+                <h3>Important Notice</h3>
+                <p>We use Pins 10 & 11 for Bluetooth so you can upload code without unplugging the module!</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-title">Setup Instructions</div>
+    <div class="card">
+        <div class="step">
+            <h3><span class="badge">1</span> Connect Hardware</h3>
+            <p>Wire the HC-05 and Relay module to the Arduino exactly as shown in the diagram above. Keep everything powered off while wiring.</p>
+        </div>
+        <div class="step">
+            <h3><span class="badge">2</span> Upload Sketch</h3>
+            <p>Copy or download the sketch below. Open the Arduino IDE on your computer, paste the code, and click Upload.</p>
+        </div>
+        <div class="step">
+            <h3><span class="badge">3</span> Pair Bluetooth</h3>
+            <p>Open your Android <strong>Settings > Bluetooth</strong>. Find <code>HC-05</code> and pair it. The default PIN is usually <code>1234</code> or <code>0000</code>.</p>
+        </div>
+        <div class="step">
+            <h3><span class="badge">4</span> Connect in App</h3>
+            <p>Open the Hey Robo app, go to the <strong>Devices</strong> tab, tap Scan, and add your HC-05. Tap Connect to start controlling!</p>
+        </div>
+    </div>
+
+    <div class="section-title">Arduino Sketch (sketch.ino)</div>
+    <div class="card">
+        <div class="code-container" id="codeBlock">
+            <span class="c">// Hey Robo - Smart Home Controller Sketch</span>
+            <span class="c">// Designed for iOS-Style Android App Integration</span>
+
+            <span class="k">#include</span> <span class="s">&lt;SoftwareSerial.h&gt;</span>
+
+            <span class="c">// We use SoftwareSerial so hardware serial (Pin 0/1) </span>
+            <span class="c">// remains free for PC code uploading.</span>
+            <span class="t">SoftwareSerial</span> <span class="f">bt</span><span class="c">(</span><span class="n">10</span><span class="c">, </span><span class="n">11</span><span class="c">)</span>; <span class="c">// RX to BT TXD, TX to BT RXD</span>
+
+            <span class="c">// Pin Mapping to match App</span>
+            <span class="k">const int</span> LEFT_LIGHT <span class="k">=</span> <span class="n">2</span>;
+            <span class="k">const int</span> RIGHT_LIGHT <span class="k">=</span> <span class="n">3</span>;
+            <span class="k">const int</span> LEFT_FAN <span class="k">=</span> <span class="n">4</span>;
+            <span class="k">const int</span> RIGHT_FAN <span class="k">=</span> <span class="n">5</span>;
+
+            <span class="c">// Most relay modules are Active-LOW (LOW = ON).</span>
+            <span class="c">// Change these if your relays act in reverse.</span>
+            <span class="k">#define</span> RELAY_ON LOW
+            <span class="k">#define</span> RELAY_OFF HIGH
+
+            <span class="t">String</span> command <span class="k">=</span> <span class="s">""</span>;
+
+            <span class="t">void</span> <span class="f">setup</span>() {
+            <span class="f">pinMode</span>(LEFT_LIGHT, OUTPUT);
+            <span class="f">pinMode</span>(RIGHT_LIGHT, OUTPUT);
+            <span class="f">pinMode</span>(LEFT_FAN, OUTPUT);
+            <span class="f">pinMode</span>(RIGHT_FAN, OUTPUT);
+
+            <span class="c">// Ensure everything is OFF initially</span>
+            <span class="f">digitalWrite</span>(LEFT_LIGHT, RELAY_OFF);
+            <span class="f">digitalWrite</span>(RIGHT_LIGHT, RELAY_OFF);
+            <span class="f">digitalWrite</span>(LEFT_FAN, RELAY_OFF);
+            <span class="f">digitalWrite</span>(RIGHT_FAN, RELAY_OFF);
+
+            <span class="f">Serial.begin</span>(<span class="n">9600</span>); <span class="c">// For PC Serial Monitor</span>
+            <span class="f">bt.begin</span>(<span class="n">9600</span>);     <span class="c">// Default HC-05 baud rate</span>
+            <span class="f">Serial.println</span>(<span class="s">"Hey Robo System Ready."</span>);
+            }
+
+            <span class="t">void</span> <span class="f">loop</span>() {
+            <span class="k">if</span> (<span class="f">bt.available</span>()) {
+            <span class="t">char</span> c <span class="k">=</span> <span class="f">bt.read</span>();
+            <span class="k">if</span> (c <span class="k">==</span> <span class="s">'\n'</span>) {
+            command.<span class="f">trim</span>();
+            <span class="f">processCommand</span>(command);
+            command <span class="k">=</span> <span class="s">""</span>; <span class="c">// Reset buffer</span>
+            } <span class="k">else</span> {
+            command <span class="k">+=</span> c;
+            }
+            }
+            }
+
+            <span class="t">void</span> <span class="f">processCommand</span>(<span class="t">String</span> cmd) {
+            <span class="f">Serial.println</span>(<span class="s">"App Sent: "</span> <span class="k">+</span> cmd);
+
+            <span class="c">// Lights</span>
+            <span class="k">if</span> (cmd.<span class="f">equalsIgnoreCase</span>(<span class="s">"turn on left light"</span>)) <span class="f">digitalWrite</span>(LEFT_LIGHT, RELAY_ON);
+            <span class="k">else if</span> (cmd.<span class="f">equalsIgnoreCase</span>(<span class="s">"turn off left light"</span>)) <span class="f">digitalWrite</span>(LEFT_LIGHT, RELAY_OFF);
+            <span class="k">else if</span> (cmd.<span class="f">equalsIgnoreCase</span>(<span class="s">"turn on right light"</span>)) <span class="f">digitalWrite</span>(RIGHT_LIGHT, RELAY_ON);
+            <span class="k">else if</span> (cmd.<span class="f">equalsIgnoreCase</span>(<span class="s">"turn off right light"</span>)) <span class="f">digitalWrite</span>(RIGHT_LIGHT, RELAY_OFF);
+
+            <span class="c">// Fans</span>
+            <span class="k">else if</span> (cmd.<span class="f">equalsIgnoreCase</span>(<span class="s">"turn on left fan"</span>)) <span class="f">digitalWrite</span>(LEFT_FAN, RELAY_ON);
+            <span class="k">else if</span> (cmd.<span class="f">equalsIgnoreCase</span>(<span class="s">"turn off left fan"</span>)) <span class="f">digitalWrite</span>(LEFT_FAN, RELAY_OFF);
+            <span class="k">else if</span> (cmd.<span class="f">equalsIgnoreCase</span>(<span class="s">"turn on right fan"</span>)) <span class="f">digitalWrite</span>(RIGHT_FAN, RELAY_ON);
+            <span class="k">else if</span> (cmd.<span class="f">equalsIgnoreCase</span>(<span class="s">"turn off right fan"</span>)) <span class="f">digitalWrite</span>(RIGHT_FAN, RELAY_OFF);
+            }</div>
+        <div class="button-group">
+            <button class="btn btn-secondary" onclick="copyCode()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Copy
+            </button>
+            <button class="btn btn-primary" onclick="downloadCode()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">Copied to clipboard!</div>
+
+<script>
+    // Extract raw code text without HTML tags
+    function getRawCode() {
+        const codeBlock = document.getElementById('codeBlock');
+        return codeBlock.innerText;
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => { toast.classList.remove('show'); }, 2000);
+    }
+
+    function copyCode() {
+        const text = getRawCode();
+
+        // Try modern clipboard API first
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Code copied!");
+            }).catch(() => { fallbackCopy(text); });
+        } else {
+            fallbackCopy(text);
+        }
+    }
+
+    // Fallback for Android WebViews where clipboard API might be restricted
+    function fallbackCopy(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showToast("Code copied!");
+        } catch (err) {
+            showToast("Failed to copy code.");
+        }
+        document.body.removeChild(textArea);
+    }
+
+    function downloadCode() {
+        const text = getRawCode();
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+
+        a.href = url;
+        a.download = 'sketch.ino';
+        document.body.appendChild(a);
+
+        try {
+            a.click();
+            showToast("Download started...");
+        } catch (e) {
+            // Some older WebViews block data blob downloads without a custom DownloadListener
+            showToast("Download restricted in this view. Use Copy instead.");
+        }
+
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 0);
+    }
+</script>
+</body>
+</html>
