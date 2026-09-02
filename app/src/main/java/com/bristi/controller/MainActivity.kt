@@ -981,8 +981,9 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                         val errorMsg = e.message?.lowercase() ?: ""
                         android.util.Log.e("JasicaApp", "Gemini API error with key $currentKey: $errorMsg")
                         
-                        // If it's a quota or rate limit error, switch to the next key instantly!
-                        if (errorMsg.contains("429") || errorMsg.contains("quota") || errorMsg.contains("exhausted")) {
+                        // Switch to the next key instantly for quota, expired, or general API errors!
+                        val isNetworkError = e is java.net.UnknownHostException || e is java.net.SocketTimeoutException || e is java.net.ConnectException || errorMsg.contains("timeout") || errorMsg.contains("network")
+                        if (!isNetworkError || errorMsg.contains("429") || errorMsg.contains("quota") || errorMsg.contains("exhausted") || errorMsg.contains("expired") || errorMsg.contains("invalid") || errorMsg.contains("api_key") || errorMsg.contains("key")) {
                             if (availableApiKeys.size > 1) {
                                 val currentIndex = availableApiKeys.indexOf(currentKey)
                                 val nextIndex = (currentIndex + 1) % availableApiKeys.size
@@ -1000,7 +1001,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                                     apiKey = currentKey,
                                     systemInstruction = content { text(getSystemInstruction()) }
                                 )
-                                android.util.Log.d("JasicaApp", "Switched to next API key instantly!")
+                                android.util.Log.d("JasicaApp", "Switched to next API key instantly! Error was: $errorMsg")
                                 continue // Retry immediately
                             }
                         }
