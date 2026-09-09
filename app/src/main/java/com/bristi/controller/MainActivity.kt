@@ -207,6 +207,9 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private val showManualControls = mutableStateOf(false)
     private val showHistoryDialog  = mutableStateOf(false)
     private val showOnboarding     = mutableStateOf(false)
+    private val showVoiceCalibration = mutableStateOf(false)
+    private val calibrationIndex     = mutableStateOf(0)
+    private val calibrationRecognizedText = mutableStateOf("")
     private val showArduinoCode    = mutableStateOf(false)
 
     private val userApiKey       = mutableStateOf("")
@@ -393,9 +396,15 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             deviceStates[id] = sharedPrefs.getBoolean("DEV_$id", false)
         }
 
-        // Check if user has seen onboarding
+        // Check if user has seen setup
+        val hasSeenCalibration = sharedPrefs.getBoolean("SEEN_CALIBRATION", false)
         val hasSeenOnboarding = sharedPrefs.getBoolean("SEEN_ONBOARDING", false)
-        showOnboarding.value = !hasSeenOnboarding
+        
+        if (!hasSeenCalibration) {
+            showVoiceCalibration.value = true
+        } else if (!hasSeenOnboarding) {
+            showOnboarding.value = true
+        }
 
         // Set Water Reminder Default ON
         if (!sharedPrefs.contains("WATER_REMINDER")) {
@@ -460,6 +469,9 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                     showManualControls  = showManualControls.value,
                     showHistory         = showHistoryDialog.value,
                     showOnboarding      = showOnboarding.value,
+                    showVoiceCalibration= showVoiceCalibration.value,
+                    calibrationIndex    = calibrationIndex.value,
+                    calibrationRecognizedText = calibrationRecognizedText.value,
                     showArduinoCode     = showArduinoCode.value,
                     currentApiKey       = userApiKey.value,
                     currentModel        = selectedAiModel.value,
@@ -487,6 +499,13 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                     onDismissOnboarding = {
                         showOnboarding.value = false
                         sharedPrefs.edit().putBoolean("SEEN_ONBOARDING", true).apply()
+                    },
+                    onDismissCalibration = {
+                        showVoiceCalibration.value = false
+                        sharedPrefs.edit().putBoolean("SEEN_CALIBRATION", true).apply()
+                        if (!sharedPrefs.getBoolean("SEEN_ONBOARDING", false)) {
+                            showOnboarding.value = true
+                        }
                     },
                     onSaveSettings      = { newKey, newModel, wakeMode ->
                         userApiKey.value = newKey
@@ -1023,6 +1042,47 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         }
     }
 
+    private fun handleCalibrationSpeech(spokenText: String) {
+        val lowerText = spokenText.lowercase()
+        runOnUiThread {
+            calibrationRecognizedText.value = spokenText
+        }
+
+        val isCorrect = when (calibrationIndex.value) {
+            0 -> lowerText.contains("off") && (lowerText.contains("light") || lowerText.contains("room"))
+            1 -> lowerText.contains("on") && lowerText.contains("all")
+            2 -> lowerText.contains("on") && (lowerText.contains("pc") || lowerText.contains("computer"))
+            else -> false
+        }
+
+        if (isCorrect) {
+            tts.speak("Perfect.", TextToSpeech.QUEUE_FLUSH, null, "CALIB")
+            runOnUiThread {
+                if (calibrationIndex.value < 2) {
+                    calibrationIndex.value += 1
+                    calibrationRecognizedText.value = ""
+                    mainHandler.postDelayed({ startListening() }, 1500)
+                } else {
+                    tts.speak("Calibration complete.", TextToSpeech.QUEUE_FLUSH, null, "CALIB")
+                    calibrationIndex.value = 3 // show completion UI
+                    mainHandler.postDelayed({
+                        showVoiceCalibration.value = false
+                        sharedPrefs.edit().putBoolean("SEEN_CALIBRATION", true).apply()
+                        if (!sharedPrefs.getBoolean("SEEN_ONBOARDING", false)) {
+                            showOnboarding.value = true
+                        }
+                    }, 2000)
+                }
+            }
+        } else {
+            tts.speak("Try again.", TextToSpeech.QUEUE_FLUSH, null, "CALIB")
+            runOnUiThread {
+                mainHandler.postDelayed({ startListening() }, 1500)
+            }
+        }
+        appState.value = AppState.IDLE
+    }
+
     private fun safeStopRecognizer() {
         if (::speechRecognizer.isInitialized) {
             try {
@@ -1035,6 +1095,11 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
 
     private fun routeVoiceCommand(spokenText: String) {
+        if (showVoiceCalibration.value) {
+            handleCalibrationSpeech(spokenText)
+            return
+        }
+
         runOnUiThread {
             uiChatHistory.add(ChatMessage(isUser = true, text = spokenText, time = getCurrentTimeString()))
         }
@@ -1504,6 +1569,9 @@ fun JasicaScreen(
     showManualControls  : Boolean,
     showHistory         : Boolean,
     showOnboarding      : Boolean,
+    showVoiceCalibration: Boolean,
+    calibrationIndex    : Int,
+    calibrationRecognizedText: String,
     showArduinoCode     : Boolean,
     currentApiKey       : String,
     currentModel        : String,
@@ -1523,6 +1591,7 @@ fun JasicaScreen(
     onArduinoCodeTap    : () -> Unit,
     onDismissArduinoCode: () -> Unit,
     onDismissOnboarding : () -> Unit,
+    onDismissCalibration: () -> Unit,
     onSaveSettings      : (String, String, Boolean) -> Unit,
     onActionCardTap     : (String) -> Unit,
     onSendRawCommand    : (String) -> Unit
@@ -1876,6 +1945,21 @@ fun JasicaScreen(
             exit = fadeOut() + slideOutVertically(targetOffsetY = { it })
         ) {
             ArduinoCodeScreen(onDismiss = onDismissArduinoCode)
+        }
+
+        // Voice Calibration Screen Overlay
+        AnimatedVisibility(
+            visible = showVoiceCalibration,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            VoiceCalibrationScreen(
+                currentPhraseIndex = calibrationIndex,
+                recognizedText = calibrationRecognizedText,
+                isListening = appState == AppState.LISTENING || appState == AppState.WAKE_LISTENING,
+                onMicTap = onMicTap,
+                onSkip = onDismissCalibration
+            )
         }
 
         // Onboarding Screen Overlay
@@ -2728,7 +2812,6 @@ fun SettingsScreen(
     var waterReminderInput by remember { mutableStateOf(sharedPrefs.getBoolean("WATER_REMINDER", false)) }
     
     val context = androidx.compose.ui.platform.LocalContext.current
-    
     var currentTab by remember { mutableStateOf(0) }
     
     var showPasswordDialog by remember { mutableStateOf(false) }
@@ -2738,115 +2821,188 @@ fun SettingsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(androidx.compose.ui.graphics.Color(0xFF121212))
-            .padding(16.dp)
-            .statusBarsPadding()
+            .background(Color(0xFF0D0D12))
+            .clickable(enabled = false) {}
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onDismiss) {
-                        Icon(imageVector = Icons.Outlined.Close, contentDescription = "Close", tint = Color.White)
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Settings",
-                        color = Color.White,
-                        fontFamily = InterFontFamily,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Button(
-                    onClick = { onSave(apiKeyInput, "gemini-2.5-flash", wakeWordInput) },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B00)),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text("SAVE", color = Color.White, fontFamily = InterFontFamily, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            TabRow(
-                selectedTabIndex = currentTab,
-                containerColor = Color.Transparent,
-                contentColor = JasicaOrange,
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        Modifier.tabIndicatorOffset(tabPositions[currentTab]),
-                        color = JasicaOrange
-                    )
-                }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 44.dp, start = 20.dp, end = 20.dp, bottom = 0.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Tab(selected = currentTab == 0, onClick = { currentTab = 0 }, text = { Text("AI", color = if (currentTab == 0) JasicaOrange else Color.White) })
-                Tab(selected = currentTab == 1, onClick = { currentTab = 1 }, text = { Text("Devices", color = if (currentTab == 1) JasicaOrange else Color.White) })
+                Column {
+                    Text(
+                        "Settings",
+                        color = Color.White,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontFamily = InterFontFamily
+                    )
+                    Text(
+                        "Preferences & Configuration",
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = 13.sp,
+                        fontFamily = InterFontFamily
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = onDismiss) {
+                        Text("CANCEL", color = Color.White.copy(alpha = 0.5f), fontFamily = InterFontFamily, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Button(
+                        onClick = { onSave(apiKeyInput, selectedModel, wakeWordInput) },
+                        colors = ButtonDefaults.buttonColors(containerColor = JasicaOrange),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("SAVE", color = Color.White, fontFamily = InterFontFamily, fontWeight = FontWeight.Bold)
+                    }
+                }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(24.dp))
+
+            // Tabs
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White.copy(alpha = 0.05f))
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                listOf("AI & System", "Hardware Config").forEachIndexed { index, title ->
+                    val isSelected = currentTab == index
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isSelected) Color(0xFF1E1E2E) else Color.Transparent)
+                            .clickable { currentTab = index },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            title,
+                            color = if (isSelected) Color.White else Color.White.copy(alpha = 0.5f),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            fontFamily = InterFontFamily
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
             
+            // Content
             Box(modifier = Modifier.weight(1f)) {
                 if (currentTab == 0) {
-                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                        Spacer(Modifier.height(16.dp))
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.White.copy(alpha = 0.1f))
-                                .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                                .clickable {
-                                    if (waterReminderInput) {
-                                        // User wants to turn it OFF
-                                        showPasswordDialog = true
-                                    } else {
-                                        // Turning ON is free
+                    // AI & System Tab
+                    Column(
+                        modifier = Modifier.verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        
+                        // Section: Core System
+                        Column {
+                            Text("CORE SYSTEM", color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                            Spacer(Modifier.height(12.dp))
+                            
+                            // Wake Word Toggle
+                            Row(
+                                modifier = Modifier.fillMaxWidth().clickable { wakeWordInput = !wakeWordInput }.padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("Hands-Free Wake Word", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                                    Text("Say 'Hey Jasica' to activate", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
+                                }
+                                Switch(
+                                    checked = wakeWordInput,
+                                    onCheckedChange = { wakeWordInput = it },
+                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = JasicaOrange, uncheckedThumbColor = Color.Gray, uncheckedTrackColor = Color.DarkGray)
+                                )
+                            }
+                            
+                            Divider(color = Color.White.copy(alpha = 0.05f))
+                            
+                            // Water Reminder Toggle
+                            Row(
+                                modifier = Modifier.fillMaxWidth().clickable {
+                                    if (waterReminderInput) showPasswordDialog = true
+                                    else {
                                         waterReminderInput = true
                                         sharedPrefs.edit().putBoolean("WATER_REMINDER", true).apply()
                                         WaterReminderManager.scheduleNextAlarm(context)
-                                        android.widget.Toast.makeText(context, "Water Reminder Enabled", android.widget.Toast.LENGTH_SHORT).show()
                                     }
+                                }.padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("Water Drinking Reminder", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                                    Text("30 minute intervals", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
                                 }
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text("Water Drinking Reminder (30 mins)", color = Color.White, fontFamily = InterFontFamily, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                                Switch(
+                                    checked = waterReminderInput,
+                                    onCheckedChange = null,
+                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF00BFFF), uncheckedThumbColor = Color.Gray, uncheckedTrackColor = Color.DarkGray)
+                                )
                             }
-                            Switch(
-                                checked = waterReminderInput,
-                                onCheckedChange = null,
-                                colors = SwitchDefaults.colors(checkedThumbColor = JasicaOrange, checkedTrackColor = JasicaOrange.copy(alpha = 0.5f))
-                            )
                         }
 
-                        Spacer(Modifier.height(16.dp))
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.White.copy(alpha = 0.1f))
-                                .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                                .clickable { wakeWordInput = !wakeWordInput }
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text("Hands-Free Wake Word", color = Color.White, fontFamily = InterFontFamily, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                            }
-                            Switch(
-                                checked = wakeWordInput,
-                                onCheckedChange = { wakeWordInput = it },
-                                colors = SwitchDefaults.colors(checkedTrackColor = Color.White, checkedThumbColor = JasicaPurple, uncheckedThumbColor = Color.LightGray)
+                        // Section: AI Configuration
+                        Column {
+                            Text("AI CONFIGURATION", color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                            Spacer(Modifier.height(12.dp))
+                            
+                            OutlinedTextField(
+                                value = apiKeyInput,
+                                onValueChange = { apiKeyInput = it },
+                                label = { Text("Gemini API Key", color = Color.White.copy(alpha = 0.5f)) },
+                                textStyle = TextStyle(color = Color.White, fontSize = 14.sp),
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = JasicaOrange,
+                                    unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
+                                    cursorColor = JasicaOrange
+                                )
+                            )
+                            
+                            Spacer(Modifier.height(16.dp))
+                            
+                            OutlinedTextField(
+                                value = selectedModel,
+                                onValueChange = { selectedModel = it },
+                                label = { Text("Model Version", color = Color.White.copy(alpha = 0.5f)) },
+                                textStyle = TextStyle(color = Color.White, fontSize = 14.sp),
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = JasicaOrange,
+                                    unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
+                                    cursorColor = JasicaOrange
+                                )
                             )
                         }
+                        
+                        Spacer(Modifier.height(40.dp))
                     }
                 } else {
-                    LazyColumn(modifier = Modifier.fillMaxHeight()) {
+                    // Devices Tab
+                    LazyColumn(
+                        contentPadding = PaddingValues(bottom = 80.dp),
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
                         items(DEFAULT_DEVICES.size) { index ->
                             val dev = DEFAULT_DEVICES[index]
                             var name by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName) }
@@ -2855,17 +3011,68 @@ fun SettingsScreen(
                             var pinOn by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_PIN_ON", dev.defaultPinOn) ?: dev.defaultPinOn) }
                             var pinOff by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_PIN_OFF", dev.defaultPinOff) ?: dev.defaultPinOff) }
 
-                            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.05f)).padding(12.dp)) {
-                                OutlinedTextField(value = name, onValueChange = { name = it; sharedPrefs.edit().putString("DEV_${dev.id}_NAME", it).apply() }, label = { Text("Device Name", color = Color.White.copy(0.7f)) }, textStyle = TextStyle(color = Color.White), modifier = Modifier.fillMaxWidth())
-                                Spacer(Modifier.height(8.dp))
-                                OutlinedTextField(value = onCmd, onValueChange = { onCmd = it; sharedPrefs.edit().putString("DEV_${dev.id}_ON_CMD", it).apply() }, label = { Text("Turn On Command", color = Color.White.copy(0.7f)) }, textStyle = TextStyle(color = Color.White), modifier = Modifier.fillMaxWidth())
-                                Spacer(Modifier.height(8.dp))
-                                OutlinedTextField(value = offCmd, onValueChange = { offCmd = it; sharedPrefs.edit().putString("DEV_${dev.id}_OFF_CMD", it).apply() }, label = { Text("Turn Off Command", color = Color.White.copy(0.7f)) }, textStyle = TextStyle(color = Color.White), modifier = Modifier.fillMaxWidth())
-                                Spacer(Modifier.height(8.dp))
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    OutlinedTextField(value = pinOn, onValueChange = { pinOn = it; sharedPrefs.edit().putString("DEV_${dev.id}_PIN_ON", it).apply() }, label = { Text("ON Pin (MCU)", color = Color.White.copy(0.7f)) }, textStyle = TextStyle(color = Color.White), modifier = Modifier.weight(1f))
-                                    OutlinedTextField(value = pinOff, onValueChange = { pinOff = it; sharedPrefs.edit().putString("DEV_${dev.id}_PIN_OFF", it).apply() }, label = { Text("OFF Pin (MCU)", color = Color.White.copy(0.7f)) }, textStyle = TextStyle(color = Color.White), modifier = Modifier.weight(1f))
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(JasicaOrange))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("DEVICE '${dev.id.uppercase()}'", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                                 }
+                                Spacer(Modifier.height(12.dp))
+                                
+                                OutlinedTextField(
+                                    value = name, 
+                                    onValueChange = { name = it; sharedPrefs.edit().putString("DEV_${dev.id}_NAME", it).apply() },
+                                    label = { Text("Display Name", color = Color.White.copy(0.5f)) },
+                                    textStyle = TextStyle(color = Color.White),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = JasicaOrange, unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
+                                )
+                                Spacer(Modifier.height(12.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    OutlinedTextField(
+                                        value = onCmd, 
+                                        onValueChange = { onCmd = it; sharedPrefs.edit().putString("DEV_${dev.id}_ON_CMD", it).apply() },
+                                        label = { Text("ON Voice Cmd", color = Color.White.copy(0.5f)) },
+                                        textStyle = TextStyle(color = Color.White),
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = JasicaOrange, unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
+                                    )
+                                    OutlinedTextField(
+                                        value = offCmd, 
+                                        onValueChange = { offCmd = it; sharedPrefs.edit().putString("DEV_${dev.id}_OFF_CMD", it).apply() },
+                                        label = { Text("OFF Voice Cmd", color = Color.White.copy(0.5f)) },
+                                        textStyle = TextStyle(color = Color.White),
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = JasicaOrange, unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
+                                    )
+                                }
+                                Spacer(Modifier.height(12.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    OutlinedTextField(
+                                        value = pinOn, 
+                                        onValueChange = { pinOn = it; sharedPrefs.edit().putString("DEV_${dev.id}_PIN_ON", it).apply() },
+                                        label = { Text("ON Pin (Char)", color = Color.White.copy(0.5f)) },
+                                        textStyle = TextStyle(color = Color.White),
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = JasicaOrange, unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
+                                    )
+                                    OutlinedTextField(
+                                        value = pinOff, 
+                                        onValueChange = { pinOff = it; sharedPrefs.edit().putString("DEV_${dev.id}_PIN_OFF", it).apply() },
+                                        label = { Text("OFF Pin (Char)", color = Color.White.copy(0.5f)) },
+                                        textStyle = TextStyle(color = Color.White),
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = JasicaOrange, unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
+                                    )
+                                }
+                                
+                                Spacer(Modifier.height(8.dp))
+                                Divider(color = Color.White.copy(alpha = 0.05f))
                             }
                         }
                     }
@@ -2880,41 +3087,47 @@ fun SettingsScreen(
                     passwordError = false
                     passwordInput = ""
                 },
-                title = { Text("Enter Password", color = Color.White) },
+                title = { Text("Enter Admin Password", color = Color.White, fontWeight = FontWeight.Bold) },
                 text = {
                     Column {
-                        Text("A password is required to turn off the water reminder.", color = Color.White.copy(0.8f))
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("A password is required to turn off the water reminder.", color = Color.White.copy(0.7f), fontSize = 14.sp)
+                        Spacer(modifier = Modifier.height(16.dp))
                         OutlinedTextField(
                             value = passwordInput,
                             onValueChange = { passwordInput = it; passwordError = false },
-                            label = { Text("Password", color = Color.White.copy(0.7f)) },
+                            label = { Text("Password", color = Color.White.copy(0.5f)) },
                             isError = passwordError,
-                            textStyle = TextStyle(color = Color.White)
+                            textStyle = TextStyle(color = Color.White),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = JasicaOrange, unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
                         )
                         if (passwordError) {
-                            Text("Incorrect password", color = Color.Red, fontSize = 12.sp)
+                            Text("Incorrect password", color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
                         }
                     }
                 },
-                containerColor = Color(0xFF1E1E1E),
+                containerColor = Color(0xFF1E1E2E),
+                shape = RoundedCornerShape(24.dp),
                 confirmButton = {
-                    TextButton(onClick = {
-                        val correctPassword = sharedPrefs.getString("WATER_REMINDER_PASSWORD", "0000") ?: "0000"
-                        if (passwordInput == correctPassword) {
-                            // Correct password
-                            waterReminderInput = false
-                            sharedPrefs.edit().putBoolean("WATER_REMINDER", false).apply()
-                            WaterReminderManager.stopAlarm(context)
-                            android.widget.Toast.makeText(context, "Water Reminder Disabled", android.widget.Toast.LENGTH_SHORT).show()
-                            showPasswordDialog = false
-                            passwordError = false
-                            passwordInput = ""
-                        } else {
-                            passwordError = true
-                        }
-                    }) {
-                        Text("Confirm", color = JasicaOrange)
+                    Button(
+                        onClick = {
+                            val correctPassword = sharedPrefs.getString("WATER_REMINDER_PASSWORD", "0000") ?: "0000"
+                            if (passwordInput == correctPassword) {
+                                waterReminderInput = false
+                                sharedPrefs.edit().putBoolean("WATER_REMINDER", false).apply()
+                                WaterReminderManager.stopAlarm(context)
+                                android.widget.Toast.makeText(context, "Water Reminder Disabled", android.widget.Toast.LENGTH_SHORT).show()
+                                showPasswordDialog = false
+                                passwordError = false
+                                passwordInput = ""
+                            } else {
+                                passwordError = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = JasicaOrange),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Confirm", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
@@ -2923,7 +3136,7 @@ fun SettingsScreen(
                         passwordError = false
                         passwordInput = ""
                     }) {
-                        Text("Cancel", color = Color.White.copy(0.7f))
+                        Text("Cancel", color = Color.White.copy(0.5f))
                     }
                 }
             )
@@ -2991,6 +3204,150 @@ fun DeviceListItem(name: String, address: String, onClick: () -> Unit) {
         Column {
             Text(name, color = Color.White, fontSize = 15.sp, fontFamily = InterFontFamily, fontWeight = FontWeight.SemiBold)
             Text(address, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, fontFamily = InterFontFamily)
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Voice Calibration Screen
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+fun VoiceCalibrationScreen(
+    currentPhraseIndex: Int,
+    recognizedText: String,
+    isListening: Boolean,
+    onMicTap: () -> Unit,
+    onSkip: () -> Unit
+) {
+    val phrases = listOf("Turn off the light", "Turn on all", "Turn on the PC")
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0D0D12))
+            .clickable(enabled = false) {} 
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(40.dp))
+            Text(
+                "Voice Setup",
+                color = Color.White,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.ExtraBold,
+                fontFamily = InterFontFamily
+            )
+            Text(
+                "Let's verify your microphone",
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 14.sp,
+                fontFamily = InterFontFamily
+            )
+            
+            Spacer(Modifier.height(40.dp))
+
+            // Progress bar
+            Row(
+                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                for (i in 0..2) {
+                    val color = if (i < currentPhraseIndex) Color(0xFF00E676)
+                                else if (i == currentPhraseIndex) JasicaOrange
+                                else Color.White.copy(alpha = 0.1f)
+                    Box(modifier = Modifier.weight(1f).fillMaxHeight().background(color))
+                }
+            }
+
+            Spacer(Modifier.weight(1f))
+
+            // Current Phrase
+            if (currentPhraseIndex < 3) {
+                Text(
+                    "Please say:",
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 16.sp,
+                    fontFamily = InterFontFamily
+                )
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    "\"${phrases[currentPhraseIndex]}\"",
+                    color = JasicaOrange,
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = InterFontFamily,
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(Modifier.height(40.dp))
+                
+                // Recognized text area
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White.copy(alpha = 0.05f))
+                        .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (recognizedText.isNotEmpty()) {
+                        Text(recognizedText, color = Color.White, fontSize = 16.sp, fontFamily = InterFontFamily, textAlign = TextAlign.Center)
+                    } else if (isListening) {
+                        Text("Listening...", color = Color.White.copy(alpha = 0.5f), fontSize = 16.sp, fontFamily = InterFontFamily)
+                    } else {
+                        Text("Tap microphone to speak", color = Color.White.copy(alpha = 0.3f), fontSize = 16.sp, fontFamily = InterFontFamily)
+                    }
+                }
+            } else {
+                // Done
+                Box(
+                    modifier = Modifier.size(80.dp).clip(CircleShape).background(Color(0xFF00E676).copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("✔", color = Color(0xFF00E676), fontSize = 40.sp)
+                }
+                Spacer(Modifier.height(16.dp))
+                Text("Calibration Complete!", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily)
+            }
+
+            Spacer(Modifier.weight(1f))
+
+            // Mic button
+            val micScale by animateFloatAsState(
+                targetValue = if (isListening) 1.2f else 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(800, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse
+                )
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .scale(if (isListening) micScale else 1f)
+                    .clip(CircleShape)
+                    .background(if (isListening) JasicaOrange else Color(0xFF1E1E2E))
+                    .clickable { onMicTap() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = androidx.compose.ui.res.painterResource(id = R.drawable.mic),
+                    contentDescription = "Microphone",
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
+            Spacer(Modifier.height(32.dp))
+            
+            TextButton(onClick = onSkip) {
+                Text("SKIP CALIBRATION", color = Color.White.copy(alpha = 0.4f), fontFamily = InterFontFamily)
+            }
         }
     }
 }
@@ -3136,6 +3493,9 @@ fun JasicaScreenIdlePreview() {
             showManualControls = false,
             showHistory = false,
             showOnboarding = false,
+            showVoiceCalibration = false,
+            calibrationIndex = 0,
+            calibrationRecognizedText = "",
             showArduinoCode = false,
             currentApiKey = "",
             currentModel = AiModelsList[0],
@@ -3155,6 +3515,7 @@ fun JasicaScreenIdlePreview() {
             onArduinoCodeTap = {},
             onDismissArduinoCode = {},
             onDismissOnboarding = {},
+            onDismissCalibration = {},
             onSaveSettings = { _, _, _ -> },
             onActionCardTap = {},
             onSendRawCommand = {}
