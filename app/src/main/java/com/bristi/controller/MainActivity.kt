@@ -1639,51 +1639,52 @@ fun JasicaScreen(
 
                 // Header Icons Container
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Manual Switch / Home Icon
-                    IconButton(onClick = onManualControlsTap) {
-                        Icon(
-                            imageVector = Icons.Outlined.Home,
-                            contentDescription = "Manual Controls",
-                            tint = JasicaWhite
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
+                    var showMenu by remember { mutableStateOf(false) }
 
-                    // Chat History Icon
-                    IconButton(onClick = onHistoryTap) {
-                        Icon(
-                            imageVector = Icons.Outlined.History,
-                            contentDescription = "Chat History",
-                            tint = JasicaWhite
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
-
-                    // Arduino Code Icon
-                    IconButton(onClick = onArduinoCodeTap) {
-                        Icon(
-                            painter = painterResource(id = android.R.drawable.ic_menu_edit), // Built-in icon for code/edit
-                            contentDescription = "Arduino Code",
-                            tint = JasicaWhite
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
-
-                    IconButton(onClick = onSettingsTap) {
-                        Icon(
-                            imageVector = Icons.Outlined.Settings,
-                            contentDescription = "Settings",
-                            tint = JasicaWhite
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
-
+                    // Bluetooth Icon
                     IconButton(onClick = onBtIconTap) {
                         Icon(
                             imageVector = Icons.Outlined.Bluetooth,
                             contentDescription = if (isBtConnected) "Bluetooth Connected" else "Bluetooth Disconnected",
                             tint = if (isBtConnected) JasicaWhite else JasicaWhite.copy(alpha = 0.4f)
                         )
+                    }
+
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(
+                                painter = painterResource(id = android.R.drawable.ic_menu_more),
+                                contentDescription = "More Options",
+                                tint = JasicaWhite
+                            )
+                        }
+                        
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false },
+                            modifier = Modifier.background(Color(0xFF1E1E2E))
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Manual Controls", color = Color.White, fontFamily = InterFontFamily) },
+                                onClick = { showMenu = false; onManualControlsTap() },
+                                leadingIcon = { Icon(Icons.Outlined.Home, contentDescription = null, tint = JasicaWhite) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Chat History", color = Color.White, fontFamily = InterFontFamily) },
+                                onClick = { showMenu = false; onHistoryTap() },
+                                leadingIcon = { Icon(Icons.Outlined.History, contentDescription = null, tint = JasicaWhite) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Arduino Code", color = Color.White, fontFamily = InterFontFamily) },
+                                onClick = { showMenu = false; onArduinoCodeTap() },
+                                leadingIcon = { Icon(painterResource(id = android.R.drawable.ic_menu_edit), contentDescription = null, tint = JasicaWhite) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Settings", color = Color.White, fontFamily = InterFontFamily) },
+                                onClick = { showMenu = false; onSettingsTap() },
+                                leadingIcon = { Icon(Icons.Outlined.Settings, contentDescription = null, tint = JasicaWhite) }
+                            )
+                        }
                     }
                 }
             }
@@ -2849,19 +2850,6 @@ fun SettingsScreen(
                         fontFamily = InterFontFamily
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = onDismiss) {
-                        Text("CANCEL", color = Color.White.copy(alpha = 0.5f), fontFamily = InterFontFamily, fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    Button(
-                        onClick = { onSave(apiKeyInput, selectedModel, wakeWordInput) },
-                        colors = ButtonDefaults.buttonColors(containerColor = JasicaOrange),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("SAVE", color = Color.White, fontFamily = InterFontFamily, fontWeight = FontWeight.Bold)
-                    }
-                }
             }
 
             Spacer(Modifier.height(24.dp))
@@ -3075,6 +3063,27 @@ fun SettingsScreen(
                             }
                         }
                     }
+                }
+            }
+            
+            // Bottom Action Buttons
+            Spacer(Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text("CANCEL", color = Color.White.copy(alpha = 0.5f), fontFamily = InterFontFamily, fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.width(16.dp))
+                Button(
+                    onClick = { onSave(apiKeyInput, selectedModel, wakeWordInput) },
+                    colors = ButtonDefaults.buttonColors(containerColor = JasicaOrange),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.height(48.dp).padding(horizontal = 16.dp)
+                ) {
+                    Text("SAVE SETTINGS", color = Color.White, fontFamily = InterFontFamily, fontWeight = FontWeight.Bold)
                 }
             }
         }
