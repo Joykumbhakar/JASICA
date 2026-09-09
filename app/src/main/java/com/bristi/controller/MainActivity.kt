@@ -525,11 +525,11 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     override fun onPause() {
         super.onPause()
-        // Safely pause microphone to save battery and release it for other apps when minimized
-        if (isWakeWordMode.value || appState.value == AppState.WAKE_LISTENING) {
-            stopEverything()
-            appState.value = AppState.IDLE
-        }
+        // Safely release the mic when app goes to background — don't show "Interrupted."
+        if (::tts.isInitialized && tts.isSpeaking) tts.stop()
+        safeStopRecognizer()
+        currentAiJob?.cancel()
+        appState.value = AppState.IDLE
     }
 
     override fun onDestroy() {
@@ -679,13 +679,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         if (::tts.isInitialized && tts.isSpeaking) {
             tts.stop()
         }
-        
-        if (::speechRecognizer.isInitialized) {
-            try {
-                speechRecognizer.stopListening()
-                speechRecognizer.cancel()
-            } catch (e: Exception) {}
-        }
+        safeStopRecognizer()
         currentAiJob?.cancel()
 
         if (appState.value != AppState.IDLE && appState.value != AppState.WAKE_LISTENING) {
@@ -694,6 +688,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 appState.value = AppState.IDLE
                 triggerWakeWordLoopIfEnabled()
             }
+        } else {
+            appState.value = AppState.IDLE
         }
     }
 
@@ -847,32 +843,69 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         setComponentState(defaultComponent, enableDefault)
     }
 
-    private fun setupSpeechRecognizer() {
+    // Track whether the recognizer is actively running to prevent double-starts
+    private var isRecognizerListening = false
+
+    private fun createSpeechRecognizer() {
+        if (::speechRecognizer.isInitialized) {
+            try { speechRecognizer.destroy() } catch (e: Exception) {}
+        }
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
         speechRecognizer.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
-                if (appState.value == AppState.IDLE) {
-                    appState.value = AppState.LISTENING
-                    aiResponseText.value = ""
+                isRecognizerListening = true
+                // Only update state if we are not already in an active listening state
+                if (appState.value == AppState.IDLE || appState.value == AppState.WAKE_LISTENING) {
+                    if (appState.value == AppState.IDLE) {
+                        appState.value = AppState.LISTENING
+                        aiResponseText.value = ""
+                    }
                 }
             }
             override fun onBeginningOfSpeech() {}
             override fun onRmsChanged(rmsdB: Float) {}
             override fun onBufferReceived(buffer: ByteArray?) {}
             override fun onEndOfSpeech() {
+                isRecognizerListening = false
                 if (appState.value == AppState.LISTENING) appState.value = AppState.THINKING
             }
             override fun onError(error: Int) {
-                if (appState.value == AppState.WAKE_LISTENING) {
-                    restartWakeWordLoop()
-                } else {
-                    appState.value = AppState.IDLE
-                    triggerWakeWordLoopIfEnabled()
+                isRecognizerListening = false
+                val isWakeMode = appState.value == AppState.WAKE_LISTENING
+
+                when (error) {
+                    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> {
+                        // Recognizer is stuck — destroy and recreate it, then retry
+                        android.util.Log.w("JasicaApp", "Recognizer busy — recreating")
+                        mainHandler.postDelayed({
+                            createSpeechRecognizer()
+                            if (isWakeMode || isWakeWordMode.value) restartWakeWordLoop()
+                            else { appState.value = AppState.IDLE }
+                        }, 600)
+                    }
+                    SpeechRecognizer.ERROR_NO_MATCH,
+                    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> {
+                        // No speech heard — normal case, just restart wake loop or go idle
+                        if (isWakeMode || isWakeWordMode.value) restartWakeWordLoop()
+                        else { appState.value = AppState.IDLE; triggerWakeWordLoopIfEnabled() }
+                    }
+                    SpeechRecognizer.ERROR_AUDIO,
+                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> {
+                        // Hardware/permission error — go idle and show message
+                        appState.value = AppState.IDLE
+                        runOnUiThread { Toast.makeText(this@MainActivity, "Mic error. Please try again.", Toast.LENGTH_SHORT).show() }
+                    }
+                    else -> {
+                        // Network errors, server errors, etc.
+                        if (isWakeMode || isWakeWordMode.value) restartWakeWordLoop()
+                        else { appState.value = AppState.IDLE; triggerWakeWordLoopIfEnabled() }
+                    }
                 }
             }
             override fun onResults(results: Bundle?) {
+                isRecognizerListening = false
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                val originalText = matches?.get(0) ?: ""
+                val originalText = matches?.firstOrNull() ?: ""
                 val lowerText = originalText.lowercase(Locale.getDefault())
                 val wakeWordRegex = Regex("h[ei]y?\\s+(jasica|jessica|jessika|jasika|jesica|jazica)")
 
@@ -886,14 +919,14 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                             tts.speak("Yes Bristi?", TextToSpeech.QUEUE_FLUSH, null, "JASICA_WAKE")
                         }
                     } else {
-                        restartWakeWordLoop() // Ignore and restart if wake word not heard
+                        restartWakeWordLoop()
                     }
                 } else {
-                    val cleanedText = originalText.replace(Regex("(?i)h[ei]y?\\s+(jasica|jessica|jessika|jasika|jesica|jazica)"), "").trim()
-                    if (cleanedText.isNotEmpty()) {
-                        routeVoiceCommand(cleanedText)
-                    } else if (originalText.isNotEmpty()) {
-                        routeVoiceCommand(originalText)
+                    // Regular listening mode — strip wake word prefix if user said it
+                    val cleaned = originalText.replace(Regex("(?i)h[ei]y?\\s+(jasica|jessica|jessika|jasika|jesica|jazica)"), "").trim()
+                    val finalText = if (cleaned.isNotEmpty()) cleaned else originalText
+                    if (finalText.isNotEmpty()) {
+                        routeVoiceCommand(finalText)
                     } else {
                         appState.value = AppState.IDLE
                         triggerWakeWordLoopIfEnabled()
@@ -903,61 +936,99 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             override fun onPartialResults(partialResults: Bundle?) {}
             override fun onEvent(eventType: Int, params: Bundle?) {}
         })
+    }
 
+    private fun setupSpeechRecognizer() {
+        createSpeechRecognizer()
         // Trigger initial loop on startup if enabled
-        mainHandler.postDelayed({ triggerWakeWordLoopIfEnabled() }, 1000)
+        mainHandler.postDelayed({ triggerWakeWordLoopIfEnabled() }, 1200)
     }
 
     private fun restartWakeWordLoop() {
         appState.value = AppState.IDLE
         mainHandler.postDelayed({
-            if (isWakeWordMode.value && appState.value == AppState.IDLE) {
+            if (isWakeWordMode.value && appState.value == AppState.IDLE && !isRecognizerListening) {
                 startWakeWordListening()
             }
-        }, 300)
+        }, 500) // Increased from 300ms to give recognizer time to fully release
     }
 
     private fun triggerWakeWordLoopIfEnabled() {
-        if (isWakeWordMode.value && appState.value == AppState.IDLE) {
+        if (isWakeWordMode.value && appState.value == AppState.IDLE && !isRecognizerListening) {
             restartWakeWordLoop()
         }
     }
 
     private fun startWakeWordListening() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-            appState.value = AppState.WAKE_LISTENING
-            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
-                putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayListOf("bn-IN"))
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en-IN")
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
-                }
+        if (!::speechRecognizer.isInitialized) return
+        if (isRecognizerListening) return // Guard against double-start
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) return
+
+        appState.value = AppState.WAKE_LISTENING
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
+            putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayListOf("bn-IN"))
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en-IN")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
             }
-            try { speechRecognizer.startListening(intent) } catch (e: Exception) {}
+        }
+        try { speechRecognizer.startListening(intent) } catch (e: Exception) {
+            android.util.Log.e("JasicaApp", "startWakeWordListening failed: ${e.message}")
+            isRecognizerListening = false
+            appState.value = AppState.IDLE
         }
     }
 
     private fun startListening() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-            stopEverything() // clean state before starting
-            aiResponseText.value = ""
-
-            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
-                putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayListOf("bn-IN"))
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en-IN")
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
-                }
-            }
-            speechRecognizer.startListening(intent)
-        } else {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "Mic permission required", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (isRecognizerListening) {
+            // Already listening — stop first, then restart after a brief delay
+            safeStopRecognizer()
+            mainHandler.postDelayed({ doStartListening() }, 400)
+            return
+        }
+        doStartListening()
+    }
+
+    private fun doStartListening() {
+        if (!::tts.isInitialized.not() && ::tts.isInitialized && tts.isSpeaking) tts.stop()
+        aiResponseText.value = ""
+        appState.value = AppState.LISTENING
+
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
+            putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayListOf("bn-IN"))
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en-IN")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+            }
+        }
+        try {
+            speechRecognizer.startListening(intent)
+        } catch (e: Exception) {
+            android.util.Log.e("JasicaApp", "startListening failed: ${e.message}")
+            isRecognizerListening = false
+            appState.value = AppState.IDLE
+            triggerWakeWordLoopIfEnabled()
         }
     }
+
+    private fun safeStopRecognizer() {
+        if (::speechRecognizer.isInitialized) {
+            try {
+                speechRecognizer.stopListening()
+                speechRecognizer.cancel()
+            } catch (e: Exception) {}
+        }
+        isRecognizerListening = false
+    }
+
 
     private fun routeVoiceCommand(spokenText: String) {
         runOnUiThread {
@@ -1115,7 +1186,12 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     private fun onFinalUtteranceDone(utteranceId: String) {
         if (utteranceId == "JASICA_WAKE") {
-            startListening()
+            // TTS just finished saying "Yes Bristi?" — start listening after a brief gap
+            mainHandler.postDelayed({
+                if (!isRecognizerListening && appState.value != AppState.LISTENING) {
+                    doStartListening()
+                }
+            }, 200)
         } else if (appState.value == AppState.SPEAKING) {
             appState.value = AppState.IDLE
             triggerWakeWordLoopIfEnabled()
