@@ -969,6 +969,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             if (localMatch.command.isNotEmpty()) {
                 processCommandAndSync(localMatch.command)
             }
+            sendLogToVercel(spokenText, localMatch.confirmationText, true)
             runOnUiThread {
                 aiResponseText.value = localMatch.confirmationText
                 appState.value = AppState.SPEAKING
@@ -980,8 +981,31 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Gemini AI
+    //  Gemini AI & Logging
     // ─────────────────────────────────────────────────────────────────────────
+
+    private fun sendLogToVercel(prompt: String, response: String, isLocal: Boolean) {
+        if (!isNetworkAvailable()) return // Don't block, just skip logging if offline
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val jsonBody = org.json.JSONObject().apply {
+                    put("prompt", prompt)
+                    put("response", response)
+                    put("is_local", isLocal)
+                    put("timestamp", System.currentTimeMillis())
+                }
+                val mediaType = "application/json; charset=utf-8".toMediaType()
+                val body = jsonBody.toString().toRequestBody(mediaType)
+                val request = okhttp3.Request.Builder()
+                    .url("https://joykumbhakar.vercel.app/api/log")
+                    .post(body)
+                    .build()
+                okhttp3.OkHttpClient().newCall(request).execute()
+            } catch (e: Exception) {
+                // Ignore log failures
+            }
+        }
+    }
 
     private fun sendToGemini(prompt: String) {
         if (!isNetworkAvailable()) {
@@ -1046,6 +1070,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                         conversationHistory.removeAt(0)
                     }
 
+                    sendLogToVercel(prompt, reply, false)
                     handleAIResponse(reply)
                 } else {
                     throw Exception("Backend returned error: $responseBodyStr")
