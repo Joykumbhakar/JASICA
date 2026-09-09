@@ -956,7 +956,13 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                     }
                 }
             }
-            override fun onPartialResults(partialResults: Bundle?) {}
+            override fun onPartialResults(partialResults: Bundle?) {
+                val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                val text = matches?.firstOrNull() ?: ""
+                if (text.isNotEmpty() && showVoiceCalibration.value) {
+                    calibrationRecognizedText.value = text
+                }
+            }
             override fun onEvent(eventType: Int, params: Bundle?) {}
         })
     }
@@ -992,10 +998,6 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
             putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayListOf("bn-IN"))
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en-IN")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
-            }
         }
         try { speechRecognizer.startListening(intent) } catch (e: Exception) {
             android.util.Log.e("JasicaApp", "startWakeWordListening failed: ${e.message}")
@@ -1027,10 +1029,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
             putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayListOf("bn-IN"))
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en-IN")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
-            }
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
         }
         try {
             speechRecognizer.startListening(intent)
