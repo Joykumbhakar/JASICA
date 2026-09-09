@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "JASICA AI - Next-Gen Voice & Hardware Controller",
-  description: "Futuristic Voice Assistant, Web Serial Hardware Controller, and Custom Cloud Hosting Platform for Arduino UNO & ESP32 IoT.",
+  title: "Jasica AI - Apple Style Experience",
+  description: "Next-Gen AI Hardware & Neural Core Release. Experience Jasica AI.",
   icons: {
     icon: "/jasica.png",
   },
@@ -15,8 +15,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-[#06070d] text-white antialiased selection:bg-cyan-500 selection:text-black">
+    <html lang="en" className="scroll-smooth">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="bg-[#f5f5f7] text-[#1d1d1f] antialiased">
         {children}
       </body>
     </html>
