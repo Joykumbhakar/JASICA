@@ -207,6 +207,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private val showManualControls = mutableStateOf(false)
     private val showHistoryDialog  = mutableStateOf(false)
     private val showOnboarding     = mutableStateOf(false)
+    private val showArduinoCode    = mutableStateOf(false)
 
     private val userApiKey       = mutableStateOf("")
     private val availableApiKeys = mutableListOf<String>()
@@ -459,6 +460,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                     showManualControls  = showManualControls.value,
                     showHistory         = showHistoryDialog.value,
                     showOnboarding      = showOnboarding.value,
+                    showArduinoCode     = showArduinoCode.value,
                     currentApiKey       = userApiKey.value,
                     currentModel        = selectedAiModel.value,
                     isWakeWordMode      = isWakeWordMode.value,
@@ -480,6 +482,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                     onDismissSettings   = { showSettingsDialog.value = false },
                     onDismissManual     = { showManualControls.value = false },
                     onDismissHistory    = { showHistoryDialog.value = false },
+                    onArduinoCodeTap    = { showArduinoCode.value = true },
+                    onDismissArduinoCode = { showArduinoCode.value = false },
                     onDismissOnboarding = {
                         showOnboarding.value = false
                         sharedPrefs.edit().putBoolean("SEEN_ONBOARDING", true).apply()
@@ -1500,6 +1504,7 @@ fun JasicaScreen(
     showManualControls  : Boolean,
     showHistory         : Boolean,
     showOnboarding      : Boolean,
+    showArduinoCode     : Boolean,
     currentApiKey       : String,
     currentModel        : String,
     isWakeWordMode      : Boolean,
@@ -1515,6 +1520,8 @@ fun JasicaScreen(
     onDismissSettings   : () -> Unit,
     onDismissManual     : () -> Unit,
     onDismissHistory    : () -> Unit,
+    onArduinoCodeTap    : () -> Unit,
+    onDismissArduinoCode: () -> Unit,
     onDismissOnboarding : () -> Unit,
     onSaveSettings      : (String, String, Boolean) -> Unit,
     onActionCardTap     : (String) -> Unit,
@@ -1579,6 +1586,16 @@ fun JasicaScreen(
                         Icon(
                             imageVector = Icons.Outlined.History,
                             contentDescription = "Chat History",
+                            tint = JasicaWhite
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    // Arduino Code Icon
+                    IconButton(onClick = onArduinoCodeTap) {
+                        Icon(
+                            painter = painterResource(id = android.R.drawable.ic_menu_edit), // Built-in icon for code/edit
+                            contentDescription = "Arduino Code",
                             tint = JasicaWhite
                         )
                     }
@@ -1852,6 +1869,15 @@ fun JasicaScreen(
             SettingsScreen(currentApiKey, currentModel, isWakeWordMode, sharedPrefs, onDismissSettings, onSaveSettings)
         }
 
+        // Arduino Code Screen Overlay
+        AnimatedVisibility(
+            visible = showArduinoCode,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it })
+        ) {
+            ArduinoCodeScreen(onDismiss = onDismissArduinoCode)
+        }
+
         // Onboarding Screen Overlay
         AnimatedVisibility(
             visible = showOnboarding,
@@ -1963,50 +1989,166 @@ fun DeviceControlCard(
 ) {
     val haptic = LocalHapticFeedback.current
 
+    // Animated glow when ON
+    val glowAlpha by animateFloatAsState(
+        targetValue = if (isChecked) 0.7f else 0f,
+        animationSpec = tween(400),
+        label = "glow"
+    )
+    val cardScale by animateFloatAsState(
+        targetValue = if (isChecked) 1f else 0.97f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "scale"
+    )
+
+    // Per-device icon
+    val deviceIcon = when (device.id) {
+        "a" -> "💻"
+        "b" -> "🌈"
+        "c" -> "💡"
+        "d" -> "🔌"
+        "e" -> "🌀"
+        "f" -> "❄️"
+        else -> "⚙️"
+    }
+
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
-            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(20.dp))
+            .scale(cardScale)
+            .clip(RoundedCornerShape(24.dp))
             .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                onSendCommand(if(!isChecked) device.cmdOn else device.cmdOff)
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onSendCommand(if (!isChecked) device.cmdOn else device.cmdOff)
             }
     ) {
-        // Card Background Image
+        // Card background image
         Image(
-            painter = painterResource(id = R.drawable.orangeandpurplebg), // Assumes card.png exists in drawable
-            contentDescription = "Card Background",
+            painter = painterResource(id = R.drawable.orangeandpurplebg),
+            contentDescription = null,
             modifier = Modifier.matchParentSize(),
             contentScale = ContentScale.Crop
         )
 
+        // Dark overlay
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(Color.Black.copy(alpha = if (isChecked) 0.25f else 0.55f))
+        )
+
+        // Active glow overlay
+        if (isChecked) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                JasicaOrange.copy(alpha = glowAlpha * 0.4f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+            )
+        }
+
+        // Border — orange when ON, subtle when OFF
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .border(
+                    width = if (isChecked) 1.5.dp else 1.dp,
+                    brush = if (isChecked)
+                        Brush.linearGradient(listOf(JasicaOrange.copy(alpha = 0.9f), JasicaPurple.copy(alpha = 0.5f)))
+                    else
+                        Brush.linearGradient(listOf(Color.White.copy(alpha = 0.15f), Color.White.copy(alpha = 0.05f))),
+                    shape = RoundedCornerShape(24.dp)
+                )
+        )
+
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp)
         ) {
+            // Top row: emoji icon + status dot
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = deviceIcon, fontSize = 26.sp)
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isChecked) Color(0xFF00E676) else Color.White.copy(alpha = 0.25f)
+                        )
+                )
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            // Device name
             Text(
                 text = device.name,
                 color = Color.White,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
                 fontFamily = InterFontFamily,
-                fontSize = 14.sp
+                fontSize = 14.sp,
+                lineHeight = 18.sp
             )
-            Spacer(Modifier.height(16.dp))
-            Switch(
-                checked = isChecked,
-                onCheckedChange = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onSendCommand(if(it) device.cmdOn else device.cmdOff)
-                },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = JasicaOrange,
-                    uncheckedThumbColor = Color.LightGray,
-                    uncheckedTrackColor = Color.DarkGray
-                )
+
+            Spacer(Modifier.height(12.dp))
+
+            // Custom toggle pill
+            val pillColor by animateColorAsState(
+                targetValue = if (isChecked)
+                    Brush.linearGradient(listOf(JasicaOrange, Color(0xFFFF6B35))).let { JasicaOrange }
+                else Color(0xFF2A2A3A),
+                animationSpec = tween(300),
+                label = "pill"
             )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(
+                        if (isChecked)
+                            Brush.horizontalGradient(listOf(JasicaOrange, Color(0xFFFF6B35)))
+                        else
+                            Brush.horizontalGradient(listOf(Color(0xFF2A2A3A), Color(0xFF1E1E2E)))
+                    )
+                    .border(
+                        1.dp,
+                        if (isChecked) JasicaOrange.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.1f),
+                        RoundedCornerShape(50)
+                    )
+                    .clickable {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onSendCommand(if (!isChecked) device.cmdOn else device.cmdOff)
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = if (isChecked) "● ON" else "○ OFF",
+                        color = if (isChecked) Color.White else Color.White.copy(alpha = 0.5f),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = InterFontFamily,
+                        letterSpacing = 1.sp
+                    )
+                }
+            }
         }
     }
 }
+
+
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2994,6 +3136,7 @@ fun JasicaScreenIdlePreview() {
             showManualControls = false,
             showHistory = false,
             showOnboarding = false,
+            showArduinoCode = false,
             currentApiKey = "",
             currentModel = AiModelsList[0],
             isWakeWordMode = false,
@@ -3009,6 +3152,8 @@ fun JasicaScreenIdlePreview() {
             onDismissSettings = {},
             onDismissManual = {},
             onDismissHistory = {},
+            onArduinoCodeTap = {},
+            onDismissArduinoCode = {},
             onDismissOnboarding = {},
             onSaveSettings = { _, _, _ -> },
             onActionCardTap = {},
@@ -3016,6 +3161,376 @@ fun JasicaScreenIdlePreview() {
         )
     }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Arduino Code Screen
+// ─────────────────────────────────────────────────────────────────────────────
+
+private val ARDUINO_UNO_CODE = """
+// ═══════════════════════════════════════════════════════════════
+//  JASICA Controller — Arduino UNO + HC-05 Bluetooth Module
+//  Board  : Arduino UNO (Clone)
+//  Module : HC-05 (connected to Software Serial pins 2 & 3)
+//  Devices: Pins 8–13 (relays / MOSFETs / LEDs)
+//  Author : Joy Kumbhakar (Bristi's System)
+// ═══════════════════════════════════════════════════════════════
+
+#include <SoftwareSerial.h>
+
+// HC-05 RX → Arduino pin 2 | HC-05 TX → Arduino pin 3
+SoftwareSerial BT(2, 3);
+
+// ── Device Pin Map ────────────────────────────────────────────
+const int PIN_PC    = 8;   // a/A — PC / Computer
+const int PIN_RGB   = 9;   // b/B — RGB Lights
+const int PIN_LIGHT = 10;  // c/C — Room Light
+const int PIN_PLUG  = 11;  // d/D — Smart Plug
+const int PIN_FAN   = 12;  // e/E — Ceiling Fan
+const int PIN_AC    = 13;  // f/F — Air Conditioner
+
+int allPins[] = { PIN_PC, PIN_RGB, PIN_LIGHT, PIN_PLUG, PIN_FAN, PIN_AC };
+const int TOTAL = 6;
+
+void setup() {
+  Serial.begin(9600);
+  BT.begin(9600);
+
+  for (int i = 0; i < TOTAL; i++) {
+    pinMode(allPins[i], OUTPUT);
+    digitalWrite(allPins[i], LOW);
+  }
+  Serial.println("JASICA UNO Ready.");
+}
+
+void loop() {
+  if (BT.available()) {
+    String cmd = BT.readStringUntil('\n');
+    cmd.trim();
+    processCommand(cmd);
+  }
+}
+
+void processCommand(String cmd) {
+  // ── All ON / All OFF ────────────────────────────────────────
+  if (cmd == "on") {
+    for (int i = 0; i < TOTAL; i++) digitalWrite(allPins[i], HIGH);
+  } else if (cmd == "off") {
+    for (int i = 0; i < TOTAL; i++) digitalWrite(allPins[i], LOW);
+
+  // ── Mood (RGB + Light) ──────────────────────────────────────
+  } else if (cmd == "mood") {
+    for (int i = 0; i < TOTAL; i++) digitalWrite(allPins[i], LOW);
+    digitalWrite(PIN_RGB, HIGH);
+    digitalWrite(PIN_LIGHT, HIGH);
+
+  // ── Individual Devices ──────────────────────────────────────
+  } else if (cmd == "a") { digitalWrite(PIN_PC,    HIGH); }
+  else if (cmd == "A")   { digitalWrite(PIN_PC,    LOW);  }
+  else if (cmd == "b")   { digitalWrite(PIN_RGB,   HIGH); }
+  else if (cmd == "B")   { digitalWrite(PIN_RGB,   LOW);  }
+  else if (cmd == "c")   { digitalWrite(PIN_LIGHT, HIGH); }
+  else if (cmd == "C")   { digitalWrite(PIN_LIGHT, LOW);  }
+  else if (cmd == "d")   { digitalWrite(PIN_PLUG,  HIGH); }
+  else if (cmd == "D")   { digitalWrite(PIN_PLUG,  LOW);  }
+  else if (cmd == "e")   { digitalWrite(PIN_FAN,   HIGH); }
+  else if (cmd == "E")   { digitalWrite(PIN_FAN,   LOW);  }
+  else if (cmd == "f")   { digitalWrite(PIN_AC,    HIGH); }
+  else if (cmd == "F")   { digitalWrite(PIN_AC,    LOW);  }
+}
+""".trimIndent()
+
+private val ESP32_CODE = """
+// ═══════════════════════════════════════════════════════════════
+//  JASICA Controller — ESP32 DevKit v1
+//  Board  : ESP32 Dev Module (select in Arduino IDE)
+//  BLE    : Built-in Bluetooth Classic (BluetoothSerial)
+//  Devices: GPIO 13, 12, 14, 27, 26, 25
+//  Author : Joy Kumbhakar (Bristi's System)
+// ═══════════════════════════════════════════════════════════════
+
+#include "BluetoothSerial.h"
+
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Enable in Arduino IDE SDK config.
+#endif
+
+BluetoothSerial BT;
+
+// ── Device Pin Map ────────────────────────────────────────────
+const int PIN_PC    = 13;  // a/A — PC / Computer
+const int PIN_RGB   = 12;  // b/B — RGB Lights
+const int PIN_LIGHT = 14;  // c/C — Room Light
+const int PIN_PLUG  = 27;  // d/D — Smart Plug
+const int PIN_FAN   = 26;  // e/E — Ceiling Fan
+const int PIN_AC    = 25;  // f/F — Air Conditioner
+
+int allPins[] = { PIN_PC, PIN_RGB, PIN_LIGHT, PIN_PLUG, PIN_FAN, PIN_AC };
+const int TOTAL = 6;
+
+void setup() {
+  Serial.begin(115200);
+  BT.begin("JASICA_ESP32");  // Bluetooth device name
+  Serial.println("JASICA ESP32 Ready. Waiting for connection...");
+
+  for (int i = 0; i < TOTAL; i++) {
+    pinMode(allPins[i], OUTPUT);
+    digitalWrite(allPins[i], LOW);
+  }
+}
+
+void loop() {
+  if (BT.available()) {
+    String cmd = BT.readStringUntil('\n');
+    cmd.trim();
+    processCommand(cmd);
+  }
+}
+
+void processCommand(String cmd) {
+  // ── All ON / All OFF ────────────────────────────────────────
+  if (cmd == "on") {
+    for (int i = 0; i < TOTAL; i++) digitalWrite(allPins[i], HIGH);
+  } else if (cmd == "off") {
+    for (int i = 0; i < TOTAL; i++) digitalWrite(allPins[i], LOW);
+
+  // ── Mood (RGB + Light) ──────────────────────────────────────
+  } else if (cmd == "mood") {
+    for (int i = 0; i < TOTAL; i++) digitalWrite(allPins[i], LOW);
+    digitalWrite(PIN_RGB, HIGH);
+    digitalWrite(PIN_LIGHT, HIGH);
+
+  // ── Individual Devices ──────────────────────────────────────
+  } else if (cmd == "a") { digitalWrite(PIN_PC,    HIGH); }
+  else if (cmd == "A")   { digitalWrite(PIN_PC,    LOW);  }
+  else if (cmd == "b")   { digitalWrite(PIN_RGB,   HIGH); }
+  else if (cmd == "B")   { digitalWrite(PIN_RGB,   LOW);  }
+  else if (cmd == "c")   { digitalWrite(PIN_LIGHT, HIGH); }
+  else if (cmd == "C")   { digitalWrite(PIN_LIGHT, LOW);  }
+  else if (cmd == "d")   { digitalWrite(PIN_PLUG,  HIGH); }
+  else if (cmd == "D")   { digitalWrite(PIN_PLUG,  LOW);  }
+  else if (cmd == "e")   { digitalWrite(PIN_FAN,   HIGH); }
+  else if (cmd == "E")   { digitalWrite(PIN_FAN,   LOW);  }
+  else if (cmd == "f")   { digitalWrite(PIN_AC,    HIGH); }
+  else if (cmd == "F")   { digitalWrite(PIN_AC,    LOW);  }
+}
+""".trimIndent()
+
+@Composable
+fun ArduinoCodeScreen(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+
+    // 0 = UNO + HC-05, 1 = ESP32
+    var selectedBoard by remember { mutableStateOf(0) }
+    var copied by remember { mutableStateOf(false) }
+
+    val boards = listOf("Arduino UNO + HC-05", "ESP32 Dev v1")
+    val codes = listOf(ARDUINO_UNO_CODE, ESP32_CODE)
+    val boardColors = listOf(
+        listOf(Color(0xFF00979C), Color(0xFF005F60)),  // Arduino teal
+        listOf(Color(0xFFE7352C), Color(0xFF8B1010))   // ESP32 red
+    )
+
+    LaunchedEffect(copied) {
+        if (copied) {
+            kotlinx.coroutines.delay(2000)
+            copied = false
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0D0D12))
+            .clickable(enabled = false) {}
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 44.dp, start = 20.dp, end = 20.dp, bottom = 24.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        "Arduino Code",
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontFamily = InterFontFamily
+                    )
+                    Text(
+                        "Ready to upload firmware",
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = 13.sp,
+                        fontFamily = InterFontFamily
+                    )
+                }
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White)
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // Board Selector Tabs
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White.copy(alpha = 0.06f))
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                boards.forEachIndexed { index, name ->
+                    val isSelected = selectedBoard == index
+                    val tabColor = if (isSelected) boardColors[index] else listOf(Color.Transparent, Color.Transparent)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Brush.horizontalGradient(tabColor))
+                            .border(
+                                if (isSelected) 1.dp else 0.dp,
+                                Color.White.copy(alpha = if (isSelected) 0.2f else 0f),
+                                RoundedCornerShape(12.dp)
+                            )
+                            .clickable { selectedBoard = index; copied = false }
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = name,
+                            color = if (isSelected) Color.White else Color.White.copy(alpha = 0.4f),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = InterFontFamily,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // Board info pill
+            val boardInfo = if (selectedBoard == 0)
+                "📌 HC-05 RX→Pin 2  TX→Pin 3  |  Devices: Pins 8–13"
+            else
+                "📌 Built-in BLE  |  Devices: GPIO 13,12,14,27,26,25"
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(boardColors[selectedBoard][0].copy(alpha = 0.15f))
+                    .border(1.dp, boardColors[selectedBoard][0].copy(alpha = 0.3f), RoundedCornerShape(10.dp))
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+            ) {
+                Text(
+                    text = boardInfo,
+                    color = boardColors[selectedBoard][0],
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            // Code block — scrollable
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFF1A1A2E))
+                    .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+            ) {
+                // Line numbers + code
+                val scrollState = rememberScrollState()
+                val codeLines = codes[selectedBoard].lines()
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(12.dp)
+                ) {
+                    // Line numbers column
+                    Column(
+                        modifier = Modifier.padding(end = 12.dp),
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        codeLines.forEachIndexed { i, _ ->
+                            Text(
+                                text = "${i + 1}",
+                                color = Color.White.copy(alpha = 0.2f),
+                                fontSize = 11.sp,
+                                fontFamily = FontFamily.Monospace,
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
+                    // Code column
+                    Column {
+                        codeLines.forEach { line ->
+                            val lineColor = when {
+                                line.trimStart().startsWith("//") -> Color(0xFF6A9955)
+                                line.trimStart().startsWith("#") -> Color(0xFFC586C0)
+                                line.contains("void ") || line.contains("const ") || line.contains("int ") -> Color(0xFF569CD6)
+                                line.contains("HIGH") || line.contains("LOW") -> Color(0xFFCE9178)
+                                else -> Color(0xFFD4D4D4)
+                            }
+                            Text(
+                                text = line,
+                                color = lineColor,
+                                fontSize = 11.sp,
+                                fontFamily = FontFamily.Monospace,
+                                lineHeight = 18.sp,
+                                softWrap = false
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            // Copy Button
+            Button(
+                onClick = {
+                    clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(codes[selectedBoard]))
+                    copied = true
+                    Toast.makeText(context, "Code copied! Open Arduino IDE and paste.", Toast.LENGTH_SHORT).show()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (copied) Color(0xFF00E676) else boardColors[selectedBoard][0]
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(
+                    text = if (copied) "✓  Copied to Clipboard!" else "⎘  Copy Full Code",
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = InterFontFamily,
+                    letterSpacing = 0.5.sp
+                )
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Dashboard Content
+// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 fun JasicaDashboardContent(
