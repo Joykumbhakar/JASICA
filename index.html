@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JASICA AI - Next-Gen Voice & Hardware Controller</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.7);
+            --primary-cyan: #00f2fe;
+            --primary-blue: #4facfe;
+            --neon-purple: #7928ca;
+            --neon-magenta: #ff0080;
+            --neon-green: #00ff87;
+            --neon-orange: #ff5e3a;
+            --neon-red: #ff3366;
+            --card-bg: rgba(18, 20, 36, 0.65);
+            --card-border: rgba(0, 242, 254, 0.22);
+            --card-hover-border: rgba(0, 242, 254, 0.65);
+            --glow-cyan: 0 0 25px rgba(0, 242, 254, 0.45);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            height: 100vh;
+            background-color: #06070d;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .app-screen {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background: radial-gradient(circle at 50% 10%, rgba(255, 94, 58, 0.25) 0%, rgba(121, 40, 202, 0.2) 50%, #06070d 95%), url('orangeandpurplebg.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-direction: column;
+            color: var(--text-main);
+            backdrop-filter: blur(8px);
+        }
+
+        /* Subtle Animated Grid Overlay */
+        .app-screen::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(0, 242, 254, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 242, 254, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Ambient Glow Blobs */
+        .glow-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+            animation: floatGlow 8s ease-in-out infinite alternate;
+        }
+        .glow-blob-1 {
+            width: 320px;
+            height: 320px;
+            top: 5%;
+            left: 20%;
+            background: radial-gradient(circle, rgba(255, 94, 58, 0.4), transparent 70%);
+        }
+        .glow-blob-2 {
+            width: 380px;
+            height: 380px;
+            bottom: 10%;
+            right: 15%;
+            background: radial-gradient(circle, rgba(121, 40, 202, 0.45), transparent 70%);
+        }
+
+        @keyframes floatGlow {
+            0% { transform: translateY(0px) scale(1); }
+            100% { transform: translateY(-30px) scale(1.15); }
+        }
+
+        /* Top Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 28px;
+            z-index: 20;
+            background: rgba(10, 12, 22, 0.5);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo-img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-cyan);
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.6);
+        }
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            background: linear-gradient(90deg, #ffffff, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .logo-badge {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            padding: 2px 7px;
+            border-radius: 6px;
+            background: rgba(0, 242, 254, 0.15);
+            border: 1px solid var(--primary-cyan);
+            color: var(--primary-cyan);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .connect-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            color: #fff;
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .connect-btn:hover {
+            background: rgba(0, 242, 254, 0.15);
+            border-color: var(--primary-cyan);
+            box-shadow: 0 0 18px rgba(0, 242, 254, 0.4);
+            transform: translateY(-2px);
+        }
+        .connect-btn.connected {
+            background: rgba(0, 255, 135, 0.15);
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+            box-shadow: 0 0 15px rgba(0, 255, 135, 0.3);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--neon-red);
+            box-shadow: 0 0 8px var(--neon-red);
+            transition: all 0.3s ease;
+        }
+        .status-dot.active {
+            background: var(--neon-green);
+            box-shadow: 0 0 12px var(--neon-green);
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #fff;
+            backdrop-filter: blur(10px);
+            transition: all 0.25s ease;
+        }
+        .icon-btn:hover {
+            background: rgba(0, 242, 254, 0.2);
+            border-color: var(--primary-cyan);
+            color: var(--primary-cyan);
+            transform: scale(1.06);
+        }
+        .icon-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        /* Main Content Container */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 24px;
+            position: relative;
+            z-index: 10;
+            min-height: 0;
+        }
+
+        /* Titles */
+        .title-group {
+            text-align: center;
+            margin-top: 4px;
+        }
+        .title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(32px, 5.5vh, 52px);
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #ffffff 30%, #00f2fe 70%, #7928ca 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 35px rgba(0, 242, 254, 0.35);
+        }
+        .subtitle {
+            font-size: clamp(13px, 1.8vh, 15px);
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .voice-feedback {
+            font-size: 14px;
+            color: var(--primary-cyan);
+            min-height: 24px;
+            margin-top: 4px;
+            font-weight: 600;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.6);
+            letter-spacing: 0.3px;
+        }
+
+        /* Center Hologram Graphic */
+        .center-graphic {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 4px 0;
+        }
+
+        /* Rotating Futuristic HUD Ring */
+        .hud-ring {
+            position: absolute;
+            width: clamp(220px, 34vh, 320px);
+            height: clamp(220px, 34vh, 320px);
+            border-radius: 50%;
+            border: 1.5px dashed rgba(0, 242, 254, 0.35);
+            animation: rotateHUD 20s linear infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .hud-ring::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 1px solid rgba(121, 40, 202, 0.35);
+            border-left-color: transparent;
+            border-right-color: transparent;
+            animation: rotateHUDReverse 14s linear infinite;
+        }
+
+        @keyframes rotateHUD {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes rotateHUDReverse {
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
+        }
+
+        /* Audio Wave Visualizer */
+        .audio-wave {
+            position: absolute;
+            width: 130%;
+            height: 100%;
+            max-height: 140px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            opacity: 0.85;
+            animation: pulseWave 3.5s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        .main-orb {
+            height: 100%;
+            max-height: 260px;
+            width: auto;
+            object-fit: contain;
+            z-index: 2;
+            filter: drop-shadow(0 0 35px rgba(0, 242, 254, 0.5));
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .main-orb:hover {
+            transform: scale(1.05);
+        }
+
+        /* Action Cards Grid */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+            gap: 10px;
+            width: 100%;
+            max-width: 520px;
+            justify-content: center;
+            padding: 0 4px;
+            margin-bottom: 8px;
+            z-index: 10;
+        }
+
+        .action-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 10px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.28s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+            transition: left 0.5s ease;
+        }
+        .action-card:hover::before {
+            left: 100%;
+        }
+
+        .action-card:hover {
+            background: rgba(28, 32, 54, 0.85);
+            border-color: var(--card-hover-border);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(0, 242, 254, 0.25), inset 0 1px 1px rgba(255,255,255,0.25);
+        }
+        .action-card:active {
+            transform: translateY(0px) scale(0.98);
+        }
+
+        .action-card.card-active {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 20px rgba(0, 255, 135, 0.35);
+        }
+
+        .card-icon-wrap {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: rgba(0, 242, 254, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 6px;
+            transition: all 0.25s ease;
+        }
+        .action-card:hover .card-icon-wrap {
+            background: rgba(0, 242, 254, 0.25);
+            transform: scale(1.1);
+        }
+
+        .action-card svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--primary-cyan);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .action-card span {
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.3;
+            color: var(--text-main);
+            letter-spacing: 0.2px;
+        }
+        .action-card .pin-badge {
+            font-size: 9px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        /* Bottom Microphone Area */
+        .bottom-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: clamp(10px, 2.5vh, 25px);
+            margin-top: auto;
+            z-index: 15;
+        }
+
+        .mic-button-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .mic-button {
+            width: clamp(62px, 8.5vh, 74px);
+            height: clamp(62px, 8.5vh, 74px);
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #7928ca 100%);
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 35px rgba(0, 242, 254, 0.6), inset 0 2px 10px rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .mic-button:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 45px rgba(0, 242, 254, 0.9), inset 0 2px 12px rgba(255, 255, 255, 0.6);
+        }
+        .mic-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Pulsating Soundwave Rings */
+        .mic-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1.5px solid var(--primary-cyan);
+            pointer-events: none;
+            opacity: 0;
+            animation: pulseRing 2.4s infinite cubic-bezier(0.21, 0.53, 0.56, 0.8);
+        }
+        .mic-ring:nth-child(1) { width: 100%; height: 100%; animation-delay: 0s; }
+        .mic-ring:nth-child(2) { width: 100%; height: 100%; animation-delay: 0.8s; }
+        .mic-ring:nth-child(3) { width: 100%; height: 100%; animation-delay: 1.6s; }
+
+        @keyframes pulseRing {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+
+        .mic-icon {
+            width: 44%;
+            height: 44%;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.4));
+        }
+
+        .tap-text {
+            font-size: clamp(12px, 1.6vh, 14px);
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.4px;
+        }
+
+        /* Floating Serial Console Drawer */
+        .serial-modal {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 420px;
+            max-width: calc(100vw - 48px);
+            height: 380px;
+            background: rgba(10, 12, 22, 0.92);
+            border: 1px solid var(--card-hover-border);
+            border-radius: 20px;
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 242, 254, 0.2);
+            z-index: 100;
+            overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .serial-modal.hidden {
+            transform: translateY(40px) scale(0.92);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .serial-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-cyan);
+            letter-spacing: 0.5px;
+        }
+        .serial-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .clear-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-size: 10px;
+            padding: 3px 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .clear-btn:hover {
+            border-color: var(--neon-red);
+            color: var(--neon-red);
+        }
+
+        /* Preset Chips */
+        .preset-chips {
+            display: flex;
+            gap: 6px;
+            padding: 8px 14px;
+            overflow-x: auto;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .preset-chips::-webkit-scrollbar { display: none; }
+        .chip {
+            background: rgba(0, 242, 254, 0.1);
+            border: 1px solid rgba(0, 242, 254, 0.25);
+            border-radius: 12px;
+            color: var(--primary-cyan);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 10px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .chip:hover {
+            background: var(--primary-cyan);
+            color: #000;
+        }
+
+        .serial-logs {
+            flex: 1;
+            padding: 12px 14px;
+            overflow-y: auto;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            background: rgba(4, 5, 10, 0.75);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .log-tx { color: var(--primary-cyan); }
+        .log-rx { color: var(--neon-green); }
+        .log-info { color: #ffd600; }
+        .log-err { color: var(--neon-red); }
+
+        .serial-input-bar {
+            display: flex;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background: rgba(10, 12, 20, 0.8);
+        }
+        .serial-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 12px 14px;
+            color: #fff;
+            font-size: 13px;
+            font-family: 'Fira Code', monospace;
+            outline: none;
+        }
+        .serial-send-btn {
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            border: none;
+            color: #06070d;
+            padding: 0 18px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .serial-send-btn:hover {
+            filter: brightness(1.15);
+        }
+
+        @keyframes pulseWave {
+            0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.97); }
+            100% { opacity: 0.95; transform: translate(-50%, -50%) scale(1.03); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-screen">
+        <!-- Ambient Glow FX -->
+        <div class="glow-blob glow-blob-1"></div>
+        <div class="glow-blob glow-blob-2"></div>
+
+        <!-- Top Navigation Header -->
+        <div class="header">
+            <div class="logo-area">
+                <div class="logo-container">
+                    <img src="jasica.png" alt="Jasica Logo" class="logo-img">
+                </div>
+                <span class="logo-text">JASICA AI</span>
+                <span class="logo-badge">V2.4 PRO</span>
+            </div>
+            <div class="header-actions">
+                <button class="connect-btn" id="btnConnectSerial" onclick="toggleSerialConnection()">
+                    <span class="status-dot" id="serialStatusDot"></span>
+                    <span id="serialBtnText">Connect Arduino</span>
+                </button>
+                <button class="icon-btn" title="Open Serial Terminal" onclick="toggleSerialModal()">
+                    <svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Interactive Content -->
+        <div class="main-content">
+            <div class="title-group">
+                <h1 class="title">JASICA AI</h1>
+                <p class="subtitle" id="subtitleText">Next-Gen Hardware & Voice Command Terminal</p>
+                <div class="voice-feedback" id="voiceFeedback">System Ready • Tap globe to activate voice</div>
+            </div>
+
+            <div class="center-graphic">
+                <!-- Rotating HUD Ring -->
+                <div class="hud-ring"></div>
+
+                <!-- Animated Audio Wave Canvas/SVG -->
+                <svg class="audio-wave" viewBox="0 0 1000 200" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="waveCyanGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="rgba(0, 242, 254, 0)"/>
+                            <stop offset="30%" stop-color="rgba(0, 242, 254, 0.6)"/>
+                            <stop offset="50%" stop-color="rgba(255, 255, 255, 0.95)"/>
+                            <stop offset="70%" stop-color="rgba(121, 40, 202, 0.7)"/>
+                            <stop offset="100%" stop-color="rgba(0, 242, 254, 0)"/>
+                        </linearGradient>
+                    </defs>
+                    <g>
+                        <path d="M0,100 C200,100 350,20 500,100 C650,180 800,100 1000,100" stroke="url(#waveCyanGlow)" stroke-width="4" fill="none" opacity="0.8"/>
+                        <path d="M0,100 C250,100 380,180 500,100 C620,20 750,100 1000,100" stroke="url(#waveCyanGlow)" stroke-width="2.5" fill="none" opacity="0.6"/>
+                        <path d="M0,100 C300,100 420,-30 500,100 C580,230 700,100 1000,100" stroke="#00f2fe" stroke-width="1.5" fill="none" opacity="0.9"/>
+                    </g>
+                </svg>
+                
+                <!-- Main Visual Orb -->
+                <img src="jasica.png" alt="Jasica AI Visualizer" class="main-orb">
+            </div>
+
+            <!-- Action Buttons Grid -->
+            <div class="action-grid">
+                <div class="action-card" onclick="sendSerialCommand('a')">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    </div>
+                    <span>PC ON</span>
+                    <span class="pin-badge">PIN 4 • 'a'</span>
+                </div>
+                
+                <div class="action-card" onclick="sendSerialCommand('A')">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line><line x1="2" y1="2" x2="22" y2="22"></line></svg>
+                    </div>
+                    <span>PC OFF</span>
+                    <span class="pin-badge">PIN 4 • 'A'</span>
+                </div>
+
+                <div class="action-card" onclick="sendSerialCommand('c')">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a7 7 0 0 0-7 7c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6a7 7 0 0 0-7-7z"></path></svg>
+                    </div>
+                    <span>LIGHT ON</span>
+                    <span class="pin-badge">PIN 6 • 'c'</span>
+                </div>
+
+                <div class="action-card" onclick="sendSerialCommand('C')">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a7 7 0 0 0-7 7c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6a7 7 0 0 0-7-7z"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>
+                    </div>
+                    <span>LIGHT OFF</span>
+                    <span class="pin-badge">PIN 6 • 'C'</span>
+                </div>
+
+                <div class="action-card" onclick="sendSerialCommand('mood')">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </div>
+                    <span>MOOD MODE</span>
+                    <span class="pin-badge">STARK TOWER</span>
+                </div>
+
+                <div class="action-card" onclick="sendSerialCommand('status')">
+                    <div class="card-icon-wrap">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                    <span>STATUS</span>
+                    <span class="pin-badge">DIAGNOSTICS</span>
+                </div>
+
+                <div class="action-card" onclick="triggerWaterReminderWeb()">
+                    <div class="card-icon-wrap" style="background: rgba(0, 255, 135, 0.15);">
+                        <svg viewBox="0 0 24 24" style="stroke: var(--neon-green);"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                    </div>
+                    <span>WATER (30M)</span>
+                    <span class="pin-badge" style="color: var(--neon-green);">HYDRATION</span>
+                </div>
+            </div>
+
+            <!-- Bottom Microphone Area -->
+            <div class="bottom-section">
+                <div class="mic-button-wrapper">
+                    <div class="mic-ring"></div>
+                    <div class="mic-ring"></div>
+                    <div class="mic-ring"></div>
+                    <div class="mic-button" id="micBtn" onclick="toggleVoiceRecognition()">
+                        <img src="mic.png" alt="Tap to speak" class="mic-icon">
+                    </div>
+                </div>
+                <p class="tap-text" id="micStatusText">Tap to speak or say "Hey Jasica"</p>
+            </div>
+        </div>
+
+        <!-- Floating Modern Serial Console Modal -->
+        <div class="serial-modal hidden" id="serialModal">
+            <div class="serial-header">
+                <span>ARDUINO SERIAL MONITOR • 9600 BAUD</span>
+                <div class="serial-controls">
+                    <button class="clear-btn" onclick="clearSerialLogs()">CLEAR</button>
+                    <button class="icon-btn" onclick="toggleSerialModal()" style="width: 26px; height: 26px; font-size: 16px; border: none;">&times;</button>
+                </div>
+            </div>
+            
+            <!-- Quick Command Preset Chips -->
+            <div class="preset-chips">
+                <span class="chip" onclick="sendSerialCommand('on')">ALL ON</span>
+                <span class="chip" onclick="sendSerialCommand('off')">ALL OFF</span>
+                <span class="chip" onclick="sendSerialCommand('mood')">MOOD</span>
+                <span class="chip" onclick="sendSerialCommand('status')">STATUS</span>
+                <span class="chip" onclick="sendSerialCommand('a')">PC ON</span>
+                <span class="chip" onclick="sendSerialCommand('A')">PC OFF</span>
+            </div>
+
+            <div class="serial-logs" id="serialLogs"></div>
+            
+            <div class="serial-input-bar">
+                <input type="text" id="serialInput" class="serial-input" placeholder="Type serial command..." onkeydown="if(event.key==='Enter') sendManualCommand()">
+                <button class="serial-send-btn" onclick="sendManualCommand()">SEND</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let port;
+        let reader;
+        let isListening = false;
+        let recognition;
+
+        const serialLogs = document.getElementById('serialLogs');
+        const serialModal = document.getElementById('serialModal');
+        const btnConnect = document.getElementById('btnConnectSerial');
+        const statusDot = document.getElementById('serialStatusDot');
+        const btnText = document.getElementById('serialBtnText');
+        const voiceFeedback = document.getElementById('voiceFeedback');
+        const micStatusText = document.getElementById('micStatusText');
+        const micBtn = document.getElementById('micBtn');
+
+        function getTimestamp() {
+            const d = new Date();
+            return d.toTimeString().split(' ')[0] + '.' + String(d.getMilliseconds()).padStart(3, '0');
+        }
+
+        function appendLog(text, type = 'info') {
+            const time = getTimestamp();
+            const logLine = document.createElement('div');
+            
+            if (type === 'tx') {
+                logLine.className = 'log-tx';
+                logLine.textContent = `[${time}] [TX] > ${text}`;
+            } else if (type === 'rx') {
+                logLine.className = 'log-rx';
+                logLine.textContent = `[${time}] [RX] < ${text}`;
+            } else if (type === 'err') {
+                logLine.className = 'log-err';
+                logLine.textContent = `[${time}] [ERR] ! ${text}`;
+            } else {
+                logLine.className = 'log-info';
+                logLine.textContent = `[${time}] [SYS] • ${text}`;
+            }
+
+            serialLogs.appendChild(logLine);
+            serialLogs.scrollTop = serialLogs.scrollHeight;
+        }
+
+        function clearSerialLogs() {
+            serialLogs.innerHTML = '';
+            appendLog('Logs cleared.');
+        }
+
+        function toggleSerialModal() {
+            serialModal.classList.toggle('hidden');
+        }
+
+        async function toggleSerialConnection() {
+            if (port) {
+                try {
+                    if (reader) await reader.cancel();
+                    await port.close();
+                } catch(e) { console.error(e); }
+                port = null;
+                btnConnect.classList.remove('connected');
+                statusDot.classList.remove('active');
+                btnText.textContent = 'Connect Arduino';
+                appendLog('Disconnected from Arduino UNO.', 'info');
+                voiceFeedback.textContent = 'Hardware Disconnected';
+                return;
+            }
+
+            if (!("serial" in navigator)) {
+                alert("Web Serial API is not supported in this browser. Please use Chrome, Edge, or Opera.");
+                return;
+            }
+
+            try {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 9600 });
+                btnConnect.classList.add('connected');
+                statusDot.classList.add('active');
+                btnText.textContent = 'Connected (9600)';
+                appendLog('Uplink established with Arduino UNO.', 'info');
+                voiceFeedback.textContent = 'Hardware Connected: Ready for Commands';
+                readSerialLoop();
+            } catch (err) {
+                console.error("Serial connection error:", err);
+                appendLog('Connection failed: ' + err.message, 'err');
+            }
+        }
+
+        async function sendSerialCommand(cmd) {
+            if (!cmd) return;
+            appendLog(cmd, 'tx');
+            if (!port || !port.writable) {
+                voiceFeedback.textContent = `Command "${cmd}" simulated (Arduino not connected)`;
+                return;
+            }
+
+            try {
+                const textEncoder = new TextEncoderStream();
+                const writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+                const writer = textEncoder.writable.getWriter();
+                await writer.write(cmd + "\n");
+                writer.releaseLock();
+                voiceFeedback.textContent = `Transmitted: "${cmd}"`;
+            } catch (err) {
+                console.error("Send error:", err);
+                appendLog("Send error: " + err.message, 'err');
+            }
+        }
+
+        async function readSerialLoop() {
+            let buffer = "";
+            while (port && port.readable) {
+                const textDecoder = new TextDecoderStream();
+                const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+                reader = textDecoder.readable.getReader();
+
+                try {
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+                        if (value) {
+                            buffer += value;
+                            let lines = buffer.split('\n');
+                            buffer = lines.pop();
+                            for (const line of lines) {
+                                const clean = line.trim();
+                                if (clean) {
+                                    appendLog(clean, 'rx');
+                                    if (clean.startsWith('[JASICA_ARDUINO]')) {
+                                        voiceFeedback.textContent = clean.replace('[JASICA_ARDUINO]', '').trim();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error("Read error:", err);
+                } finally {
+                    reader.releaseLock();
+                }
+            }
+        }
+
+        function sendManualCommand() {
+            const input = document.getElementById('serialInput');
+            const val = input.value.trim();
+            if (val) {
+                sendSerialCommand(val);
+                input.value = '';
+            }
+        }
+
+        function triggerWaterReminderWeb() {
+            voiceFeedback.textContent = "Water reminder set for 30 minutes!";
+            appendLog("Hydration reminder initiated (30 minutes).", "info");
+            setTimeout(() => {
+                alert("💧 Time to hydrate! Drink a glass of water.");
+            }, 30 * 60 * 1000);
+        }
+
+        // Voice Recognition Support (Web Speech API)
+        function initVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return;
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isListening = true;
+                micStatusText.textContent = "Listening... Speak your command";
+                micBtn.style.boxShadow = "0 0 50px rgba(0, 255, 135, 0.9)";
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.toLowerCase().trim();
+                voiceFeedback.textContent = `Understood: "${transcript}"`;
+                handleVoiceCommand(transcript);
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                micStatusText.textContent = "Tap to speak";
+                isListening = false;
+                micBtn.style.boxShadow = "";
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                micStatusText.textContent = "Tap to speak or say 'Hey Jasica'";
+                micBtn.style.boxShadow = "";
+            };
+        }
+
+        function toggleVoiceRecognition() {
+            if (!recognition) initVoiceRecognition();
+            if (!recognition) {
+                alert("Web Speech API is not supported in this browser. Please use Chrome/Edge.");
+                return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        function handleVoiceCommand(text) {
+            if (text.includes("pc on") || text.includes("turn on pc") || text.includes("computer on")) {
+                sendSerialCommand("a");
+            } else if (text.includes("pc off") || text.includes("turn off pc") || text.includes("shutdown")) {
+                sendSerialCommand("A");
+            } else if (text.includes("rgb on") || text.includes("lights on")) {
+                sendSerialCommand("b");
+            } else if (text.includes("rgb off")) {
+                sendSerialCommand("B");
+            } else if (text.includes("room light on") || text.includes("main light on") || text.includes("light on")) {
+                sendSerialCommand("c");
+            } else if (text.includes("room light off") || text.includes("main light off") || text.includes("light off")) {
+                sendSerialCommand("C");
+            } else if (text.includes("plug on") || text.includes("socket on")) {
+                sendSerialCommand("d");
+            } else if (text.includes("plug off") || text.includes("socket off")) {
+                sendSerialCommand("D");
+            } else if (text.includes("all on") || text.includes("everything on")) {
+                sendSerialCommand("on");
+            } else if (text.includes("all off") || text.includes("everything off") || text.includes("good night")) {
+                sendSerialCommand("off");
+            } else if (text.includes("mood") || text.includes("stark tower") || text.includes("relax")) {
+                sendSerialCommand("mood");
+            } else if (text.includes("water") || text.includes("drink")) {
+                triggerWaterReminderWeb();
+            } else if (text.includes("status") || text.includes("check")) {
+                sendSerialCommand("status");
+            } else {
+                voiceFeedback.textContent = `Unrecognized command: "${text}"`;
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            initVoiceRecognition();
+            appendLog('JASICA OS initialized. Ready for hardware connection.');
+        });
+    </script>
+</body>
+</html>
