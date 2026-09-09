@@ -2950,22 +2950,7 @@ fun SettingsScreen(
                         Column {
                             Text("AI CONFIGURATION", color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                             Spacer(Modifier.height(12.dp))
-                            
-                            OutlinedTextField(
-                                value = apiKeyInput,
-                                onValueChange = { apiKeyInput = it },
-                                label = { Text("Gemini API Key", color = Color.White.copy(alpha = 0.5f)) },
-                                textStyle = TextStyle(color = Color.White, fontSize = 14.sp),
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = JasicaOrange,
-                                    unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
-                                    cursorColor = JasicaOrange
-                                )
-                            )
-                            
-                            Spacer(Modifier.height(16.dp))
+                            // API Key input removed for security
                             
                             OutlinedTextField(
                                 value = selectedModel,
