@@ -52,6 +52,7 @@ dependencies {
 
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("com.airbnb.android:lottie-compose:6.4.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
     // Coroutines for background Bluetooth threading
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     // OkHttp for Sarvam AI TTS REST API

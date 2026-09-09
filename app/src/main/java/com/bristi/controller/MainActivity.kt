@@ -88,6 +88,8 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import androidx.compose.runtime.DisposableEffect
+import org.json.JSONObject
+import coil.compose.AsyncImage
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -1595,8 +1597,102 @@ fun JasicaScreen(
     onActionCardTap     : (String) -> Unit,
     onSendRawCommand    : (String) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var updateNotification by remember { mutableStateOf<UpdateNotification?>(null) }
+    
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val url = java.net.URL("https://joykumbhakar.vercel.app/api/update")
+                val connection = url.openConnection() as java.net.HttpURLConnection
+                connection.connectTimeout = 3000
+                connection.readTimeout = 3000
+                connection.requestMethod = "GET"
+                
+                if (connection.responseCode == java.net.HttpURLConnection.HTTP_OK) {
+                    val jsonStr = connection.inputStream.bufferedReader().use { it.readText() }
+                    val json = org.json.JSONObject(jsonStr)
+                    
+                    val notification = UpdateNotification(
+                        id = json.optString("id", ""),
+                        title = json.optString("title", ""),
+                        description = json.optString("description", ""),
+                        imageUrl = json.optString("imageUrl", ""),
+                        primaryButtonText = json.optString("primaryButtonText", "Update Now"),
+                        primaryButtonUrl = json.optString("primaryButtonUrl", ""),
+                        secondaryButtonText = json.optString("secondaryButtonText", "Later")
+                    )
+                    
+                    val lastSeenId = sharedPrefs.getString("LAST_SEEN_NOTIFICATION", "")
+                    if (notification.id.isNotEmpty() && notification.id != lastSeenId) {
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                            updateNotification = notification
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Ignore failures (e.g. no internet)
+            }
+        }
+    }
+
     val haptic = LocalHapticFeedback.current
     Box(modifier = Modifier.fillMaxSize()) {
+        
+        updateNotification?.let { notif ->
+            AlertDialog(
+                onDismissRequest = { 
+                    sharedPrefs.edit().putString("LAST_SEEN_NOTIFICATION", notif.id).apply()
+                    updateNotification = null 
+                },
+                title = null,
+                text = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        if (notif.imageUrl.isNotEmpty()) {
+                            AsyncImage(
+                                model = notif.imageUrl,
+                                contentDescription = "Update Banner",
+                                modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(12.dp)),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                            )
+                            Spacer(Modifier.height(16.dp))
+                        }
+                        Text(notif.title, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                        Spacer(Modifier.height(8.dp))
+                        Text(notif.description, color = Color.White.copy(alpha=0.8f), fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 4)
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            if (notif.primaryButtonUrl.isNotEmpty()) {
+                                try {
+                                    val i = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(notif.primaryButtonUrl))
+                                    context.startActivity(i)
+                                } catch(e:Exception){}
+                            }
+                            sharedPrefs.edit().putString("LAST_SEEN_NOTIFICATION", notif.id).apply()
+                            updateNotification = null
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = JasicaOrange)
+                    ) {
+                        Text(notif.primaryButtonText, color = Color.White)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            sharedPrefs.edit().putString("LAST_SEEN_NOTIFICATION", notif.id).apply()
+                            updateNotification = null
+                        }
+                    ) {
+                        Text(notif.secondaryButtonText, color = Color.White.copy(alpha=0.6f))
+                    }
+                },
+                containerColor = Color(0xFF1E1E2A),
+                shape = RoundedCornerShape(16.dp)
+            )
+        }
         // 1. Full Screen Generated Background
         Image(
             painter = painterResource(id = R.drawable.wallpaper3), // Assumes existing drawable
@@ -4175,3 +4271,12 @@ fun AnimatedSplashScreen(onFinished: () -> Unit) {
         }
     }
 }
+data class UpdateNotification(
+    val id: String,
+    val title: String,
+    val description: String,
+    val imageUrl: String,
+    val primaryButtonText: String,
+    val primaryButtonUrl: String,
+    val secondaryButtonText: String
+)
