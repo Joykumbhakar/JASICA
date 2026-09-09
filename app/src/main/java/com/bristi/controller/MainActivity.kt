@@ -1603,7 +1603,7 @@ fun JasicaScreen(
     LaunchedEffect(Unit) {
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             try {
-                val url = java.net.URL("https://joykumbhakar.vercel.app/api/update")
+                val url = java.net.URL("https://joykumbhakar.vercel.app/api/app-config")
                 val connection = url.openConnection() as java.net.HttpURLConnection
                 connection.connectTimeout = 3000
                 connection.readTimeout = 3000
@@ -1612,21 +1612,24 @@ fun JasicaScreen(
                 if (connection.responseCode == java.net.HttpURLConnection.HTTP_OK) {
                     val jsonStr = connection.inputStream.bufferedReader().use { it.readText() }
                     val json = org.json.JSONObject(jsonStr)
+                    val notifObj = json.optJSONObject("notification")
                     
-                    val notification = UpdateNotification(
-                        id = json.optString("id", ""),
-                        title = json.optString("title", ""),
-                        description = json.optString("description", ""),
-                        imageUrl = json.optString("imageUrl", ""),
-                        primaryButtonText = json.optString("primaryButtonText", "Update Now"),
-                        primaryButtonUrl = json.optString("primaryButtonUrl", ""),
-                        secondaryButtonText = json.optString("secondaryButtonText", "Later")
-                    )
+                    if (notifObj != null) {
+                        val notification = UpdateNotification(
+                            id = notifObj.optString("id", ""),
+                            title = notifObj.optString("title", ""),
+                            description = notifObj.optString("description", ""),
+                            imageUrl = notifObj.optString("imageUrl", ""),
+                            primaryButtonText = notifObj.optString("primaryButtonText", "Update Now"),
+                            primaryButtonUrl = notifObj.optString("primaryButtonUrl", ""),
+                            secondaryButtonText = notifObj.optString("secondaryButtonText", "Later")
+                        )
                     
-                    val lastSeenId = sharedPrefs.getString("LAST_SEEN_NOTIFICATION", "")
-                    if (notification.id.isNotEmpty() && notification.id != lastSeenId) {
-                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                            updateNotification = notification
+                        val lastSeenId = sharedPrefs.getString("LAST_SEEN_NOTIFICATION", "")
+                        if (notification.id.isNotEmpty() && notification.id != lastSeenId) {
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                updateNotification = notification
+                            }
                         }
                     }
                 }
