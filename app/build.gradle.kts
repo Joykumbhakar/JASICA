@@ -26,6 +26,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GEMINI_API_KEY", "\"${localProps.getProperty("GEMINI_API_KEY", "")}\"")
+        buildConfigField("String", "GEMINI_API_KEYS", "\"${localProps.getProperty("GEMINI_API_KEYS", "")}\"")
             }
 
     buildTypes {
@@ -48,7 +49,7 @@ android {
 }
 
 dependencies {
-    implementation("com.google.ai.client.generativeai:generativeai:0.7.0")
+
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("com.airbnb.android:lottie-compose:6.4.0")
     // Coroutines for background Bluetooth threading

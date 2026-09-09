@@ -35,6 +35,7 @@ import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -117,8 +118,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.content
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -212,7 +214,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private val isWakeWordMode   = mutableStateOf(false)
 
     // ── Conversation Memory ───────────────────────────────────────────────────
-    private val conversationHistory = mutableListOf<com.google.ai.client.generativeai.type.Content>()
+    private val conversationHistory = mutableListOf<org.json.JSONObject>()
     private val uiChatHistory       = mutableStateListOf<ChatMessage>()
     private val MAX_HISTORY_PAIRS   = 6
 
@@ -367,11 +369,18 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         super.onCreate(savedInstanceState)
 
         sharedPrefs = getSharedPreferences("JasicaSettings", Context.MODE_PRIVATE)
-        userApiKey.value = sharedPrefs.getString("API_KEY", DEFAULT_API_KEY) ?: DEFAULT_API_KEY
-        val savedKeys = sharedPrefs.getString("AVAILABLE_KEYS", "") ?: ""
-        if (savedKeys.isNotBlank()) {
+        val buildKeys = BuildConfig.GEMINI_API_KEYS
+        if (buildKeys.isNotBlank()) {
             availableApiKeys.clear()
-            availableApiKeys.addAll(savedKeys.split(","))
+            availableApiKeys.addAll(buildKeys.split(","))
+            userApiKey.value = availableApiKeys.first()
+        } else {
+            userApiKey.value = sharedPrefs.getString("API_KEY", DEFAULT_API_KEY) ?: DEFAULT_API_KEY
+            val savedKeys = sharedPrefs.getString("AVAILABLE_KEYS", "") ?: ""
+            if (savedKeys.isNotBlank()) {
+                availableApiKeys.clear()
+                availableApiKeys.addAll(savedKeys.split(","))
+            }
         }
         // Fetch dynamic icon and API key from portfolio
         fetchAppConfigFromPortfolio()
@@ -387,6 +396,12 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         val hasSeenOnboarding = sharedPrefs.getBoolean("SEEN_ONBOARDING", false)
         showOnboarding.value = !hasSeenOnboarding
 
+        // Set Water Reminder Default ON
+        if (!sharedPrefs.contains("WATER_REMINDER")) {
+            sharedPrefs.edit().putBoolean("WATER_REMINDER", true).apply()
+            WaterReminderManager.scheduleNextAlarm(this)
+        }
+
         tts = TextToSpeech(this, this)
         
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -395,7 +410,14 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
         setupBluetoothReceiver()
 
-        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.POST_NOTIFICATIONS
+            )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             arrayOf(
                 Manifest.permission.RECORD_AUDIO,
                 Manifest.permission.BLUETOOTH_CONNECT,
@@ -719,7 +741,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             .url(PORTFOLIO_CONFIG_URL)
             .build()
             
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val response = client.newCall(request).execute()
                 if (response.isSuccessful) {
@@ -731,7 +753,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                             
                             // 1. Extract API Keys Array
                             val apiKeysArray = json.optJSONArray("api_keys")
-                            if (apiKeysArray != null && apiKeysArray.length() > 0) {
+                            if (BuildConfig.GEMINI_API_KEYS.isBlank() && apiKeysArray != null && apiKeysArray.length() > 0) {
                                 val keys = mutableListOf<String>()
                                 for (i in 0 until apiKeysArray.length()) {
                                     keys.add(apiKeysArray.getString(i))
@@ -751,7 +773,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                             } else {
                                 // Fallback
                                 val apiKey = json.optString("api_key", "")
-                                if (apiKey.startsWith("AIza")) {
+                                if (BuildConfig.GEMINI_API_KEYS.isBlank() && apiKey.startsWith("AIza")) {
                                     availableApiKeys.clear()
                                     availableApiKeys.add(apiKey)
                                     sharedPrefs.edit().putString("API_KEY", apiKey).apply()
@@ -763,6 +785,10 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                             
                             // 2. Extract active icon
                             val activeIcon = json.optString("active_icon", "default")
+                            
+                            // 3. Extract water reminder password
+                            val waterPassword = json.optString("water_reminder_password", "0000")
+                            sharedPrefs.edit().putString("WATER_REMINDER_PASSWORD", waterPassword).apply()
                             
                             // Instantly switch the app icon
                             runOnUiThread {
@@ -786,15 +812,24 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         val favDiComponent = android.content.ComponentName(this, "com.bristi.controller.AliasFavDi")
         val sonaDiComponent = android.content.ComponentName(this, "com.bristi.controller.AliasSonaDi")
         val tithiComponent = android.content.ComponentName(this, "com.bristi.controller.AliasTithi")
+        val jijuDidiComponent = android.content.ComponentName(this, "com.bristi.controller.AliasJijuDidi")
+        val qweenComponent = android.content.ComponentName(this, "com.bristi.controller.AliasQween")
+        val thinkingComponent = android.content.ComponentName(this, "com.bristi.controller.AliasThinking")
+        val thinking2Component = android.content.ComponentName(this, "com.bristi.controller.AliasThinking2")
         
+        val name = iconName.lowercase()
         // Define desired states based on the string from the server
-        val enableDefault = iconName.lowercase() == "default" || iconName.lowercase() == "jasica"
-        val enableFavDi = iconName.lowercase() == "fav_di"
-        val enableSonaDi = iconName.lowercase() == "sona_di"
-        val enableTithi = iconName.lowercase() == "tithi"
+        val enableDefault = name == "default" || name == "jasica"
+        val enableFavDi = name == "fav_di"
+        val enableSonaDi = name == "sona_di"
+        val enableTithi = name == "tithi"
+        val enableJijuDidi = name == "jiju_didi"
+        val enableQween = name == "qween"
+        val enableThinking = name == "thinking"
+        val enableThinking2 = name == "thinking2"
         
         // Only apply if it's a known icon to prevent disabling everything
-        if (!enableDefault && !enableFavDi && !enableSonaDi && !enableTithi) return
+        if (!enableDefault && !enableFavDi && !enableSonaDi && !enableTithi && !enableJijuDidi && !enableQween && !enableThinking && !enableThinking2) return
         
         // Helper to enable/disable
         fun setComponentState(component: android.content.ComponentName, enable: Boolean) {
@@ -805,6 +840,10 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         setComponentState(favDiComponent, enableFavDi)
         setComponentState(sonaDiComponent, enableSonaDi)
         setComponentState(tithiComponent, enableTithi)
+        setComponentState(jijuDidiComponent, enableJijuDidi)
+        setComponentState(qweenComponent, enableQween)
+        setComponentState(thinkingComponent, enableThinking)
+        setComponentState(thinking2Component, enableThinking2)
         setComponentState(defaultComponent, enableDefault)
     }
 
@@ -892,6 +931,9 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
                 putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayListOf("bn-IN"))
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en-IN")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+                }
             }
             try { speechRecognizer.startListening(intent) } catch (e: Exception) {}
         }
@@ -907,6 +949,9 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
                 putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayListOf("bn-IN"))
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en-IN")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+                }
             }
             speechRecognizer.startListening(intent)
         } else {
@@ -944,92 +989,71 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             return
         }
 
-        val activeApiKey = (if (userApiKey.value.isNotBlank()) userApiKey.value else DEFAULT_API_KEY).trim()
-        if (activeApiKey.isBlank()) {
-            handleAIResponse("My API key is missing. Please update it in settings.")
-            return
-        }
-
         appState.value = AppState.THINKING
         currentAiJob?.cancel()
 
-        currentAiJob = CoroutineScope(Dispatchers.IO).launch {
+        currentAiJob = lifecycleScope.launch(Dispatchers.IO) {
             try {
-                var model = GenerativeModel(
-                    modelName        = selectedAiModel.value,
-                    apiKey           = activeApiKey,
-                    systemInstruction = content { text(getSystemInstruction()) }
-                )
+                val client = okhttp3.OkHttpClient.Builder()
+                    .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                    .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                    .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                    .build()
+                
+                val historyArray = org.json.JSONArray()
+                conversationHistory.forEach { historyArray.put(it) }
 
-                var reply = ""
-                var success = false
-                var currentKey = activeApiKey
-                
-                // Try up to the number of available keys (or at least 1 time if list is empty)
-                val maxAttempts = if (availableApiKeys.isNotEmpty()) availableApiKeys.size else 1
-                
-                for (attempt in 0 until maxAttempts) {
-                    try {
-                        val chat = model.startChat(history = conversationHistory.toList())
-                        val response = chat.sendMessage(prompt)
-                        reply = response.text ?: "Uh oh, something went wrong."
-                        success = true
-                        break // Success! Exit loop.
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        val errorMsg = e.message?.lowercase() ?: ""
-                        android.util.Log.e("JasicaApp", "Gemini API error with key $currentKey: $errorMsg")
-                        
-                        // Switch to the next key instantly for quota, expired, or general API errors!
-                        val isNetworkError = e is java.net.UnknownHostException || e is java.net.SocketTimeoutException || e is java.net.ConnectException || errorMsg.contains("timeout") || errorMsg.contains("network")
-                        if (!isNetworkError || errorMsg.contains("429") || errorMsg.contains("quota") || errorMsg.contains("exhausted") || errorMsg.contains("expired") || errorMsg.contains("invalid") || errorMsg.contains("api_key") || errorMsg.contains("key")) {
-                            if (availableApiKeys.size > 1) {
-                                val currentIndex = availableApiKeys.indexOf(currentKey)
-                                val nextIndex = (currentIndex + 1) % availableApiKeys.size
-                                currentKey = availableApiKeys[nextIndex]
-                                
-                                // Save the new key
-                                sharedPrefs.edit().putString("API_KEY", currentKey).apply()
-                                runOnUiThread {
-                                    userApiKey.value = currentKey
-                                }
-                                
-                                // Re-initialize the model with the new key for the next attempt
-                                model = GenerativeModel(
-                                    modelName = selectedAiModel.value,
-                                    apiKey = currentKey,
-                                    systemInstruction = content { text(getSystemInstruction()) }
-                                )
-                                android.util.Log.d("JasicaApp", "Switched to next API key instantly! Error was: $errorMsg")
-                                continue // Retry immediately
-                            }
-                        }
-                        
-                        // If it's not a rate limit error, or we only have 1 key, we delay slightly and retry
-                        if (attempt < maxAttempts - 1) {
-                            delay(1000L) // only short delay before trying next
-                        }
+                val jsonBody = org.json.JSONObject().apply {
+                    put("system_instruction", getSystemInstruction())
+                    put("history", historyArray)
+                    put("prompt", prompt)
+                    put("api_key", userApiKey.value)
+                    put("model", selectedAiModel.value)
+                }
+
+                val mediaType = "application/json; charset=utf-8".toMediaType()
+                val body = jsonBody.toString().toRequestBody(mediaType)
+                val request = okhttp3.Request.Builder()
+                    .url("https://joykumbhakar.vercel.app/api/chat")
+                    .post(body)
+                    .build()
+
+                val response = client.newCall(request).execute()
+                val responseBodyStr = response.body?.string() ?: ""
+
+                if (response.isSuccessful && responseBodyStr.isNotBlank()) {
+                    val jsonResponse = org.json.JSONObject(responseBodyStr)
+                    val reply = jsonResponse.optString("text", "Uh oh, something went wrong.")
+
+                    // Add to history
+                    val userMsg = org.json.JSONObject().apply {
+                        put("role", "user")
+                        val partsArray = org.json.JSONArray()
+                        partsArray.put(org.json.JSONObject().put("text", prompt))
+                        put("parts", partsArray)
                     }
+                    val modelMsg = org.json.JSONObject().apply {
+                        put("role", "model")
+                        val partsArray = org.json.JSONArray()
+                        partsArray.put(org.json.JSONObject().put("text", reply))
+                        put("parts", partsArray)
+                    }
+                    conversationHistory.add(userMsg)
+                    conversationHistory.add(modelMsg)
+
+                    while (conversationHistory.size > MAX_HISTORY_PAIRS * 2) {
+                        conversationHistory.removeAt(0)
+                        conversationHistory.removeAt(0)
+                    }
+
+                    handleAIResponse(reply)
+                } else {
+                    throw Exception("Backend returned error: $responseBodyStr")
                 }
-
-                if (!success) {
-                    throw Exception("API connection failed. All keys exhausted or network error.")
-                }
-
-                conversationHistory.add(content(role = "user")  { text(prompt) })
-                conversationHistory.add(content(role = "model") { text(reply)  })
-
-                while (conversationHistory.size > MAX_HISTORY_PAIRS * 2) {
-                    conversationHistory.removeAt(0)
-                    conversationHistory.removeAt(0)
-                }
-
-                handleAIResponse(reply)
-
             } catch (e: CancellationException) {
+                // Ignore cancellation
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { Log.e("JasicaApp", "API Error", e) }
+                withContext(Dispatchers.Main) { android.util.Log.e("JasicaApp", "API Error", e) }
                 handleAIResponse("Server connection failed. Check network stability.")
             }
         }
@@ -1275,7 +1299,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     @SuppressLint("MissingPermission")
     private fun connectClassic(device: BluetoothDevice) {
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
                 if (btAdapter?.isDiscovering == true) btAdapter?.cancelDiscovery()
                 delay(300)
@@ -1333,7 +1357,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private fun sendCommandOverBluetooth(command: String) {
         val payload = "$command\n".toByteArray()
         if (isClassicConnected && classicOutStream != null) {
-            CoroutineScope(Dispatchers.IO).launch { try { classicOutStream?.write(payload); classicOutStream?.flush() } catch (e: IOException) { disconnectAll() } }
+            lifecycleScope.launch(Dispatchers.IO) { try { classicOutStream?.write(payload); classicOutStream?.flush() } catch (e: IOException) { disconnectAll() } }
         } else if (isBleConnected && bluetoothGatt != null && bleWriteChar != null) {
             try { bleWriteChar?.value = payload; bluetoothGatt?.writeCharacteristic(bleWriteChar) } catch (e: SecurityException) {}
         }
@@ -2458,8 +2482,15 @@ fun SettingsScreen(
     var apiKeyInput by remember { mutableStateOf(currentApiKey) }
     var selectedModel by remember { mutableStateOf(currentModel) }
     var wakeWordInput by remember { mutableStateOf(isWakeWordMode) }
+    var waterReminderInput by remember { mutableStateOf(sharedPrefs.getBoolean("WATER_REMINDER", false)) }
+    
+    val context = androidx.compose.ui.platform.LocalContext.current
     
     var currentTab by remember { mutableStateOf(0) }
+    
+    var showPasswordDialog by remember { mutableStateOf(false) }
+    var passwordInput by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -2522,6 +2553,40 @@ fun SettingsScreen(
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(Color.White.copy(alpha = 0.1f))
                                 .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                                .clickable {
+                                    if (waterReminderInput) {
+                                        // User wants to turn it OFF
+                                        showPasswordDialog = true
+                                    } else {
+                                        // Turning ON is free
+                                        waterReminderInput = true
+                                        sharedPrefs.edit().putBoolean("WATER_REMINDER", true).apply()
+                                        WaterReminderManager.scheduleNextAlarm(context)
+                                        android.widget.Toast.makeText(context, "Water Reminder Enabled", android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text("Water Drinking Reminder (30 mins)", color = Color.White, fontFamily = InterFontFamily, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                            Switch(
+                                checked = waterReminderInput,
+                                onCheckedChange = null,
+                                colors = SwitchDefaults.colors(checkedThumbColor = JasicaOrange, checkedTrackColor = JasicaOrange.copy(alpha = 0.5f))
+                            )
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.White.copy(alpha = 0.1f))
+                                .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
                                 .clickable { wakeWordInput = !wakeWordInput }
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -2563,6 +2628,62 @@ fun SettingsScreen(
                     }
                 }
             }
+        }
+
+        if (showPasswordDialog) {
+            AlertDialog(
+                onDismissRequest = { 
+                    showPasswordDialog = false
+                    passwordError = false
+                    passwordInput = ""
+                },
+                title = { Text("Enter Password", color = Color.White) },
+                text = {
+                    Column {
+                        Text("A password is required to turn off the water reminder.", color = Color.White.copy(0.8f))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = passwordInput,
+                            onValueChange = { passwordInput = it; passwordError = false },
+                            label = { Text("Password", color = Color.White.copy(0.7f)) },
+                            isError = passwordError,
+                            textStyle = TextStyle(color = Color.White)
+                        )
+                        if (passwordError) {
+                            Text("Incorrect password", color = Color.Red, fontSize = 12.sp)
+                        }
+                    }
+                },
+                containerColor = Color(0xFF1E1E1E),
+                confirmButton = {
+                    TextButton(onClick = {
+                        val correctPassword = sharedPrefs.getString("WATER_REMINDER_PASSWORD", "0000") ?: "0000"
+                        if (passwordInput == correctPassword) {
+                            // Correct password
+                            waterReminderInput = false
+                            sharedPrefs.edit().putBoolean("WATER_REMINDER", false).apply()
+                            WaterReminderManager.stopAlarm(context)
+                            android.widget.Toast.makeText(context, "Water Reminder Disabled", android.widget.Toast.LENGTH_SHORT).show()
+                            showPasswordDialog = false
+                            passwordError = false
+                            passwordInput = ""
+                        } else {
+                            passwordError = true
+                        }
+                    }) {
+                        Text("Confirm", color = JasicaOrange)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { 
+                        showPasswordDialog = false
+                        passwordError = false
+                        passwordInput = ""
+                    }) {
+                        Text("Cancel", color = Color.White.copy(0.7f))
+                    }
+                }
+            )
         }
     }
 }

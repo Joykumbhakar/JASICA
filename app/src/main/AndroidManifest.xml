@@ -31,7 +31,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
         android:allowBackup="true"
         android:icon="@drawable/jasica"
@@ -91,7 +93,68 @@
             </intent-filter>
         </activity-alias>
 
+        <activity-alias
+            android:name=".AliasJijuDidi"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/jiju_didi"
+            android:roundIcon="@drawable/jiju_didi"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".AliasQween"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/qween"
+            android:roundIcon="@drawable/qween"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".AliasThinking"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/thinking"
+            android:roundIcon="@drawable/thinking"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".AliasThinking2"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/thinking2"
+            android:roundIcon="@drawable/thinking2"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
         <service android:name=".JarvisService" android:foregroundServiceType="microphone|connectedDevice" android:exported="false" />
+
+        <receiver android:name=".WaterAlarmReceiver" android:exported="false" />
+        
+        <activity
+            android:name=".WaterAlarmActivity"
+            android:showOnLockScreen="true"
+            android:turnScreenOn="true"
+            android:theme="@style/Theme.Controller"
+            android:exported="false" />
     </application>
 
 </manifest>
