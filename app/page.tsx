@@ -29,10 +29,15 @@ export default function HomePage() {
     camera.position.set(0, 0, 10);
     camera.lookAt(0, 0, 0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true, 
+      alpha: true, 
+      powerPreference: "high-performance",
+      precision: "mediump"
+    });
+    const pixelRatio = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 1.5) : 1;
+    renderer.setPixelRatio(pixelRatio);
+    renderer.shadowMap.enabled = false;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.1;
     renderer.outputEncoding = THREE.sRGBEncoding;
@@ -300,7 +305,7 @@ export default function HomePage() {
 
     function createRoundedPlane(width: number, height: number, radius: number) {
       const shape = createRoundedRectShape(width, height, radius);
-      const geometry = new THREE.ShapeGeometry(shape, 48);
+      const geometry = new THREE.ShapeGeometry(shape, 24);
       const pos = geometry.attributes.position;
       const x = -width / 2, y = -height / 2;
       const uv = new Float32Array(pos.count * 2);
@@ -315,11 +320,9 @@ export default function HomePage() {
     const phoneGroup = new THREE.Group();
     scene.add(phoneGroup);
 
-    const frameGeom = new THREE.ExtrudeGeometry(createRoundedRectShape(phoneWidth, phoneHeight, cornerRadius), { depth: phoneDepth, bevelEnabled: true, bevelSegments: 8, steps: 1, bevelSize: 0.05, bevelThickness: 0.05, curveSegments: 48 });
+    const frameGeom = new THREE.ExtrudeGeometry(createRoundedRectShape(phoneWidth, phoneHeight, cornerRadius), { depth: phoneDepth, bevelEnabled: true, bevelSegments: 4, steps: 1, bevelSize: 0.05, bevelThickness: 0.05, curveSegments: 24 });
     frameGeom.translate(0, 0, -phoneDepth / 2);
     const frameMesh = new THREE.Mesh(frameGeom, materials.frame);
-    frameMesh.castShadow = true;
-    frameMesh.receiveShadow = true;
     phoneGroup.add(frameMesh);
 
     const borderMesh = new THREE.Mesh(createRoundedPlane(phoneWidth - 0.06, phoneHeight - 0.06, cornerRadius - 0.02), materials.screenBorder);
@@ -330,16 +333,16 @@ export default function HomePage() {
     screenMesh.position.z = phoneDepth / 2 + 0.055;
     phoneGroup.add(screenMesh);
 
-    const islandGeom = new THREE.ExtrudeGeometry(createRoundedRectShape(0.84, 0.24, 0.12), { depth: 0.01, bevelEnabled: false, curveSegments: 32 });
+    const islandGeom = new THREE.ExtrudeGeometry(createRoundedRectShape(0.84, 0.24, 0.12), { depth: 0.01, bevelEnabled: false, curveSegments: 16 });
     const islandMesh = new THREE.Mesh(islandGeom, new THREE.MeshBasicMaterial({ color: 0x000000 }));
     islandMesh.position.set(0, phoneHeight / 2 - 0.25, phoneDepth / 2 + 0.058);
     phoneGroup.add(islandMesh);
 
-    const backMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(createRoundedRectShape(phoneWidth - 0.06, phoneHeight - 0.06, cornerRadius - 0.02), { depth: 0.015, bevelEnabled: false, curveSegments: 48 }), materials.backGlass);
+    const backMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(createRoundedRectShape(phoneWidth - 0.06, phoneHeight - 0.06, cornerRadius - 0.02), { depth: 0.015, bevelEnabled: false, curveSegments: 24 }), materials.backGlass);
     backMesh.position.z = -phoneDepth / 2 - 0.055;
     phoneGroup.add(backMesh);
 
-    const panelGeom = new THREE.ExtrudeGeometry(createRoundedRectShape(phoneWidth - 0.18, 4.70, cornerRadius - 0.05), { depth: 0.008, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.015, bevelThickness: 0.015, curveSegments: 48 });
+    const panelGeom = new THREE.ExtrudeGeometry(createRoundedRectShape(phoneWidth - 0.18, 4.70, cornerRadius - 0.05), { depth: 0.008, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.015, bevelThickness: 0.015, curveSegments: 24 });
     const panelMesh = new THREE.Mesh(panelGeom, materials.innerBackPanel);
     panelMesh.rotation.y = Math.PI;
     panelMesh.position.set(0, -0.86, -phoneDepth / 2 - 0.054);
@@ -348,14 +351,12 @@ export default function HomePage() {
 
     const camIslandDepth = 0.08;
     const camIslandBevel = 0.04;
-    const camIslandGeom = new THREE.ExtrudeGeometry(createRoundedRectShape(2.80, 1.55, 0.40), { depth: camIslandDepth, bevelEnabled: true, bevelSegments: 20, steps: 1, bevelSize: camIslandBevel, bevelThickness: camIslandBevel, curveSegments: 64 });
+    const camIslandGeom = new THREE.ExtrudeGeometry(createRoundedRectShape(2.80, 1.55, 0.40), { depth: camIslandDepth, bevelEnabled: true, bevelSegments: 6, steps: 1, bevelSize: camIslandBevel, bevelThickness: camIslandBevel, curveSegments: 32 });
     camIslandGeom.translate(0, 0, -camIslandDepth / 2);
     const camIslandMesh = new THREE.Mesh(camIslandGeom, materials.cameraBump);
     const camY = (phoneHeight / 2) - (1.55 / 2) - 0.18;
     const camBumpCenterZ = -0.25;
     camIslandMesh.position.set(0, camY, camBumpCenterZ);
-    camIslandMesh.castShadow = true;
-    camIslandMesh.receiveShadow = true;
     phoneGroup.add(camIslandMesh);
 
     const islandSurfaceZ = camBumpCenterZ - (camIslandDepth / 2) - camIslandBevel;
@@ -363,35 +364,35 @@ export default function HomePage() {
     function createProMaxLens(x: number, y: number, radius: number, surfaceZ: number) {
       const group = new THREE.Group();
       group.position.set(x, y, surfaceZ);
-      const collarGeom = new THREE.CylinderGeometry(radius + 0.058, radius + 0.068, 0.025, 64);
+      const collarGeom = new THREE.CylinderGeometry(radius + 0.058, radius + 0.068, 0.025, 32);
       collarGeom.rotateX(Math.PI / 2);
       const collarMesh = new THREE.Mesh(collarGeom, materials.lensRingBase);
       collarMesh.position.z = -0.0125;
       group.add(collarMesh);
 
-      const barrelGeom = new THREE.CylinderGeometry(radius + 0.038, radius + 0.038, 0.09, 64, 1, true);
+      const barrelGeom = new THREE.CylinderGeometry(radius + 0.038, radius + 0.038, 0.09, 32, 1, true);
       barrelGeom.rotateX(Math.PI / 2);
       const barrelMesh = new THREE.Mesh(barrelGeom, materials.lensInnerBezel);
       barrelMesh.position.z = -0.07;
       group.add(barrelMesh);
 
-      const bezelMesh = new THREE.Mesh(new THREE.RingGeometry(radius - 0.05, radius + 0.005, 64), materials.lensInnerBezel);
+      const bezelMesh = new THREE.Mesh(new THREE.RingGeometry(radius - 0.05, radius + 0.005, 32), materials.lensInnerBezel);
       bezelMesh.rotation.y = Math.PI;
       bezelMesh.position.z = -0.093;
       group.add(bezelMesh);
 
-      const glassMesh = new THREE.Mesh(new THREE.CircleGeometry(radius - 0.018, 64), materials.lensGlass);
+      const glassMesh = new THREE.Mesh(new THREE.CircleGeometry(radius - 0.018, 32), materials.lensGlass);
       glassMesh.rotation.y = Math.PI;
       glassMesh.position.z = -0.085;
       group.add(glassMesh);
 
       const sensorZ = -0.05;
-      const aperture = new THREE.Mesh(new THREE.RingGeometry(radius * 0.3, radius * 0.85, 48), new THREE.MeshBasicMaterial({ color: 0x030303 }));
+      const aperture = new THREE.Mesh(new THREE.RingGeometry(radius * 0.3, radius * 0.85, 24), new THREE.MeshBasicMaterial({ color: 0x030303 }));
       aperture.rotation.y = Math.PI;
       aperture.position.z = sensorZ;
       group.add(aperture);
 
-      const sensorMesh = new THREE.Mesh(new THREE.CircleGeometry(radius * 0.3, 32), materials.pupilReflection);
+      const sensorMesh = new THREE.Mesh(new THREE.CircleGeometry(radius * 0.3, 16), materials.pupilReflection);
       sensorMesh.rotation.y = Math.PI;
       sensorMesh.position.z = sensorZ - 0.001;
       group.add(sensorMesh);
@@ -519,21 +520,29 @@ export default function HomePage() {
       updateScrollState();
     }
 
+    let isVisible = true;
     function updateScrollState() {
+      const scrollY = typeof window !== "undefined" ? window.scrollY : 0;
       const scrollRange = window.innerHeight * 1.5;
-      const scrollProgress = Math.min(Math.max(window.scrollY / scrollRange, 0), 1);
+      const scrollProgress = Math.min(Math.max(scrollY / scrollRange, 0), 1);
       targetRotY = (-Math.PI / 4) * (1 - scrollProgress);
       targetScale = baseScale * (1 - scrollProgress * 0.20);
       targetPosY = basePosY + scrollProgress * (Math.abs(basePosY) - 0.5);
+      
+      // Pause WebGL rendering when scrolled past the hero view to save 100% GPU/CPU
+      isVisible = scrollY < window.innerHeight * 1.4;
     }
 
-    window.addEventListener("scroll", updateScrollState);
-    window.addEventListener("resize", updateResponsiveLayout);
+    window.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateResponsiveLayout, { passive: true });
     updateResponsiveLayout();
 
     let reqId: number;
     function animate() {
       reqId = requestAnimationFrame(animate);
+
+      if (!isVisible) return;
+
       currentRotY += (targetRotY - currentRotY) * 0.08;
       currentScale += (targetScale - currentScale) * 0.08;
       currentPosY += (targetPosY - currentPosY) * 0.08;
