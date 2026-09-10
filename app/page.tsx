@@ -41,30 +41,93 @@ export default function HomePage() {
     container.innerHTML = "";
     container.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    // Realistic Studio HDR Environment Map for Metallic & Glass Reflections
+    const envCanvas = document.createElement("canvas");
+    envCanvas.width = 1024;
+    envCanvas.height = 512;
+    const envCtx = envCanvas.getContext("2d")!;
+    
+    // Deep studio gradient background
+    const bgGrad = envCtx.createLinearGradient(0, 0, 0, 512);
+    bgGrad.addColorStop(0, "#303e54");
+    bgGrad.addColorStop(0.35, "#151d2a");
+    bgGrad.addColorStop(0.65, "#080c14");
+    bgGrad.addColorStop(1, "#1c2636");
+    envCtx.fillStyle = bgGrad;
+    envCtx.fillRect(0, 0, 1024, 512);
+    
+    // Top Studio Overhead Softbox (Specular key reflection along top bevel)
+    const topSoftbox = envCtx.createRadialGradient(512, 80, 10, 512, 80, 360);
+    topSoftbox.addColorStop(0, "rgba(255, 255, 255, 1.0)");
+    topSoftbox.addColorStop(0.25, "rgba(235, 245, 255, 0.9)");
+    topSoftbox.addColorStop(0.6, "rgba(180, 210, 255, 0.35)");
+    topSoftbox.addColorStop(1, "rgba(0, 0, 0, 0)");
+    envCtx.fillStyle = topSoftbox;
+    envCtx.fillRect(0, 0, 1024, 300);
+
+    // Left Rim Softbox (Long vertical highlight strip for sharp edge reflection)
+    const leftStrip = envCtx.createLinearGradient(120, 0, 280, 0);
+    leftStrip.addColorStop(0, "rgba(0, 0, 0, 0)");
+    leftStrip.addColorStop(0.3, "rgba(255, 255, 255, 0.95)");
+    leftStrip.addColorStop(0.7, "rgba(255, 255, 255, 0.95)");
+    leftStrip.addColorStop(1, "rgba(0, 0, 0, 0)");
+    envCtx.fillStyle = leftStrip;
+    envCtx.fillRect(100, 30, 200, 440);
+
+    // Right Rim Softbox (Sleek edge shine for buttons and right rail)
+    const rightStrip = envCtx.createLinearGradient(740, 0, 900, 0);
+    rightStrip.addColorStop(0, "rgba(0, 0, 0, 0)");
+    rightStrip.addColorStop(0.3, "rgba(245, 250, 255, 0.9)");
+    rightStrip.addColorStop(0.7, "rgba(245, 250, 255, 0.9)");
+    rightStrip.addColorStop(1, "rgba(0, 0, 0, 0)");
+    envCtx.fillStyle = rightStrip;
+    envCtx.fillRect(730, 30, 200, 440);
+
+    // Ground bounce reflection
+    const groundBounce = envCtx.createRadialGradient(512, 490, 10, 512, 490, 280);
+    groundBounce.addColorStop(0, "rgba(200, 225, 255, 0.65)");
+    groundBounce.addColorStop(1, "rgba(0, 0, 0, 0)");
+    envCtx.fillStyle = groundBounce;
+    envCtx.fillRect(200, 360, 624, 152);
+
+    const envTexture = new THREE.CanvasTexture(envCanvas);
+    envTexture.mapping = THREE.EquirectangularReflectionMapping;
+    envTexture.encoding = THREE.sRGBEncoding;
+
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+    const envMap = pmremGenerator.fromEquirectangular(envTexture).texture;
+    scene.environment = envMap;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
-    keyLight.position.set(5, 8, 5);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.6);
+    keyLight.position.set(5, 9, 6);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = 2048;
     keyLight.shadow.mapSize.height = 2048;
     keyLight.shadow.bias = -0.0001;
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0xeef2ff, 0.7);
-    fillLight.position.set(-6, -4, 5);
+    const fillLight = new THREE.DirectionalLight(0xe4edff, 1.2);
+    fillLight.position.set(-6, -3, 6);
     scene.add(fillLight);
 
-    const rimLight = new THREE.SpotLight(0xffffff, 3.5);
-    rimLight.position.set(4, 6, -8);
+    const rimLight = new THREE.SpotLight(0xffffff, 4.2);
+    rimLight.position.set(5, 7, -8);
     rimLight.lookAt(0, 0, 0);
-    rimLight.penumbra = 0.5;
+    rimLight.penumbra = 0.4;
     scene.add(rimLight);
 
-    const rimLight2 = new THREE.DirectionalLight(0xffffff, 1.2);
-    rimLight2.position.set(-5, 5, -8);
+    const rimLight2 = new THREE.DirectionalLight(0xddeeff, 2.0);
+    rimLight2.position.set(-6, 6, -8);
     scene.add(rimLight2);
+
+    // Specular glint light across metallic chamfer
+    const specularGlint = new THREE.PointLight(0xffffff, 2.0, 15);
+    specularGlint.position.set(2, 4, 3);
+    scene.add(specularGlint);
 
     const screenCanvas = document.createElement("canvas");
     screenCanvas.width = 1200;
@@ -118,23 +181,104 @@ export default function HomePage() {
       }
     }
 
-    const colors = { base: 0x111622, matte: 0x0e111a, bump: 0x121724, logo: 0x040508, panelLine: 0x090c14 };
+    const colors = { 
+      base: 0x181e2b, 
+      matte: 0x0e121a, 
+      bump: 0x141a26, 
+      logo: 0x3d4b63, 
+      panelLine: 0x090c14 
+    };
+
     const materials = {
-      frame: new THREE.MeshPhysicalMaterial({ color: colors.base, metalness: 0.85, roughness: 0.35, clearcoat: 0.2, clearcoatRoughness: 0.5 }),
-      backGlass: new THREE.MeshPhysicalMaterial({ color: colors.matte, metalness: 0.15, roughness: 0.65, clearcoat: 0.1, clearcoatRoughness: 0.9 }),
-      innerBackPanel: new THREE.MeshPhysicalMaterial({ color: colors.matte, metalness: 0.12, roughness: 0.7, clearcoat: 0.05, clearcoatRoughness: 0.95 }),
+      frame: new THREE.MeshPhysicalMaterial({ 
+        color: colors.base, 
+        metalness: 0.96, 
+        roughness: 0.16, 
+        clearcoat: 0.9, 
+        clearcoatRoughness: 0.1,
+        reflectivity: 1.0 
+      }),
+      backGlass: new THREE.MeshPhysicalMaterial({ 
+        color: colors.matte, 
+        metalness: 0.2, 
+        roughness: 0.4, 
+        clearcoat: 0.75, 
+        clearcoatRoughness: 0.2 
+      }),
+      innerBackPanel: new THREE.MeshPhysicalMaterial({ 
+        color: colors.matte, 
+        metalness: 0.18, 
+        roughness: 0.5, 
+        clearcoat: 0.6, 
+        clearcoatRoughness: 0.25 
+      }),
       screen: new THREE.MeshBasicMaterial({ map: screenTex, side: THREE.FrontSide, toneMapped: false }),
-      cameraBump: new THREE.MeshPhysicalMaterial({ color: colors.bump, metalness: 0.6, roughness: 0.4 }),
-      lensRingBase: new THREE.MeshPhysicalMaterial({ color: colors.base, metalness: 0.9, roughness: 0.2 }),
-      lensInnerBezel: new THREE.MeshPhysicalMaterial({ color: 0x050505, metalness: 0.8, roughness: 0.5 }),
-      lensGlass: new THREE.MeshPhysicalMaterial({ color: 0x020202, metalness: 0.3, roughness: 0.0, transparent: true, opacity: 0.6, clearcoat: 1.0 }),
-      pupilReflection: new THREE.MeshPhysicalMaterial({ color: 0x1a3d82, emissive: 0x020512, metalness: 0.8, roughness: 0.1, clearcoat: 1.0 }),
-      logo: new THREE.MeshPhysicalMaterial({ color: colors.logo, metalness: 0.7, roughness: 0.1, clearcoat: 1.0, side: THREE.DoubleSide }),
-      antenna: new THREE.MeshBasicMaterial({ color: 0x121620 }),
-      blackDetail: new THREE.MeshBasicMaterial({ color: 0x111111 }),
-      screenBorder: new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0.1, roughness: 0.1, clearcoat: 1.0 }),
-      buttonMat: new THREE.MeshPhysicalMaterial({ color: colors.base, metalness: 0.95, roughness: 0.2, clearcoat: 0.6 }),
-      captureBtnMat: new THREE.MeshPhysicalMaterial({ color: 0x0a0d14, metalness: 0.9, roughness: 0.1, clearcoat: 1.0 })
+      cameraBump: new THREE.MeshPhysicalMaterial({ 
+        color: colors.bump, 
+        metalness: 0.75, 
+        roughness: 0.2, 
+        clearcoat: 0.9, 
+        clearcoatRoughness: 0.1 
+      }),
+      lensRingBase: new THREE.MeshPhysicalMaterial({ 
+        color: 0x35445c, 
+        metalness: 0.98, 
+        roughness: 0.08, 
+        clearcoat: 1.0, 
+        clearcoatRoughness: 0.05 
+      }),
+      lensInnerBezel: new THREE.MeshPhysicalMaterial({ 
+        color: 0x06080e, 
+        metalness: 0.85, 
+        roughness: 0.35 
+      }),
+      lensGlass: new THREE.MeshPhysicalMaterial({ 
+        color: 0x030408, 
+        metalness: 0.2, 
+        roughness: 0.0, 
+        transparent: true, 
+        opacity: 0.65, 
+        clearcoat: 1.0, 
+        clearcoatRoughness: 0.02 
+      }),
+      pupilReflection: new THREE.MeshPhysicalMaterial({ 
+        color: 0x1d4796, 
+        emissive: 0x030a1c, 
+        metalness: 0.9, 
+        roughness: 0.05, 
+        clearcoat: 1.0 
+      }),
+      logo: new THREE.MeshPhysicalMaterial({ 
+        color: colors.logo, 
+        metalness: 0.98, 
+        roughness: 0.08, 
+        clearcoat: 1.0, 
+        clearcoatRoughness: 0.05, 
+        side: THREE.DoubleSide 
+      }),
+      antenna: new THREE.MeshBasicMaterial({ color: 0x141822 }),
+      blackDetail: new THREE.MeshBasicMaterial({ color: 0x0f1118 }),
+      screenBorder: new THREE.MeshPhysicalMaterial({ 
+        color: 0x000000, 
+        metalness: 0.15, 
+        roughness: 0.05, 
+        clearcoat: 1.0, 
+        clearcoatRoughness: 0.05 
+      }),
+      buttonMat: new THREE.MeshPhysicalMaterial({ 
+        color: colors.base, 
+        metalness: 0.98, 
+        roughness: 0.12, 
+        clearcoat: 0.9, 
+        clearcoatRoughness: 0.1 
+      }),
+      captureBtnMat: new THREE.MeshPhysicalMaterial({ 
+        color: 0x0c1018, 
+        metalness: 0.95, 
+        roughness: 0.15, 
+        clearcoat: 1.0, 
+        clearcoatRoughness: 0.08 
+      })
     };
 
     renderScreenComposite();
@@ -393,6 +537,9 @@ export default function HomePage() {
       currentRotY += (targetRotY - currentRotY) * 0.08;
       currentScale += (targetScale - currentScale) * 0.08;
       currentPosY += (targetPosY - currentPosY) * 0.08;
+
+      specularGlint.position.x = 2 + Math.sin(currentRotY) * 3;
+      specularGlint.position.z = 3 + Math.cos(currentRotY) * 2;
 
       phoneGroup.rotation.y = currentRotY;
       phoneGroup.rotation.x = 0;
