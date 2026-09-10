@@ -831,9 +831,14 @@ export default function HomePage() {
                         <span className="text-zinc-500 font-medium text-base sm:text-lg whitespace-nowrap">Direct Link</span>
                     </div>
                     <div className="sm:text-right w-full sm:w-2/3 flex justify-start sm:justify-end pl-11 sm:pl-0 mt-1 sm:mt-0">
-                        <a href="/apks/JASICA.apk" download="JASICA.apk" className="text-blue-600 font-semibold text-base sm:text-lg flex items-center gap-2 cursor-pointer group">
-                            <span className="underline underline-offset-4 decoration-1">Download App (.apk)</span>
-                            <ChevronRight strokeWidth={1.5} className="w-4 h-4 text-blue-600 group-hover:translate-x-0.5 transition-transform" />
+                        <a href="/apks/JASICA.apk" download="JASICA.apk" onClick={handleDownload} className="text-blue-600 font-semibold text-base sm:text-lg flex items-center gap-2 cursor-pointer group">
+                            {isDownloading ? (
+                                <div className="w-4 h-4 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
+                            ) : null}
+                            <span className="underline underline-offset-4 decoration-1">
+                                {isDownloading ? "Starting Download..." : "Download App (.apk)"}
+                            </span>
+                            {!isDownloading && <ChevronRight strokeWidth={1.5} className="w-4 h-4 text-blue-600 group-hover:translate-x-0.5 transition-transform" />}
                         </a>
                     </div>
                 </div>
@@ -1074,7 +1079,14 @@ export default function HomePage() {
                 <div>
                     <h3 className="text-zinc-900 font-semibold mb-3">Explore Jasica</h3>
                     <ul className="space-y-3 font-normal">
-                        <li><a href="/apks/JASICA.apk" download="JASICA.apk" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Android App (.apk)</a></li>
+                        <li>
+                            <a href="/apks/JASICA.apk" download="JASICA.apk" onClick={handleDownload} className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer flex items-center gap-1.5 w-fit">
+                                {isDownloading ? (
+                                    <div className="w-3 h-3 border-2 border-zinc-400/30 border-t-zinc-400 rounded-full animate-spin" />
+                                ) : null}
+                                {isDownloading ? "Starting..." : "Android App (.apk)"}
+                            </a>
+                        </li>
                         <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Smart Hardware</a></li>
                         <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Cloud Config</a></li>
                     </ul>
