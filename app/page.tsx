@@ -526,7 +526,7 @@ export default function HomePage() {
     phoneGroup.add(logoGroup);
 
     let baseScale = 1.35;
-    let basePosY = -4.1;
+    let basePosY = -3.95;
     let basePosX = -0.25;      // Desktop: Optical center
     let baseRotY = -Math.PI / 4; // Desktop: 45° angled view
 
@@ -576,7 +576,7 @@ export default function HomePage() {
         baseRotY = -Math.PI / 4; // 45° angle
       } else {
         baseScale = 1.35;
-        basePosY = -4.1;
+        basePosY = -3.95;
         basePosX = -0.25;        // Optical center for desktop
         baseRotY = -Math.PI / 4; // 45° angle
       }
