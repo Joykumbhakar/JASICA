@@ -35,7 +35,7 @@ export default function HomePage() {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.1;
-    renderer.outputColorSpace = THREE.SRGBColorSpace; // equivalent to outputEncoding = sRGBEncoding in modern three.js
+    renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     container.innerHTML = "";
@@ -77,7 +77,7 @@ export default function HomePage() {
     grad.addColorStop(1, "#0b131e");
 
     const screenTex = new THREE.CanvasTexture(screenCanvas);
-    screenTex.colorSpace = THREE.SRGBColorSpace;
+    screenTex.encoding = THREE.sRGBEncoding;
     screenTex.minFilter = THREE.LinearFilter;
     screenTex.generateMipmaps = false;
 
@@ -469,7 +469,7 @@ export default function HomePage() {
     </nav>
 
     <div className="absolute top-[22vh] sm:top-[20vh] md:top-[18vh] left-0 w-full px-4 text-center z-0 pointer-events-none flex flex-col items-center">
-        <h1 className="mobile-title-scale text-[7rem] sm:text-[9rem] md:text-[12rem] lg:text-[16rem] font-bold tracking-jasica-tighter leading-[0.8] animate-fade-up pb-2 whitespace-nowrap">
+        <h1 className="mobile-title-scale text-[7rem] sm:text-[9rem] md:text-[12rem] lg:text-[16rem] font-bold tracking-apple-tighter leading-[0.8] animate-fade-up pb-2 whitespace-nowrap">
             <span className="text-black">Jasica</span>
             <span className="bg-gradient-to-b from-zinc-600 to-black bg-clip-text text-transparent">AI.</span>
         </h1>
@@ -550,9 +550,9 @@ export default function HomePage() {
                 <p className="text-lg md:text-xl text-zinc-500 font-normal max-w-2xl mx-auto">A seamless blend of emotional AI, hardware control, and everyday utility.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-5 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-0 md:gap-6 divide-y divide-zinc-300 md:divide-y-0">
                 
-                <div className="col-span-1 md:col-span-6 bg-white border border-zinc-200 rounded-[1.5rem] md:rounded-[2rem] p-6 sm:p-8 md:p-12 flex flex-col md:flex-row gap-6 md:gap-10 items-start md:items-center overflow-hidden">
+                <div className="col-span-1 md:col-span-6 md:bg-white md:border md:border-zinc-200 md:rounded-[2rem] py-10 md:p-12 flex flex-col md:flex-row gap-6 md:gap-10 items-start md:items-center md:overflow-hidden">
                     <div className="flex-1 w-full">
                         <div className="w-12 h-12 rounded-[14px] bg-[#5856D6] flex items-center justify-center text-white mb-5 md:mb-6 shadow-sm">
                             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.25" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
@@ -592,7 +592,7 @@ export default function HomePage() {
                     </div>
                 </div>
 
-                <div className="col-span-1 md:col-span-4 bg-white border border-zinc-200 rounded-[1.5rem] md:rounded-[2rem] p-6 sm:p-8 md:p-10 flex flex-col justify-between">
+                <div className="col-span-1 md:col-span-4 md:bg-white md:border md:border-zinc-200 md:rounded-[2rem] py-10 md:p-10 flex flex-col justify-between">
                     <div>
                         <div className="w-12 h-12 rounded-[14px] bg-[#FF9500] flex items-center justify-center text-white mb-5 md:mb-6 shadow-sm">
                             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
@@ -634,7 +634,7 @@ export default function HomePage() {
                     </div>
                 </div>
 
-                <div className="col-span-1 md:col-span-2 bg-white border border-zinc-200 rounded-[1.5rem] md:rounded-[2rem] p-6 sm:p-8 md:p-10 flex flex-col justify-between">
+                <div className="col-span-1 md:col-span-2 md:bg-white md:border md:border-zinc-200 md:rounded-[2rem] py-10 md:p-10 flex flex-col justify-between">
                     <div>
                         <div className="w-12 h-12 rounded-[14px] bg-[#FF3B30] flex items-center justify-center text-white mb-5 md:mb-6 shadow-sm">
                             <Droplet strokeWidth={1.5} className="w-6 h-6" />
@@ -651,7 +651,7 @@ export default function HomePage() {
                     </div>
                 </div>
                 
-                <div className="col-span-1 md:col-span-3 bg-white border border-zinc-200 rounded-[1.5rem] md:rounded-[2rem] p-6 sm:p-8 md:p-10 flex flex-col justify-between">
+                <div className="col-span-1 md:col-span-3 md:bg-white md:border md:border-zinc-200 md:rounded-[2rem] py-10 md:p-10 flex flex-col justify-between">
                     <div>
                         <div className="w-12 h-12 rounded-[14px] bg-[#007AFF] flex items-center justify-center text-white mb-5 md:mb-6 shadow-sm">
                             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
@@ -702,7 +702,7 @@ export default function HomePage() {
                     </div>
                 </div>
 
-                <div className="col-span-1 md:col-span-3 bg-white border border-zinc-200 rounded-[1.5rem] md:rounded-[2rem] p-6 sm:p-8 md:p-10 flex flex-col justify-between">
+                <div className="col-span-1 md:col-span-3 md:bg-white md:border md:border-zinc-200 md:rounded-[2rem] py-10 md:p-10 flex flex-col justify-between">
                     <div>
                         <div className="w-12 h-12 rounded-[14px] bg-[#8E8E93] flex items-center justify-center text-white mb-5 md:mb-6 shadow-sm">
                             <Paintbrush strokeWidth={1.5} className="w-6 h-6" />
