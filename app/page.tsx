@@ -9,6 +9,121 @@ import {
   SmartphoneCharging, Paintbrush, Check, Globe
 } from "lucide-react";
 
+const PremiumVerifiedBadge = ({ className = '' }) => {
+  const points = 16;
+  const outerRadius = 45;
+  const innerRadius = 36;
+  const outerRounding = 0.5;
+  const innerRounding = 0.4;
+  const checkColor = '#FFFFFF';
+
+  const generatePath = () => {
+    const cx = 50;
+    const cy = 50;
+    const numVertices = points * 2;
+    const angleStep = (Math.PI * 2) / numVertices;
+    const vertices = [];
+
+    for (let i = 0; i < numVertices; i++) {
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      const angle = i * angleStep - Math.PI / 2; 
+      vertices.push({
+        x: cx + radius * Math.cos(angle),
+        y: cy + radius * Math.sin(angle),
+        isOuter: i % 2 === 0
+      });
+    }
+
+    let d = "";
+    for (let i = 0; i < numVertices; i++) {
+      const v = vertices[i];
+      const prevV = vertices[(i - 1 + numVertices) % numVertices];
+      const nextV = vertices[(i + 1) % numVertices];
+
+      const rounding = v.isOuter ? outerRounding : innerRounding;
+
+      const pInX = v.x + (prevV.x - v.x) * rounding;
+      const pInY = v.y + (prevV.y - v.y) * rounding;
+
+      const pOutX = v.x + (nextV.x - v.x) * rounding;
+      const pOutY = v.y + (nextV.y - v.y) * rounding;
+
+      if (i === 0) {
+        d += `M ${pInX.toFixed(2)} ${pInY.toFixed(2)} `;
+      } else {
+        d += `L ${pInX.toFixed(2)} ${pInY.toFixed(2)} `;
+      }
+
+      d += `Q ${v.x.toFixed(2)} ${v.y.toFixed(2)} ${pOutX.toFixed(2)} ${pOutY.toFixed(2)} `;
+    }
+    d += "Z";
+    return d;
+  };
+
+  const svgPath = generatePath();
+
+  return (
+    <div className={`inline-flex items-center shrink-0 ${className}`} title="Verified Creator">
+      <svg viewBox="0 0 100 100" width="20" height="20" className="shrink-0">
+        <defs>
+          <style>{`
+            .badge-float { animation: smoothFloat 6s ease-in-out infinite; }
+            .star-shape { transform-origin: 50px 50px; animation: spinStar 40s linear infinite; }
+            .check-mark {
+              stroke-dasharray: 60;
+              stroke-dashoffset: 60;
+              animation: drawCheck 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+              animation-delay: 0.2s;
+            }
+            @keyframes smoothFloat {
+              0%, 100% { transform: translateY(0px); }
+              50% { transform: translateY(-1px); }
+            }
+            @keyframes spinStar {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+            }
+            @keyframes drawCheck {
+              to { stroke-dashoffset: 0; }
+            }
+          `}</style>
+          <linearGradient id="goldBase" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FFEA94" />
+            <stop offset="25%" stopColor="#FFD43D" />
+            <stop offset="50%" stopColor="#E8A300" />
+            <stop offset="80%" stopColor="#C27A00" />
+            <stop offset="100%" stopColor="#995700" />
+          </linearGradient>
+          <linearGradient id="goldEdge" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FFF8D6" stopOpacity="1" />
+            <stop offset="35%" stopColor="#FFD43D" stopOpacity="0.3" />
+            <stop offset="65%" stopColor="#E8A300" stopOpacity="0.1" />
+            <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.9" />
+          </linearGradient>
+        </defs>
+        <g className="badge-float">
+          <path 
+            className="star-shape"
+            d={svgPath} 
+            fill="url(#goldBase)" 
+            stroke="url(#goldEdge)" 
+            strokeWidth="3" 
+          />
+          <path 
+            className="check-mark"
+            d="M 32 52.5 L 43.5 64 L 68 39.5" 
+            fill="none" 
+            stroke={checkColor} 
+            strokeWidth="8.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+          />
+        </g>
+      </svg>
+    </div>
+  );
+};
+
 export default function HomePage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -1180,22 +1295,7 @@ export default function HomePage() {
               <h4 className="text-zinc-900 font-semibold text-sm leading-tight truncate">
                 Bristi Kumbhakar
               </h4>
-              {/* Blue Verified Badge with Smooth Rounded Scallops/Petals */}
-              <span className="inline-flex items-center shrink-0" title="Verified Creator">
-                <svg viewBox="0 0 24 24" width="18" height="18" aria-label="Verified" className="shrink-0">
-                  <g fill="#1D9BF0">
-                    <rect x="2.5" y="2.5" width="19" height="19" rx="2.5" />
-                    <rect x="2.5" y="2.5" width="19" height="19" rx="2.5" transform="rotate(18 12 12)" />
-                    <rect x="2.5" y="2.5" width="19" height="19" rx="2.5" transform="rotate(36 12 12)" />
-                    <rect x="2.5" y="2.5" width="19" height="19" rx="2.5" transform="rotate(54 12 12)" />
-                    <rect x="2.5" y="2.5" width="19" height="19" rx="2.5" transform="rotate(72 12 12)" />
-                  </g>
-                  <path
-                    d="M10.2 15.6L6.8 12.2l1.3-1.3 2.1 2.1 5.6-5.6 1.3 1.3-6.9 6.9z"
-                    fill="#ffffff"
-                  />
-                </svg>
-              </span>
+              <PremiumVerifiedBadge />
             </div>
             <p className="text-[11px] text-zinc-500 font-normal mt-0.5">
               Current Status: Intern
