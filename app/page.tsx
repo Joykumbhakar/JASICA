@@ -518,9 +518,22 @@ export default function HomePage() {
     let currentScale = targetScale;
     let currentPosY = targetPosY;
 
-    function updateResponsiveLayout() {
+    let lastWidth = window.innerWidth;
+    let lastHeight = window.innerHeight;
+
+    function updateResponsiveLayout(isInit = false) {
       const width = window.innerWidth;
       const height = window.innerHeight;
+      
+      // On mobile, scrolling shows/hides the URL bar, causing continuous 'resize' events.
+      // Re-sizing WebGL buffers on every scroll frame causes severe glitching/stuttering.
+      // We ignore minor height-only changes (like URL bar) unless it's the initial setup.
+      if (!isInit && Math.abs(width - lastWidth) < 10 && Math.abs(height - lastHeight) < 150) {
+        return;
+      }
+      lastWidth = width;
+      lastHeight = height;
+
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
@@ -554,19 +567,22 @@ export default function HomePage() {
       isVisible = scrollY < window.innerHeight * 1.4;
     }
 
+    const onResize = () => updateResponsiveLayout(false);
+
     window.addEventListener("scroll", updateScrollState, { passive: true });
-    window.addEventListener("resize", updateResponsiveLayout, { passive: true });
-    updateResponsiveLayout();
+    window.addEventListener("resize", onResize, { passive: true });
+    updateResponsiveLayout(true);
 
     let reqId: number;
     function animate() {
       reqId = requestAnimationFrame(animate);
 
-      if (!isVisible) return;
-
+      // Always update the interpolation math so the model doesn't snap if it becomes visible again
       currentRotY += (targetRotY - currentRotY) * 0.08;
       currentScale += (targetScale - currentScale) * 0.08;
       currentPosY += (targetPosY - currentPosY) * 0.08;
+
+      if (!isVisible) return; // Skip actual WebGL rendering
 
       specularGlint.position.x = 2 + Math.sin(currentRotY) * 3;
       specularGlint.position.z = 3 + Math.cos(currentRotY) * 2;
@@ -583,7 +599,7 @@ export default function HomePage() {
     return () => {
       cancelAnimationFrame(reqId);
       window.removeEventListener("scroll", updateScrollState);
-      window.removeEventListener("resize", updateResponsiveLayout);
+      window.removeEventListener("resize", onResize);
       renderer.dispose();
     };
   }, []);
