@@ -623,10 +623,14 @@ export default function HomePage() {
     </div>
 
     <div className="fixed bottom-10 md:bottom-14 left-0 w-full flex justify-center z-50 pointer-events-none animate-fade-up delay-200">
-        <button className="pointer-events-auto bg-black text-white text-lg md:text-xl font-medium px-12 md:px-16 py-4 md:py-5 rounded-full cursor-pointer transition-colors duration-200 flex items-center gap-3">
+        <a
+            href="/apks/JASICA.apk"
+            download="JASICA.apk"
+            className="pointer-events-auto bg-black hover:bg-zinc-800 text-white text-lg md:text-xl font-medium px-12 md:px-16 py-4 md:py-5 rounded-full cursor-pointer transition-all duration-200 flex items-center gap-3 shadow-2xl active:scale-95"
+        >
             <Download strokeWidth={1} className="w-6 h-6" />
             Download APK
-        </button>
+        </a>
     </div>
 
     <div id="canvas-container" ref={containerRef} />
@@ -678,9 +682,9 @@ export default function HomePage() {
                         <span className="text-zinc-500 font-medium text-base sm:text-lg whitespace-nowrap">Direct Link</span>
                     </div>
                     <div className="sm:text-right w-full sm:w-2/3 flex justify-start sm:justify-end pl-11 sm:pl-0 mt-1 sm:mt-0">
-                        <a href="#download" className="text-blue-600 font-semibold text-base sm:text-lg flex items-center gap-2 cursor-pointer group">
+                        <a href="/apks/JASICA.apk" download="JASICA.apk" className="text-blue-600 font-semibold text-base sm:text-lg flex items-center gap-2 cursor-pointer group">
                             <span className="underline underline-offset-4 decoration-1">Download App (.apk)</span>
-                            <ChevronRight strokeWidth={1.5} className="w-4 h-4 text-blue-600" />
+                            <ChevronRight strokeWidth={1.5} className="w-4 h-4 text-blue-600 group-hover:translate-x-0.5 transition-transform" />
                         </a>
                     </div>
                 </div>
@@ -890,7 +894,7 @@ export default function HomePage() {
                 <div>
                     <h3 className="text-zinc-900 font-semibold mb-3">Explore Jasica</h3>
                     <ul className="space-y-3 font-normal">
-                        <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Android App</a></li>
+                        <li><a href="/apks/JASICA.apk" download="JASICA.apk" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Android App (.apk)</a></li>
                         <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Smart Hardware</a></li>
                         <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Cloud Config</a></li>
                     </ul>
