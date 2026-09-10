@@ -511,15 +511,20 @@ export default function HomePage() {
 
     let baseScale = 1.45;
     let basePosY = -3.85;
-    let targetRotY = -Math.PI / 4;
-    let targetScale = baseScale;
-    let targetPosY = basePosY;
-    let currentRotY = targetRotY;
-    let currentScale = targetScale;
-    let currentPosY = targetPosY;
+    let basePosX = 0.8;        // Desktop: slight right offset for hero layout
+    let baseRotY = -Math.PI / 4; // Desktop: 45° angled view
 
     let lastWidth = window.innerWidth;
     let lastHeight = window.innerHeight;
+
+    let targetRotY = baseRotY;
+    let targetScale = baseScale;
+    let targetPosY = basePosY;
+    let targetPosX = basePosX;
+    let currentRotY = targetRotY;
+    let currentScale = targetScale;
+    let currentPosY = targetPosY;
+    let currentPosX = targetPosX;
 
     function updateResponsiveLayout(isInit = false) {
       const width = window.innerWidth;
@@ -541,15 +546,23 @@ export default function HomePage() {
       if (width < 480) {
         baseScale = 1.0;
         basePosY = -2.5;
+        basePosX = 0;           // Centered on small mobile
+        baseRotY = 0;           // Face-on, no angle — fits narrow screens
       } else if (width < 768) {
         baseScale = 1.15;
         basePosY = -3.2;
+        basePosX = 0;           // Still centered on large mobile
+        baseRotY = -Math.PI / 8; // Slight 22° angle
       } else if (width < 1024) {
         baseScale = 1.3;
         basePosY = -3.5;
+        basePosX = 0.5;
+        baseRotY = -Math.PI / 6; // Moderate 30° angle
       } else {
         baseScale = 1.45;
         basePosY = -3.85;
+        basePosX = 0.8;
+        baseRotY = -Math.PI / 4; // Full 45° angled view on desktop
       }
       updateScrollState();
     }
@@ -559,9 +572,10 @@ export default function HomePage() {
       const scrollY = typeof window !== "undefined" ? window.scrollY : 0;
       const scrollRange = window.innerHeight * 1.5;
       const scrollProgress = Math.min(Math.max(scrollY / scrollRange, 0), 1);
-      targetRotY = (-Math.PI / 4) * (1 - scrollProgress);
+      targetRotY = baseRotY * (1 - scrollProgress);
       targetScale = baseScale * (1 - scrollProgress * 0.20);
       targetPosY = basePosY + scrollProgress * (Math.abs(basePosY) - 0.5);
+      targetPosX = basePosX * (1 - scrollProgress);
       
       // Pause WebGL rendering when scrolled past the hero view to save 100% GPU/CPU
       isVisible = scrollY < window.innerHeight * 1.4;
@@ -581,6 +595,7 @@ export default function HomePage() {
       currentRotY += (targetRotY - currentRotY) * 0.08;
       currentScale += (targetScale - currentScale) * 0.08;
       currentPosY += (targetPosY - currentPosY) * 0.08;
+      currentPosX += (targetPosX - currentPosX) * 0.08;
 
       if (!isVisible) return; // Skip actual WebGL rendering
 
@@ -591,6 +606,7 @@ export default function HomePage() {
       phoneGroup.rotation.x = 0;
       phoneGroup.scale.set(currentScale, currentScale, currentScale);
       phoneGroup.position.y = currentPosY;
+      phoneGroup.position.x = currentPosX;
 
       renderer.render(scene, camera);
     }
@@ -598,6 +614,7 @@ export default function HomePage() {
 
     return () => {
       cancelAnimationFrame(reqId);
+
       window.removeEventListener("scroll", updateScrollState);
       window.removeEventListener("resize", onResize);
       renderer.dispose();
