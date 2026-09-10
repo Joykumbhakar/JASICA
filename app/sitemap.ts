@@ -1,15 +1,14 @@
-import { MetadataRoute } from "next";
+import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://jasicaai.vercel.app";
-  const currentDate = new Date();
-
   return [
-    {
-      url: baseUrl,
-      lastModified: currentDate,
-      changeFrequency: "weekly",
-      priority: 1.0,
-    },
-  ];
+    { url: 'https://jasicaai.vercel.app', lastModified: new Date() },
+    { url: 'https://jasicaai.vercel.app/privacy-policy', lastModified: new Date() },
+    { url: 'https://jasicaai.vercel.app/hardware-safety', lastModified: new Date() },
+    { url: 'https://jasicaai.vercel.app/api-terms', lastModified: new Date() },
+    { url: 'https://jasicaai.vercel.app/docs/smart-hardware', lastModified: new Date() },
+    { url: 'https://jasicaai.vercel.app/docs/cloud-config', lastModified: new Date() },
+    { url: 'https://jasicaai.vercel.app/docs/arduino-generator', lastModified: new Date() },
+    { url: 'https://jasicaai.vercel.app/docs/release-notes', lastModified: new Date() }
+  ]
 }

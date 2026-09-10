@@ -1087,24 +1087,24 @@ export default function HomePage() {
                                 {isDownloading ? "Starting..." : "Android App (.apk)"}
                             </a>
                         </li>
-                        <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Smart Hardware</a></li>
-                        <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Cloud Config</a></li>
+                        <li><a href="/docs/smart-hardware" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Smart Hardware</a></li>
+                        <li><a href="/docs/cloud-config" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Cloud Config</a></li>
                     </ul>
                 </div>
                 <div>
                     <h3 className="text-zinc-900 font-semibold mb-3">Features</h3>
                     <ul className="space-y-3 font-normal">
-                        <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Voice Assistant</a></li>
-                        <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Hardware Control</a></li>
-                        <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Health Reminders</a></li>
+                        <li><span className="text-zinc-500">Voice Assistant</span></li>
+                        <li><a href="/docs/smart-hardware" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Hardware Control</a></li>
+                        <li><span className="text-zinc-500">Health Reminders</span></li>
                     </ul>
                 </div>
                 <div>
                     <h3 className="text-zinc-900 font-semibold mb-3">System</h3>
                     <ul className="space-y-3 font-normal">
-                        <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Gemini API</a></li>
-                        <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Bluetooth LE</a></li>
-                        <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Local Intents</a></li>
+                        <li><span className="text-zinc-500">Gemini API</span></li>
+                        <li><span className="text-zinc-500">Bluetooth LE</span></li>
+                        <li><span className="text-zinc-500">Local Intents</span></li>
                     </ul>
                 </div>
                 <div>
@@ -1122,8 +1122,8 @@ export default function HomePage() {
                         </p>
                     </div>
                     <ul className="space-y-3 font-normal mt-4 pt-4 border-t border-zinc-200">
-                        <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Arduino Generator</a></li>
-                        <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Release Notes</a></li>
+                        <li><a href="/docs/arduino-generator" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Arduino Generator</a></li>
+                        <li><a href="/docs/release-notes" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Release Notes</a></li>
                     </ul>
                 </div>
             </div>
@@ -1132,11 +1132,11 @@ export default function HomePage() {
                 <div className="flex flex-col xl:flex-row items-start xl:items-center gap-2 xl:gap-8 font-normal">
                     <p>Copyright &copy; 2026 Bristi / Jasica AI. All rights reserved.</p>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                        <a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Privacy Policy</a>
+                        <a href="/privacy-policy" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Privacy Policy</a>
                         <span className="text-zinc-300 hidden sm:inline">|</span>
-                        <a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Hardware Safety</a>
+                        <a href="/hardware-safety" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Hardware Safety</a>
                         <span className="text-zinc-300 hidden sm:inline">|</span>
-                        <a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">API Terms</a>
+                        <a href="/api-terms" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">API Terms</a>
                     </div>
                 </div>
                 <div className="flex items-center gap-2 font-medium text-zinc-600">
@@ -1184,9 +1184,11 @@ export default function HomePage() {
               <span className="inline-flex items-center shrink-0" title="Verified Creator">
                 <svg viewBox="0 0 24 24" width="18" height="18" aria-label="Verified" className="shrink-0">
                   <g fill="#1D9BF0">
-                    <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" />
-                    <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" transform="rotate(30 12 12)" />
-                    <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" transform="rotate(60 12 12)" />
+                    <rect x="2.5" y="2.5" width="19" height="19" rx="2.5" />
+                    <rect x="2.5" y="2.5" width="19" height="19" rx="2.5" transform="rotate(18 12 12)" />
+                    <rect x="2.5" y="2.5" width="19" height="19" rx="2.5" transform="rotate(36 12 12)" />
+                    <rect x="2.5" y="2.5" width="19" height="19" rx="2.5" transform="rotate(54 12 12)" />
+                    <rect x="2.5" y="2.5" width="19" height="19" rx="2.5" transform="rotate(72 12 12)" />
                   </g>
                   <path
                     d="M10.2 15.6L6.8 12.2l1.3-1.3 2.1 2.1 5.6-5.6 1.3 1.3-6.9 6.9z"
