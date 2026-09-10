@@ -1073,9 +1073,11 @@ export default function HomePage() {
               <h4 className="text-zinc-900 font-semibold text-sm leading-tight truncate">
                 Bristi Kumbhakar
               </h4>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200/60">
-                Creator
-              </span>
+              {/* Blue Verified Badge */}
+              <svg viewBox="0 0 22 22" width="17" height="17" aria-label="Verified" title="Verified Creator">
+                <circle cx="11" cy="11" r="11" fill="#1D9BF0" />
+                <path d="M9.07 15.5L5.5 11.93l1.06-1.06 2.51 2.51 6.37-6.37 1.06 1.06L9.07 15.5z" fill="white" />
+              </svg>
             </div>
             <p className="text-[11px] text-zinc-500 font-normal mt-0.5">
               Current Status: Intern
