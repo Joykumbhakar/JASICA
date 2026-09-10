@@ -12,6 +12,27 @@ import {
 export default function HomePage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showCreatorPopup, setShowCreatorPopup] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+
+  // Randomly trigger the Creator Profile popup and show for exactly 24s
+  useEffect(() => {
+    let hideTimer: NodeJS.Timeout;
+    const randomInitialDelay = Math.floor(Math.random() * 3000) + 2000; // 2-5s initial random delay
+
+    const showTimer = setTimeout(() => {
+      setShowCreatorPopup(true);
+
+      hideTimer = setTimeout(() => {
+        setShowCreatorPopup(false);
+      }, 24000); // Stays visible for exactly 24 seconds
+    }, randomInitialDelay);
+
+    return () => {
+      clearTimeout(showTimer);
+      if (hideTimer) clearTimeout(hideTimer);
+    };
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -970,6 +991,71 @@ export default function HomePage() {
             </div>
         </div>
     </footer>
+
+    {/* Right-side iOS Style Creator Profile Pop-up (Shows for 24s) */}
+    <div
+      className={`fixed bottom-24 right-4 md:bottom-8 md:right-8 z-50 transition-all duration-500 ease-out transform ${
+        showCreatorPopup
+          ? "translate-x-0 opacity-100 scale-100 pointer-events-auto"
+          : "translate-x-[120%] opacity-0 scale-95 pointer-events-none"
+      }`}
+    >
+      <div className="bg-white/95 backdrop-blur-2xl border border-zinc-200/90 shadow-[0_20px_60px_rgba(0,0,0,0.18)] rounded-2xl md:rounded-[24px] p-4 md:p-5 max-w-[320px] sm:max-w-sm flex flex-col gap-3 relative">
+        {/* Close Button */}
+        <button
+          onClick={() => setShowCreatorPopup(false)}
+          className="absolute top-3 right-3 text-zinc-400 hover:text-zinc-600 p-1 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
+          aria-label="Close"
+        >
+          <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
+        {/* Profile Info */}
+        <div className="flex items-start gap-3 pr-4">
+          <img
+            src="/thinking2.png"
+            alt="Bristi Kumbhakar"
+            className="w-12 h-12 rounded-full object-cover shrink-0 border border-zinc-200/80 shadow-xs"
+          />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h4 className="text-zinc-900 font-semibold text-sm leading-tight truncate">
+                Bristi Kumbhakar
+              </h4>
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200/60">
+                Creator
+              </span>
+            </div>
+            <p className="text-[11px] text-zinc-500 font-normal mt-0.5">
+              Current Status: Intern
+            </p>
+            <p className="text-[11px] text-zinc-600 leading-tight mt-1 line-clamp-2">
+              Electrician, ITI, Electronics and Telecommunication Eng. from Durgapur Govt. ITI Collage.
+            </p>
+          </div>
+        </div>
+
+        {/* Follow / Unfollow iOS Action Row */}
+        <div className="flex items-center justify-between pt-2.5 border-t border-zinc-100 mt-0.5">
+          <span className="text-[11px] text-zinc-400 font-normal">
+            {isFollowing ? "Connected with Bristi" : "Follow Creator"}
+          </span>
+          <button
+            onClick={() => setIsFollowing(!isFollowing)}
+            className={`font-semibold text-xs px-4 py-1.5 rounded-full transition-all duration-200 active:scale-95 cursor-pointer shadow-xs ${
+              isFollowing
+                ? "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-300"
+                : "bg-[#007AFF] hover:bg-blue-600 text-white shadow-blue-500/25 shadow-sm"
+            }`}
+          >
+            {isFollowing ? "Unfollow" : "Follow"}
+          </button>
+        </div>
+      </div>
+    </div>
 
     </div>
   );
