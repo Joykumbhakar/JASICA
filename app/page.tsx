@@ -14,6 +14,7 @@ export default function HomePage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showCreatorPopup, setShowCreatorPopup] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Randomly trigger the Creator Profile popup and show for exactly 24s
   useEffect(() => {
@@ -612,7 +613,12 @@ export default function HomePage() {
     }
     animate();
 
+    const initialLoadTimer = setTimeout(() => {
+      setIsLoading(false);
+    }, 450);
+
     return () => {
+      clearTimeout(initialLoadTimer);
       cancelAnimationFrame(reqId);
 
       window.removeEventListener("scroll", updateScrollState);
@@ -623,6 +629,18 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] antialiased overflow-x-hidden selection:bg-cyan-500 selection:text-black">
+
+    {/* Minimalist Loading Wheel */}
+    <div
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#f5f5f7] transition-opacity duration-500 pointer-events-none ${
+        isLoading ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" />
+        <span className="text-[11px] font-medium text-zinc-400 tracking-widest uppercase">Loading</span>
+      </div>
+    </div>
 
     <nav className="fixed top-0 left-0 w-full bg-white/70 backdrop-blur-lg border-b border-zinc-200 z-50 flex flex-col">
         <div className="h-14 flex items-center justify-between px-4 md:px-8 w-full">
@@ -1074,10 +1092,12 @@ export default function HomePage() {
                 Bristi Kumbhakar
               </h4>
               {/* Blue Verified Badge */}
-              <svg viewBox="0 0 22 22" width="17" height="17" aria-label="Verified" title="Verified Creator">
-                <circle cx="11" cy="11" r="11" fill="#1D9BF0" />
-                <path d="M9.07 15.5L5.5 11.93l1.06-1.06 2.51 2.51 6.37-6.37 1.06 1.06L9.07 15.5z" fill="white" />
-              </svg>
+              <span className="inline-flex items-center" title="Verified Creator">
+                <svg viewBox="0 0 22 22" width="17" height="17" aria-label="Verified">
+                  <circle cx="11" cy="11" r="11" fill="#1D9BF0" />
+                  <path d="M9.07 15.5L5.5 11.93l1.06-1.06 2.51 2.51 6.37-6.37 1.06 1.06L9.07 15.5z" fill="white" />
+                </svg>
+              </span>
             </div>
             <p className="text-[11px] text-zinc-500 font-normal mt-0.5">
               Current Status: Intern
