@@ -701,10 +701,10 @@ export default function HomePage() {
                 <p className="text-lg md:text-xl text-zinc-500 font-normal max-w-2xl mx-auto">A seamless blend of emotional AI, hardware control, and everyday utility.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-5 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-0 md:gap-6 divide-y divide-zinc-300 md:divide-y-0">
                 
                 {/* 1. AI Voice Assistant */}
-                <div className="col-span-1 md:col-span-6 bg-gradient-to-br from-[#EDE9FE] via-[#F5F3FF] to-[#FAF5FF] border border-[#DDD6FE] rounded-[1.5rem] md:rounded-[2rem] p-6 sm:p-8 md:p-12 flex flex-col md:flex-row gap-6 md:gap-10 items-start md:items-center overflow-hidden shadow-sm">
+                <div className="col-span-1 md:col-span-6 py-10 md:p-12 md:bg-gradient-to-br md:from-[#EDE9FE] md:via-[#F5F3FF] md:to-[#FAF5FF] md:border md:border-[#DDD6FE] md:rounded-[2rem] flex flex-col md:flex-row gap-6 md:gap-10 items-start md:items-center overflow-hidden md:shadow-sm">
                     <div className="flex-1 w-full">
                         <div className="w-12 h-12 rounded-[14px] bg-[#5856D6] flex items-center justify-center text-white mb-5 md:mb-6 shadow-sm">
                             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.25" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
@@ -724,19 +724,19 @@ export default function HomePage() {
                             Powered by Jasica 1.0, she isn't just an assistant—she's an emotionally aware companion with a custom persona dedicated to Bristi. Fluent in English and Bengali, she remembers your context and is always ready with hands-free Wake Word activation.
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-3 md:gap-y-4 gap-x-6">
-                            <div className="flex items-center gap-3 bg-white/70 backdrop-blur-xs py-2 px-3 rounded-xl border border-purple-200/60">
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs">
                                 <BrainCircuit strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0" />
                                 <span className="text-zinc-800 font-medium text-sm">Conversation Memory</span>
                             </div>
-                            <div className="flex items-center gap-3 bg-white/70 backdrop-blur-xs py-2 px-3 rounded-xl border border-purple-200/60">
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs">
                                 <Languages strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0" />
                                 <span className="text-zinc-800 font-medium text-sm">Bilingual TTS</span>
                             </div>
-                            <div className="flex items-center gap-3 bg-white/70 backdrop-blur-xs py-2 px-3 rounded-xl border border-purple-200/60">
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs">
                                 <Mic strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0" />
                                 <span className="text-zinc-800 font-medium text-sm">Voice Calibration</span>
                             </div>
-                            <div className="flex items-center gap-3 bg-white/70 backdrop-blur-xs py-2 px-3 rounded-xl border border-purple-200/60">
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs">
                                 <WifiOff strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0" />
                                 <span className="text-zinc-800 font-medium text-sm">Offline Parser</span>
                             </div>
@@ -745,7 +745,7 @@ export default function HomePage() {
                 </div>
 
                 {/* 2. Smart Home & Hardware */}
-                <div className="col-span-1 md:col-span-4 bg-gradient-to-br from-[#FFF7ED] via-[#FFEDD5] to-[#FEF3C7] border border-[#FED7AA] rounded-[1.5rem] md:rounded-[2rem] p-6 sm:p-8 md:p-10 flex flex-col justify-between shadow-sm">
+                <div className="col-span-1 md:col-span-4 py-10 md:p-10 md:bg-gradient-to-br md:from-[#FFF7ED] md:via-[#FFEDD5] md:to-[#FEF3C7] md:border md:border-[#FED7AA] md:rounded-[2rem] flex flex-col justify-between md:shadow-sm">
                     <div>
                         <div className="w-12 h-12 rounded-[14px] bg-[#FF9500] flex items-center justify-center text-white mb-5 md:mb-6 shadow-sm">
                             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
@@ -761,27 +761,27 @@ export default function HomePage() {
                     </div>
                     
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3">
-                        <div className="bg-white/80 backdrop-blur-xs border border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-xs">
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs">
                             <Monitor strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">PC Hub</span>
                         </div>
-                        <div className="bg-white/80 backdrop-blur-xs border border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-xs">
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs">
                             <Lightbulb strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">RGB Light</span>
                         </div>
-                        <div className="bg-white/80 backdrop-blur-xs border border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-xs">
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs">
                             <Plug strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">Smart Plug</span>
                         </div>
-                        <div className="bg-white/80 backdrop-blur-xs border border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-xs">
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs">
                             <Wind strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">AC Unit</span>
                         </div>
-                        <div className="bg-white/80 backdrop-blur-xs border border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-xs">
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs">
                             <Fan strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">Room Fan</span>
                         </div>
-                        <div className="bg-white/80 backdrop-blur-xs border border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-xs">
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs">
                             <Code strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">Arduino Gen</span>
                         </div>
@@ -789,7 +789,7 @@ export default function HomePage() {
                 </div>
 
                 {/* 3. Health & Wellness */}
-                <div className="col-span-1 md:col-span-2 bg-gradient-to-br from-[#FEF2F2] via-[#FFE4E6] to-[#FEE2E2] border border-[#FECACA] rounded-[1.5rem] md:rounded-[2rem] p-6 sm:p-8 md:p-10 flex flex-col justify-between shadow-sm">
+                <div className="col-span-1 md:col-span-2 py-10 md:p-10 md:bg-gradient-to-br md:from-[#FEF2F2] md:via-[#FFE4E6] md:to-[#FEE2E2] md:border md:border-[#FECACA] md:rounded-[2rem] flex flex-col justify-between md:shadow-sm">
                     <div>
                         <div className="w-12 h-12 rounded-[14px] bg-[#FF3B30] flex items-center justify-center text-white mb-5 md:mb-6 shadow-sm">
                             <Droplet strokeWidth={1.5} className="w-6 h-6" />
@@ -799,7 +799,7 @@ export default function HomePage() {
                             A dedicated background service ensures you drink water every 30 minutes.
                         </p>
                     </div>
-                    <div className="bg-white/85 backdrop-blur-xs rounded-2xl p-5 border border-rose-200/80 flex flex-col items-center justify-center text-center h-full min-h-[100px] md:min-h-[120px] shadow-xs">
+                    <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-5 border border-zinc-200 md:border-rose-200/80 flex flex-col items-center justify-center text-center h-full min-h-[100px] md:min-h-[120px] shadow-2xs">
                         <SmartphoneCharging strokeWidth={1.5} className="w-6 h-6 md:w-7 md:h-7 text-[#FF3B30] mb-2" />
                         <span className="text-sm font-medium text-zinc-900 block mb-1">Lock Screen Override</span>
                         <span className="text-xs text-zinc-500 font-normal">Wakes device & vibrates</span>
@@ -807,7 +807,7 @@ export default function HomePage() {
                 </div>
                 
                 {/* 4. System Shortcuts */}
-                <div className="col-span-1 md:col-span-3 bg-gradient-to-br from-[#EFF6FF] via-[#E0F2FE] to-[#F0F9FF] border border-[#BFDBFE] rounded-[1.5rem] md:rounded-[2rem] p-6 sm:p-8 md:p-10 flex flex-col justify-between shadow-sm">
+                <div className="col-span-1 md:col-span-3 py-10 md:p-10 md:bg-gradient-to-br md:from-[#EFF6FF] md:via-[#E0F2FE] md:to-[#F0F9FF] md:border md:border-[#BFDBFE] md:rounded-[2rem] flex flex-col justify-between md:shadow-sm">
                     <div>
                         <div className="w-12 h-12 rounded-[14px] bg-[#007AFF] flex items-center justify-center text-white mb-5 md:mb-6 shadow-sm">
                             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
@@ -859,7 +859,7 @@ export default function HomePage() {
                 </div>
 
                 {/* 5. UI, UX & Customization */}
-                <div className="col-span-1 md:col-span-3 bg-gradient-to-br from-[#F0FDF4] via-[#ECFDF5] to-[#F0FDFA] border border-[#BBF7D0] rounded-[1.5rem] md:rounded-[2rem] p-6 sm:p-8 md:p-10 flex flex-col justify-between shadow-sm">
+                <div className="col-span-1 md:col-span-3 py-10 md:p-10 md:bg-gradient-to-br md:from-[#F0FDF4] md:via-[#ECFDF5] md:to-[#F0FDFA] md:border md:border-[#BBF7D0] md:rounded-[2rem] flex flex-col justify-between md:shadow-sm">
                     <div>
                         <div className="w-12 h-12 rounded-[14px] bg-[#10B981] flex items-center justify-center text-white mb-5 md:mb-6 shadow-sm">
                             <Paintbrush strokeWidth={1.5} className="w-6 h-6" />
@@ -870,11 +870,11 @@ export default function HomePage() {
                         </p>
                     </div>
                     <div className="space-y-1">
-                        <div className="flex items-center justify-between py-2.5 border-b border-emerald-200/60">
+                        <div className="flex items-center justify-between py-2.5 border-b border-zinc-200 md:border-emerald-200/60">
                              <span className="text-sm font-medium text-zinc-800">Animated Voice UI</span>
                              <Check strokeWidth={1.5} className="w-4 h-4 text-[#10B981]" />
                         </div>
-                        <div className="flex items-center justify-between py-2.5 border-b border-emerald-200/60">
+                        <div className="flex items-center justify-between py-2.5 border-b border-zinc-200 md:border-emerald-200/60">
                              <span className="text-sm font-medium text-zinc-800">Dynamic App Icons</span>
                              <Check strokeWidth={1.5} className="w-4 h-4 text-[#10B981]" />
                         </div>
