@@ -15,6 +15,14 @@ export default function HomePage() {
   const [showCreatorPopup, setShowCreatorPopup] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = () => {
+    setIsDownloading(true);
+    setTimeout(() => {
+      setIsDownloading(false);
+    }, 3000);
+  };
 
   // Randomly trigger the Creator Profile popup and show for exactly 24s
   useEffect(() => {
@@ -517,9 +525,9 @@ export default function HomePage() {
     logoGroup.add(new THREE.Mesh(new THREE.ShapeGeometry(logoShape), materials.logo), new THREE.Mesh(new THREE.ShapeGeometry(leafShape), materials.logo));
     phoneGroup.add(logoGroup);
 
-    let baseScale = 1.45;
-    let basePosY = -3.85;
-    let basePosX = 0.8;        // Desktop: slight right offset for hero layout
+    let baseScale = 1.35;
+    let basePosY = -4.1;
+    let basePosX = -0.25;      // Desktop: Optical center
     let baseRotY = -Math.PI / 4; // Desktop: 45° angled view
 
     let lastWidth = window.innerWidth;
@@ -564,12 +572,12 @@ export default function HomePage() {
       } else if (width < 1024) {
         baseScale = 1.25;
         basePosY = -3.4;
-        basePosX = 0.4;
+        basePosX = -0.15;        // Optical center for tablets
         baseRotY = -Math.PI / 4; // 45° angle
       } else {
-        baseScale = 1.45;
-        basePosY = -3.85;
-        basePosX = 0.8;
+        baseScale = 1.35;
+        basePosY = -4.1;
+        basePosX = -0.25;        // Optical center for desktop
         baseRotY = -Math.PI / 4; // 45° angle
       }
       updateScrollState();
@@ -709,8 +717,16 @@ export default function HomePage() {
                 <a href="#features" className="hover:text-black cursor-pointer group transition-colors">
                     <span className="underline underline-offset-4 decoration-1 decoration-zinc-300">Features</span>
                 </a>
-                <a href="/apks/JASICA.apk" download="JASICA.apk" className="bg-black text-white text-xs font-medium px-4 py-1.5 rounded-full hover:bg-zinc-800 transition-colors">
-                    Download APK
+                <a 
+                  href="/apks/JASICA.apk" 
+                  download="JASICA.apk" 
+                  onClick={handleDownload}
+                  className="bg-black text-white text-xs font-medium px-4 py-1.5 rounded-full hover:bg-zinc-800 transition-all flex items-center gap-1.5 active:scale-95"
+                >
+                  {isDownloading ? (
+                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : null}
+                  Download APK
                 </a>
             </div>
 
@@ -725,7 +741,20 @@ export default function HomePage() {
         <div className="md:hidden w-full bg-white/95 backdrop-blur-lg border-t border-zinc-200 px-4 py-5 flex flex-col gap-4 shadow-xl">
              <a href="#specs" onClick={() => setIsMobileMenuOpen(false)} className="text-black font-medium text-lg">Overview</a>
              <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="text-zinc-600 font-medium text-lg">Features</a>
-             <a href="/apks/JASICA.apk" download="JASICA.apk" onClick={() => setIsMobileMenuOpen(false)} className="bg-black text-white text-center font-medium text-base py-3 rounded-full mt-2">Download APK</a>
+             <a 
+               href="/apks/JASICA.apk" 
+               download="JASICA.apk" 
+               onClick={() => {
+                 handleDownload();
+                 setTimeout(() => setIsMobileMenuOpen(false), 600);
+               }} 
+               className="bg-black text-white text-center font-medium text-base py-3 rounded-full mt-2 flex items-center justify-center gap-2 active:scale-95"
+             >
+               {isDownloading && (
+                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+               )}
+               {isDownloading ? "Starting Download..." : "Download APK"}
+             </a>
         </div>
         )}
     </nav>
@@ -741,10 +770,15 @@ export default function HomePage() {
         <a
             href="/apks/JASICA.apk"
             download="JASICA.apk"
-            className="pointer-events-auto bg-black hover:bg-zinc-800 text-white text-lg md:text-xl font-medium px-12 md:px-16 py-4 md:py-5 rounded-full cursor-pointer transition-all duration-200 flex items-center gap-3 shadow-2xl active:scale-95"
+            onClick={handleDownload}
+            className="pointer-events-auto bg-black hover:bg-zinc-800 text-white text-lg md:text-xl font-medium px-12 md:px-16 py-4 md:py-5 rounded-full cursor-pointer transition-all duration-200 flex items-center gap-3 shadow-2xl active:scale-95 min-w-[260px] justify-center"
         >
-            <Download strokeWidth={1} className="w-6 h-6" />
-            Download APK
+            {isDownloading ? (
+              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Download strokeWidth={1.5} className="w-6 h-6" />
+            )}
+            {isDownloading ? "Starting Download..." : "Download APK"}
         </a>
     </div>
 
