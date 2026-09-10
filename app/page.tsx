@@ -55,7 +55,7 @@ export default function HomePage() {
       antialias: true, 
       alpha: true, 
       powerPreference: "high-performance",
-      precision: "mediump"
+      precision: "highp"
     });
     const pixelRatio = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 1.5) : 1;
     renderer.setPixelRatio(pixelRatio);
@@ -239,7 +239,14 @@ export default function HomePage() {
         clearcoat: 0.6, 
         clearcoatRoughness: 0.25 
       }),
-      screen: new THREE.MeshBasicMaterial({ map: screenTex, side: THREE.FrontSide, toneMapped: false }),
+      screen: new THREE.MeshBasicMaterial({ 
+        map: screenTex, 
+        side: THREE.FrontSide, 
+        toneMapped: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1
+      }),
       cameraBump: new THREE.MeshPhysicalMaterial({ 
         color: colors.bump, 
         metalness: 0.75, 
@@ -348,16 +355,16 @@ export default function HomePage() {
     phoneGroup.add(frameMesh);
 
     const borderMesh = new THREE.Mesh(createRoundedPlane(phoneWidth - 0.06, phoneHeight - 0.06, cornerRadius - 0.02), materials.screenBorder);
-    borderMesh.position.z = phoneDepth / 2 + 0.051;
+    borderMesh.position.z = phoneDepth / 2 + 0.054;
     phoneGroup.add(borderMesh);
 
     const screenMesh = new THREE.Mesh(createRoundedPlane(phoneWidth - 0.16, phoneHeight - 0.16, cornerRadius - 0.07), materials.screen);
-    screenMesh.position.z = phoneDepth / 2 + 0.055;
+    screenMesh.position.z = phoneDepth / 2 + 0.058;
     phoneGroup.add(screenMesh);
 
     const islandGeom = new THREE.ExtrudeGeometry(createRoundedRectShape(0.84, 0.24, 0.12), { depth: 0.01, bevelEnabled: false, curveSegments: 16 });
     const islandMesh = new THREE.Mesh(islandGeom, new THREE.MeshBasicMaterial({ color: 0x000000 }));
-    islandMesh.position.set(0, phoneHeight / 2 - 0.25, phoneDepth / 2 + 0.058);
+    islandMesh.position.set(0, phoneHeight / 2 - 0.25, phoneDepth / 2 + 0.062);
     phoneGroup.add(islandMesh);
 
     const backMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(createRoundedRectShape(phoneWidth - 0.06, phoneHeight - 0.06, cornerRadius - 0.02), { depth: 0.015, bevelEnabled: false, curveSegments: 24 }), materials.backGlass);
@@ -545,25 +552,25 @@ export default function HomePage() {
       renderer.setSize(width, height);
 
       if (width < 480) {
-        baseScale = 1.0;
-        basePosY = -2.5;
-        basePosX = 0;           // Centered on small mobile
-        baseRotY = 0;           // Face-on, no angle — fits narrow screens
+        baseScale = 1.05;
+        basePosY = -2.6;
+        basePosX = 0;
+        baseRotY = -Math.PI / 4; // 45° angle
       } else if (width < 768) {
         baseScale = 1.15;
         basePosY = -3.2;
-        basePosX = 0;           // Still centered on large mobile
-        baseRotY = -Math.PI / 8; // Slight 22° angle
+        basePosX = 0;
+        baseRotY = -Math.PI / 4; // 45° angle
       } else if (width < 1024) {
         baseScale = 1.3;
         basePosY = -3.5;
         basePosX = 0.5;
-        baseRotY = -Math.PI / 6; // Moderate 30° angle
+        baseRotY = -Math.PI / 4; // 45° angle
       } else {
         baseScale = 1.45;
         basePosY = -3.85;
         basePosX = 0.8;
-        baseRotY = -Math.PI / 4; // Full 45° angled view on desktop
+        baseRotY = -Math.PI / 4; // 45° angle
       }
       updateScrollState();
     }
@@ -1091,11 +1098,17 @@ export default function HomePage() {
               <h4 className="text-zinc-900 font-semibold text-sm leading-tight truncate">
                 Bristi Kumbhakar
               </h4>
-              {/* Blue Verified Badge */}
-              <span className="inline-flex items-center" title="Verified Creator">
-                <svg viewBox="0 0 22 22" width="17" height="17" aria-label="Verified">
-                  <circle cx="11" cy="11" r="11" fill="#1D9BF0" />
-                  <path d="M9.07 15.5L5.5 11.93l1.06-1.06 2.51 2.51 6.37-6.37 1.06 1.06L9.07 15.5z" fill="white" />
+              {/* Blue Verified Badge with Spikes / Scalloped Rosette */}
+              <span className="inline-flex items-center shrink-0" title="Verified Creator">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-label="Verified" className="shrink-0">
+                  <path
+                    d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.67-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.67-.88 3.34-2.19c1.39.45 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34z"
+                    fill="#1D9BF0"
+                  />
+                  <path
+                    d="M10.54 16.2L6.8 12.46l1.41-1.42 2.33 2.33 4.96-4.96 1.41 1.42-6.37 6.37z"
+                    fill="#ffffff"
+                  />
                 </svg>
               </span>
             </div>
