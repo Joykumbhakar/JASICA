@@ -552,19 +552,19 @@ export default function HomePage() {
       renderer.setSize(width, height);
 
       if (width < 480) {
-        baseScale = 1.05;
-        basePosY = -2.6;
-        basePosX = 0;
+        baseScale = 0.92;
+        basePosY = -2.5;
+        basePosX = -0.15;        // Optical center on mobile screens
         baseRotY = -Math.PI / 4; // 45° angle
       } else if (width < 768) {
-        baseScale = 1.15;
-        basePosY = -3.2;
-        basePosX = 0;
+        baseScale = 1.05;
+        basePosY = -3.0;
+        basePosX = -0.10;        // Optical center on small tablet / large phone
         baseRotY = -Math.PI / 4; // 45° angle
       } else if (width < 1024) {
-        baseScale = 1.3;
-        basePosY = -3.5;
-        basePosX = 0.5;
+        baseScale = 1.25;
+        basePosY = -3.4;
+        basePosX = 0.4;
         baseRotY = -Math.PI / 4; // 45° angle
       } else {
         baseScale = 1.45;
@@ -1134,13 +1134,14 @@ export default function HomePage() {
               <h4 className="text-zinc-900 font-semibold text-sm leading-tight truncate">
                 Bristi Kumbhakar
               </h4>
-              {/* Blue Verified Badge with Sharp Multi-Point Spikes */}
+              {/* Blue Verified Badge with Smooth Rounded Scallops/Petals */}
               <span className="inline-flex items-center shrink-0" title="Verified Creator">
-                <svg viewBox="0 0 24 24" width="19" height="19" aria-label="Verified" className="shrink-0">
-                  <polygon
-                    points="12.00,0.50 13.44,2.91 15.55,1.06 16.18,3.80 18.76,2.70 18.51,5.49 21.30,5.24 20.20,7.82 22.94,8.45 21.09,10.56 23.50,12.00 21.09,13.44 22.94,15.55 20.20,16.18 21.30,18.76 18.51,18.51 18.76,21.30 16.18,20.20 15.55,22.94 13.44,21.09 12.00,23.50 10.56,21.09 8.45,22.94 7.82,20.20 5.24,21.30 5.49,18.51 2.70,18.76 3.80,16.18 1.06,15.55 2.91,13.44 0.50,12.00 2.91,10.56 1.06,8.45 3.80,7.82 2.70,5.24 5.49,5.49 5.24,2.70 7.82,3.80 8.45,1.06 10.56,2.91"
-                    fill="#1D9BF0"
-                  />
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-label="Verified" className="shrink-0">
+                  <g fill="#1D9BF0">
+                    <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" />
+                    <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" transform="rotate(30 12 12)" />
+                    <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" transform="rotate(60 12 12)" />
+                  </g>
                   <path
                     d="M10.2 15.6L6.8 12.2l1.3-1.3 2.1 2.1 5.6-5.6 1.3 1.3-6.9 6.9z"
                     fill="#ffffff"
