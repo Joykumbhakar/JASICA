@@ -119,3 +119,52 @@ body {
   background: #d1d1d6;
   border-radius: 5px;
 }
+
+/* Jasica Unique SVG Logo Loader */
+@keyframes jasicaLogoPulse {
+  0%, 100% {
+    transform: scale(0.94);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes jasicaWaveGlow {
+  0% {
+    stroke-dashoffset: 40;
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0.4;
+  }
+}
+
+@keyframes jasicaOrbitSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-jasica-pulse {
+  animation: jasicaLogoPulse 2s ease-in-out infinite;
+}
+
+.animate-jasica-spin-slow {
+  animation: jasicaOrbitSpin 8s linear infinite;
+}
+
+.animate-jasica-wave {
+  stroke-dasharray: 24;
+  animation: jasicaWaveGlow 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+

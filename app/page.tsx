@@ -637,15 +637,51 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] antialiased overflow-x-hidden selection:bg-cyan-500 selection:text-black">
 
-    {/* Minimalist Loading Wheel */}
+    {/* Unique Jasica Animated SVG Logo Loader (No Text) */}
     <div
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#f5f5f7] transition-opacity duration-500 pointer-events-none ${
+      className={`fixed inset-0 z-[100] flex items-center justify-center bg-[#f5f5f7] transition-opacity duration-600 pointer-events-none ${
         isLoading ? "opacity-100" : "opacity-0"
       }`}
     >
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-6 h-6 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" />
-        <span className="text-[11px] font-medium text-zinc-400 tracking-widest uppercase">Loading</span>
+      <div className="relative flex items-center justify-center animate-jasica-pulse">
+        {/* Subtle Ambient Glow */}
+        <div className="absolute w-20 h-20 bg-gradient-to-tr from-cyan-400/20 via-blue-500/20 to-purple-500/20 rounded-full blur-xl pointer-events-none" />
+
+        {/* Outer Orbiting Dash Ring */}
+        <svg viewBox="0 0 52 52" width="52" height="52" className="absolute animate-jasica-spin-slow text-zinc-300">
+          <circle
+            cx="26"
+            cy="26"
+            r="23"
+            stroke="currentColor"
+            strokeWidth="1.25"
+            strokeDasharray="4 6"
+            fill="none"
+          />
+        </svg>
+
+        {/* Unique Jasica AI Core Logo */}
+        <svg
+          viewBox="0 0 24 24"
+          width="36"
+          height="36"
+          stroke="currentColor"
+          strokeWidth="1.35"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-black relative z-10"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <clipPath id="loader-sphere-clip">
+            <circle cx="12" cy="12" r="9.5" />
+          </clipPath>
+          <g clipPath="url(#loader-sphere-clip)" className="animate-jasica-wave">
+            <path d="M -2 6 C 6 14, 14 -2, 26 6" />
+            <path d="M -2 12 C 6 20, 14 4, 26 12" />
+            <path d="M -2 18 C 6 26, 14 10, 26 18" />
+          </g>
+        </svg>
       </div>
     </div>
 
