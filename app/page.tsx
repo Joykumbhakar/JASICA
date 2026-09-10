@@ -765,14 +765,20 @@ export default function HomePage() {
                     </ul>
                 </div>
                 <div>
-                    <h3 className="text-zinc-900 font-semibold mb-3">Support</h3>
-                    <ul className="space-y-3 font-normal">
-                        <li>
-                            <a href="#" className="inline-flex items-center gap-2 underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">
-                                <img src="/thinking2.png" alt="Creator Profile" className="w-4 h-4 rounded-full object-cover shrink-0 border border-zinc-300" />
-                                <span>Creator: Bristi</span>
-                            </a>
-                        </li>
+                    <h3 className="text-zinc-900 font-semibold mb-3">Creator & Support</h3>
+                    <div className="mb-4">
+                        <div className="flex items-center gap-2.5 mb-2.5">
+                            <img src="/thinking2.png" alt="Bristi Kumbhakar" className="w-9 h-9 rounded-full object-cover shrink-0 border border-zinc-200" />
+                            <div>
+                                <p className="text-zinc-900 font-medium text-[13px]">Bristi Kumbhakar</p>
+                                <p className="text-[11px] text-zinc-500">Current Status: Intern</p>
+                            </div>
+                        </div>
+                        <p className="text-[11px] text-zinc-500 leading-relaxed">
+                            Electrician, ITI, Electronics and Telecommunication Engineering from Durgapur Govt. ITI Collage.
+                        </p>
+                    </div>
+                    <ul className="space-y-3 font-normal mt-4 pt-4 border-t border-zinc-200">
                         <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Arduino Generator</a></li>
                         <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Release Notes</a></li>
                     </ul>
