@@ -938,6 +938,21 @@ export default function HomePage() {
 
     <footer className="relative z-20 bg-[#f5f5f7] py-10 md:py-12 px-4 md:px-12 text-xs text-zinc-500 border-t border-zinc-300">
         <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-2 mb-6">
+                <svg viewBox="0 0 24 24" width="24" height="24" className="text-zinc-800">
+                    <circle cx="12" cy="12" r="10" fill="currentColor" />
+                    <clipPath id="footer-sphere-clip">
+                        <circle cx="12" cy="12" r="9.5" />
+                    </clipPath>
+                    <g clipPath="url(#footer-sphere-clip)" stroke="#f5f5f7" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M -2 6 C 6 14, 14 -2, 26 6" />
+                        <path d="M -2 12 C 6 20, 14 4, 26 12" />
+                        <path d="M -2 18 C 6 26, 14 10, 26 18" />
+                    </g>
+                </svg>
+                <span className="font-semibold text-base text-zinc-900 tracking-tight">Jasica AI</span>
+            </div>
+
             <div className="pb-5 border-b border-zinc-300 leading-relaxed font-normal">
                 <p className="mb-2">1. JASICA AI is exclusively developed and optimized for devices running Android 6.0 (Marshmallow) or later.</p>
                 <p>2. Actual download size and installation time may vary depending on your local network conditions.</p>
