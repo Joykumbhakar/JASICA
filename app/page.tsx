@@ -587,19 +587,15 @@ export default function HomePage() {
                 Jasica AI
             </div>
             
-            <div className="hidden md:flex items-center gap-5 sm:gap-6 text-sm font-medium text-zinc-500">
-                <div className="flex items-center gap-1 text-zinc-400 mr-2">
-                    <div className="ios-spinner scale-[0.6]">
-                        <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-                    </div>
-                    <span className="text-xs">Syncing</span>
-                </div>
-                
-                <a href="#" className="text-black cursor-pointer group">
+            <div className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-500">
+                <a href="#specs" className="text-black cursor-pointer group">
                     <span className="underline underline-offset-4 decoration-1 decoration-zinc-400">Overview</span>
                 </a>
-                <a href="#" className="cursor-pointer group">
+                <a href="#features" className="hover:text-black cursor-pointer group transition-colors">
                     <span className="underline underline-offset-4 decoration-1 decoration-zinc-300">Features</span>
+                </a>
+                <a href="/apks/JASICA.apk" download="JASICA.apk" className="bg-black text-white text-xs font-medium px-4 py-1.5 rounded-full hover:bg-zinc-800 transition-colors">
+                    Download APK
                 </a>
             </div>
 
@@ -612,14 +608,9 @@ export default function HomePage() {
 
         {isMobileMenuOpen && (
         <div className="md:hidden w-full bg-white/95 backdrop-blur-lg border-t border-zinc-200 px-4 py-5 flex flex-col gap-4 shadow-xl">
-             <div className="flex items-center gap-2 text-zinc-400 pb-3 border-b border-zinc-100">
-                 <div className="ios-spinner scale-[0.6]">
-                     <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-                 </div>
-                 <span className="text-xs">Syncing Configurations</span>
-             </div>
-             <a href="#" className="text-black font-medium text-lg">Overview</a>
-             <a href="#" className="text-zinc-500 font-medium text-lg">Features</a>
+             <a href="#specs" onClick={() => setIsMobileMenuOpen(false)} className="text-black font-medium text-lg">Overview</a>
+             <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="text-zinc-600 font-medium text-lg">Features</a>
+             <a href="/apks/JASICA.apk" download="JASICA.apk" onClick={() => setIsMobileMenuOpen(false)} className="bg-black text-white text-center font-medium text-base py-3 rounded-full mt-2">Download APK</a>
         </div>
         )}
     </nav>
@@ -644,7 +635,7 @@ export default function HomePage() {
 
     <div id="canvas-container" ref={containerRef} />
 
-    <section className="relative z-20 bg-[#f5f5f7] py-24 md:py-32 px-4 md:px-12 mt-[100vh] md:mt-[110vh]">
+    <section id="specs" className="relative z-20 bg-[#f5f5f7] py-24 md:py-32 px-4 md:px-12 mt-[100vh] md:mt-[110vh]">
         <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12 md:mb-16">
                 <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-black mb-4">System Specifications</h2>
@@ -702,7 +693,7 @@ export default function HomePage() {
         </div>
     </section>
 
-    <section className="relative z-20 bg-[#f5f5f7] py-16 md:py-24 px-4 md:px-12">
+    <section id="features" className="relative z-20 bg-[#f5f5f7] py-16 md:py-24 px-4 md:px-12">
         <div className="max-w-6xl mx-auto">
             
             <div className="text-center mb-12 md:mb-20">
