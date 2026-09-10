@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Jasica AI - Next-Gen Experience",
+  title: "Jasica AI - Experience",
   description: "Next-Gen AI Hardware & Neural Core Release. Experience Jasica AI.",
   icons: {
     icon: "/jasica.png",

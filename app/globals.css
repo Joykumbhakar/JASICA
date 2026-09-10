@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --font-jasica: 'Inter', -jasica-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-jasica: 'Inter', system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --jasica-bg: #f5f5f7;
   --jasica-text: #1d1d1f;
 }
