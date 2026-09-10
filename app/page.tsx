@@ -765,7 +765,12 @@ export default function HomePage() {
                 <div>
                     <h3 className="text-zinc-900 font-semibold mb-3">Support</h3>
                     <ul className="space-y-3 font-normal">
-                        <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Creator: Bristi</a></li>
+                        <li>
+                            <a href="#" className="inline-flex items-center gap-2 underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">
+                                <img src="/thinking2.png" alt="Creator Profile" className="w-4 h-4 rounded-full object-cover shrink-0 border border-zinc-300" />
+                                <span>Creator: Bristi</span>
+                            </a>
+                        </li>
                         <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Arduino Generator</a></li>
                         <li><a href="#" className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer">Release Notes</a></li>
                     </ul>
