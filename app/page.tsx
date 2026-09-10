@@ -35,6 +35,7 @@ export default function HomePage() {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.1;
+    renderer.outputColorSpace = THREE.SRGBColorSpace; // equivalent to outputEncoding = sRGBEncoding in modern three.js
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     container.innerHTML = "";
@@ -76,6 +77,7 @@ export default function HomePage() {
     grad.addColorStop(1, "#0b131e");
 
     const screenTex = new THREE.CanvasTexture(screenCanvas);
+    screenTex.colorSpace = THREE.SRGBColorSpace;
     screenTex.minFilter = THREE.LinearFilter;
     screenTex.generateMipmaps = false;
 
@@ -86,7 +88,7 @@ export default function HomePage() {
       wallpaperLoaded = true;
       renderScreenComposite();
     };
-    wallpaperImg.src = "/orangeandpurplebg.png";
+    wallpaperImg.src = 'https://hgbpavdzzdnwhvzdvybh.supabase.co/storage/v1/object/sign/hire_files/1788991331724_k7ro1m.jpg?token=eyJraWQiOiIwOGJjNTQ2MC1mMzU0LTQyMDMtOTg4YS0yMGMzYThkMGU1YTIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJoaXJlX2ZpbGVzLzE3ODg5OTEzMzE3MjRfazdybzFtLmpwZyIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODg5OTE5MjQsImV4cCI6MTgyMDUyNzkyNH0.JCmeQXCOj17rU0AbjkVYfh59bxLj-zcpwNixgtSIisY';
 
     function renderScreenComposite() {
       sCtx.clearRect(0, 0, screenCanvas.width, screenCanvas.height);
@@ -121,7 +123,7 @@ export default function HomePage() {
       frame: new THREE.MeshPhysicalMaterial({ color: colors.base, metalness: 0.85, roughness: 0.35, clearcoat: 0.2, clearcoatRoughness: 0.5 }),
       backGlass: new THREE.MeshPhysicalMaterial({ color: colors.matte, metalness: 0.15, roughness: 0.65, clearcoat: 0.1, clearcoatRoughness: 0.9 }),
       innerBackPanel: new THREE.MeshPhysicalMaterial({ color: colors.matte, metalness: 0.12, roughness: 0.7, clearcoat: 0.05, clearcoatRoughness: 0.95 }),
-      screen: new THREE.MeshBasicMaterial({ map: screenTex, side: THREE.FrontSide }),
+      screen: new THREE.MeshBasicMaterial({ map: screenTex, side: THREE.FrontSide, toneMapped: false }),
       cameraBump: new THREE.MeshPhysicalMaterial({ color: colors.bump, metalness: 0.6, roughness: 0.4 }),
       lensRingBase: new THREE.MeshPhysicalMaterial({ color: colors.base, metalness: 0.9, roughness: 0.2 }),
       lensInnerBezel: new THREE.MeshPhysicalMaterial({ color: 0x050505, metalness: 0.8, roughness: 0.5 }),
@@ -410,7 +412,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] font-sans antialiased overflow-x-hidden selection:bg-cyan-500 selection:text-black">
+    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] antialiased overflow-x-hidden selection:bg-cyan-500 selection:text-black">
 
     <nav className="fixed top-0 left-0 w-full bg-white/70 backdrop-blur-lg border-b border-zinc-200 z-50 flex flex-col">
         <div className="h-14 flex items-center justify-between px-4 md:px-8 w-full">
