@@ -3818,6 +3818,298 @@ fun MicErrorDialog(
 }
 
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  Lucide Icons (Crisp Vector Graphics for Jetpack Compose)
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+fun LucideIconBox(
+    backgroundColor: Color,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .size(30.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(backgroundColor),
+        contentAlignment = Alignment.Center
+    ) {
+        content()
+    }
+}
+
+@Composable
+fun LucideMic(modifier: Modifier = Modifier.size(16.dp), tint: Color = Color.White) {
+    Canvas(modifier = modifier) {
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+            width = size.width * 0.1f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            join = androidx.compose.ui.graphics.StrokeJoin.Round
+        )
+        val w = size.width * 0.4f
+        val h = size.height * 0.55f
+        val l = (size.width - w) / 2f
+        val t = size.height * 0.1f
+        drawRoundRect(
+            color = tint,
+            topLeft = androidx.compose.ui.geometry.Offset(l, t),
+            size = androidx.compose.ui.geometry.Size(w, h),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(w / 2f, w / 2f),
+            style = stroke
+        )
+        val arcPath = androidx.compose.ui.graphics.Path().apply {
+            moveTo(size.width * 0.18f, size.height * 0.38f)
+            cubicTo(
+                size.width * 0.18f, size.height * 0.72f,
+                size.width * 0.82f, size.height * 0.72f,
+                size.width * 0.82f, size.height * 0.38f
+            )
+            moveTo(size.width * 0.5f, size.height * 0.72f)
+            lineTo(size.width * 0.5f, size.height * 0.9f)
+            moveTo(size.width * 0.3f, size.height * 0.9f)
+            lineTo(size.width * 0.7f, size.height * 0.9f)
+        }
+        drawPath(arcPath, color = tint, style = stroke)
+    }
+}
+
+@Composable
+fun LucideClock(modifier: Modifier = Modifier.size(16.dp), tint: Color = Color.White) {
+    Canvas(modifier = modifier) {
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+            width = size.width * 0.1f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            join = androidx.compose.ui.graphics.StrokeJoin.Round
+        )
+        drawCircle(color = tint, radius = size.width * 0.42f, style = stroke)
+        val p = androidx.compose.ui.graphics.Path().apply {
+            moveTo(size.width * 0.5f, size.height * 0.25f)
+            lineTo(size.width * 0.5f, size.height * 0.5f)
+            lineTo(size.width * 0.68f, size.height * 0.5f)
+        }
+        drawPath(p, color = tint, style = stroke)
+    }
+}
+
+@Composable
+fun LucideDroplet(modifier: Modifier = Modifier.size(16.dp), tint: Color = Color.White) {
+    Canvas(modifier = modifier) {
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+            width = size.width * 0.1f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            join = androidx.compose.ui.graphics.StrokeJoin.Round
+        )
+        val p = androidx.compose.ui.graphics.Path().apply {
+            moveTo(size.width * 0.5f, size.height * 0.12f)
+            cubicTo(
+                size.width * 0.15f, size.height * 0.55f,
+                size.width * 0.15f, size.height * 0.88f,
+                size.width * 0.5f, size.height * 0.88f
+            )
+            cubicTo(
+                size.width * 0.85f, size.height * 0.88f,
+                size.width * 0.85f, size.height * 0.55f,
+                size.width * 0.5f, size.height * 0.12f
+            )
+            close()
+        }
+        drawPath(p, color = tint, style = stroke)
+    }
+}
+
+@Composable
+fun LucideZap(modifier: Modifier = Modifier.size(16.dp), tint: Color = Color.White) {
+    Canvas(modifier = modifier) {
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+            width = size.width * 0.1f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            join = androidx.compose.ui.graphics.StrokeJoin.Round
+        )
+        val p = androidx.compose.ui.graphics.Path().apply {
+            moveTo(size.width * 0.55f, size.height * 0.1f)
+            lineTo(size.width * 0.2f, size.height * 0.52f)
+            lineTo(size.width * 0.48f, size.height * 0.52f)
+            lineTo(size.width * 0.42f, size.height * 0.9f)
+            lineTo(size.width * 0.8f, size.height * 0.45f)
+            lineTo(size.width * 0.52f, size.height * 0.45f)
+            close()
+        }
+        drawPath(p, color = tint, style = stroke)
+    }
+}
+
+@Composable
+fun LucideKey(modifier: Modifier = Modifier.size(16.dp), tint: Color = Color.White) {
+    Canvas(modifier = modifier) {
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+            width = size.width * 0.1f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            join = androidx.compose.ui.graphics.StrokeJoin.Round
+        )
+        drawCircle(color = tint, radius = size.width * 0.22f, center = androidx.compose.ui.geometry.Offset(size.width * 0.32f, size.height * 0.35f), style = stroke)
+        val p = androidx.compose.ui.graphics.Path().apply {
+            moveTo(size.width * 0.48f, size.height * 0.51f)
+            lineTo(size.width * 0.85f, size.height * 0.88f)
+            moveTo(size.width * 0.72f, size.height * 0.75f)
+            lineTo(size.width * 0.82f, size.height * 0.65f)
+            moveTo(size.width * 0.60f, size.height * 0.63f)
+            lineTo(size.width * 0.70f, size.height * 0.53f)
+        }
+        drawPath(p, color = tint, style = stroke)
+    }
+}
+
+@Composable
+fun LucideSliders(modifier: Modifier = Modifier.size(16.dp), tint: Color = Color.White) {
+    Canvas(modifier = modifier) {
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+            width = size.width * 0.1f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            join = androidx.compose.ui.graphics.StrokeJoin.Round
+        )
+        drawLine(color = tint, start = androidx.compose.ui.geometry.Offset(size.width * 0.15f, size.height * 0.3f), end = androidx.compose.ui.geometry.Offset(size.width * 0.85f, size.height * 0.3f), strokeWidth = stroke.width, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        drawCircle(color = tint, radius = size.width * 0.12f, center = androidx.compose.ui.geometry.Offset(size.width * 0.4f, size.height * 0.3f))
+        
+        drawLine(color = tint, start = androidx.compose.ui.geometry.Offset(size.width * 0.15f, size.height * 0.7f), end = androidx.compose.ui.geometry.Offset(size.width * 0.85f, size.height * 0.7f), strokeWidth = stroke.width, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        drawCircle(color = tint, radius = size.width * 0.12f, center = androidx.compose.ui.geometry.Offset(size.width * 0.65f, size.height * 0.7f))
+    }
+}
+
+@Composable
+fun LucideCpu(modifier: Modifier = Modifier.size(16.dp), tint: Color = Color.White) {
+    Canvas(modifier = modifier) {
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+            width = size.width * 0.1f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            join = androidx.compose.ui.graphics.StrokeJoin.Round
+        )
+        val boxSize = size.width * 0.5f
+        val boxLeft = (size.width - boxSize) / 2f
+        val boxTop = (size.height - boxSize) / 2f
+        drawRoundRect(color = tint, topLeft = androidx.compose.ui.geometry.Offset(boxLeft, boxTop), size = androidx.compose.ui.geometry.Size(boxSize, boxSize), cornerRadius = androidx.compose.ui.geometry.CornerRadius(2f, 2f), style = stroke)
+        drawRect(color = tint, topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.38f, size.height * 0.38f), size = androidx.compose.ui.geometry.Size(size.width * 0.24f, size.height * 0.24f))
+        val p = androidx.compose.ui.graphics.Path().apply {
+            moveTo(size.width * 0.35f, 0f); lineTo(size.width * 0.35f, boxTop)
+            moveTo(size.width * 0.65f, 0f); lineTo(size.width * 0.65f, boxTop)
+            moveTo(size.width * 0.35f, size.height); lineTo(size.width * 0.35f, boxTop + boxSize)
+            moveTo(size.width * 0.65f, size.height); lineTo(size.width * 0.65f, boxTop + boxSize)
+            moveTo(0f, size.height * 0.35f); lineTo(boxLeft, size.height * 0.35f)
+            moveTo(0f, size.height * 0.65f); lineTo(boxLeft, size.height * 0.65f)
+            moveTo(size.width, size.height * 0.35f); lineTo(boxLeft + boxSize, size.height * 0.35f)
+            moveTo(size.width, size.height * 0.65f); lineTo(boxLeft + boxSize, size.height * 0.65f)
+        }
+        drawPath(p, color = tint, style = stroke)
+    }
+}
+
+@Composable
+fun LucideLayers(modifier: Modifier = Modifier.size(16.dp), tint: Color = Color.White) {
+    Canvas(modifier = modifier) {
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+            width = size.width * 0.1f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            join = androidx.compose.ui.graphics.StrokeJoin.Round
+        )
+        val p = androidx.compose.ui.graphics.Path().apply {
+            moveTo(size.width * 0.5f, size.height * 0.12f)
+            lineTo(size.width * 0.85f, size.height * 0.32f)
+            lineTo(size.width * 0.5f, size.height * 0.52f)
+            lineTo(size.width * 0.15f, size.height * 0.32f)
+            close()
+            moveTo(size.width * 0.15f, size.height * 0.55f)
+            lineTo(size.width * 0.5f, size.height * 0.75f)
+            lineTo(size.width * 0.85f, size.height * 0.55f)
+        }
+        drawPath(p, color = tint, style = stroke)
+    }
+}
+
+@Composable
+fun LucideRotateCcw(modifier: Modifier = Modifier.size(16.dp), tint: Color = Color.White) {
+    Canvas(modifier = modifier) {
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+            width = size.width * 0.1f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            join = androidx.compose.ui.graphics.StrokeJoin.Round
+        )
+        val arcPath = androidx.compose.ui.graphics.Path().apply {
+            arcTo(
+                rect = androidx.compose.ui.geometry.Rect(size.width * 0.15f, size.height * 0.15f, size.width * 0.85f, size.height * 0.85f),
+                startAngleDegrees = 45f,
+                sweepAngleDegrees = 270f,
+                forceMoveTo = true
+            )
+            moveTo(size.width * 0.15f, size.height * 0.2f)
+            lineTo(size.width * 0.15f, size.height * 0.45f)
+            lineTo(size.width * 0.4f, size.height * 0.45f)
+        }
+        drawPath(arcPath, color = tint, style = stroke)
+    }
+}
+
+@Composable
+fun LucideChevronDown(modifier: Modifier = Modifier.size(14.dp), tint: Color = Color.White) {
+    Canvas(modifier = modifier) {
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+            width = size.width * 0.14f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            join = androidx.compose.ui.graphics.StrokeJoin.Round
+        )
+        val p = androidx.compose.ui.graphics.Path().apply {
+            moveTo(size.width * 0.2f, size.height * 0.35f)
+            lineTo(size.width * 0.5f, size.height * 0.65f)
+            lineTo(size.width * 0.8f, size.height * 0.35f)
+        }
+        drawPath(p, color = tint, style = stroke)
+    }
+}
+
+@Composable
+fun LucideChevronUp(modifier: Modifier = Modifier.size(14.dp), tint: Color = Color.White) {
+    Canvas(modifier = modifier) {
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+            width = size.width * 0.14f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            join = androidx.compose.ui.graphics.StrokeJoin.Round
+        )
+        val p = androidx.compose.ui.graphics.Path().apply {
+            moveTo(size.width * 0.2f, size.height * 0.65f)
+            lineTo(size.width * 0.5f, size.height * 0.35f)
+            lineTo(size.width * 0.8f, size.height * 0.65f)
+        }
+        drawPath(p, color = tint, style = stroke)
+    }
+}
+
+@Composable
+fun LucideTrash(modifier: Modifier = Modifier.size(16.dp), tint: Color = Color.White) {
+    Canvas(modifier = modifier) {
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+            width = size.width * 0.1f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            join = androidx.compose.ui.graphics.StrokeJoin.Round
+        )
+        val p = androidx.compose.ui.graphics.Path().apply {
+            moveTo(size.width * 0.2f, size.height * 0.25f)
+            lineTo(size.width * 0.8f, size.height * 0.25f)
+            moveTo(size.width * 0.3f, size.height * 0.25f)
+            lineTo(size.width * 0.35f, size.height * 0.85f)
+            lineTo(size.width * 0.65f, size.height * 0.85f)
+            lineTo(size.width * 0.7f, size.height * 0.25f)
+            moveTo(size.width * 0.4f, size.height * 0.25f)
+            lineTo(size.width * 0.4f, size.height * 0.12f)
+            lineTo(size.width * 0.6f, size.height * 0.12f)
+            lineTo(size.width * 0.6f, size.height * 0.25f)
+        }
+        drawPath(p, color = tint, style = stroke)
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Apple Design System Group & Rows with Lucide Icons
+// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
 fun AppleSettingsGroup(
     title: String? = null,
@@ -3827,10 +4119,11 @@ fun AppleSettingsGroup(
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
         if (title != null) {
             Text(
-                title.uppercase(java.util.Locale.getDefault()),
+                title.uppercase(java.util.Locale.ROOT),
                 color = Color.White.copy(alpha = 0.5f),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
+                fontFamily = InterFontFamily,
                 modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
             )
         }
@@ -3847,6 +4140,7 @@ fun AppleSettingsGroup(
                 footer,
                 color = Color.White.copy(alpha = 0.5f),
                 fontSize = 13.sp,
+                fontFamily = InterFontFamily,
                 modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)
             )
         }
@@ -3857,7 +4151,7 @@ fun AppleSettingsGroup(
 fun AppleSettingsRow(
     title: String,
     subtitle: String? = null,
-    icon: String? = null,
+    icon: (@Composable () -> Unit)? = null,
     iconBgColor: Color = Color.Transparent,
     showDivider: Boolean = true,
     onClick: (() -> Unit)? = null,
@@ -3871,14 +4165,8 @@ fun AppleSettingsRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
-            Box(
-                modifier = Modifier
-                    .size(30.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(iconBgColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(icon, fontSize = 16.sp)
+            LucideIconBox(backgroundColor = iconBgColor) {
+                icon()
             }
             Spacer(Modifier.width(16.dp))
         }
@@ -3886,10 +4174,10 @@ fun AppleSettingsRow(
         Column(modifier = Modifier.weight(1f).padding(vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(end = 16.dp)) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                    Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium, fontFamily = InterFontFamily)
                     if (subtitle != null) {
                         Spacer(Modifier.height(2.dp))
-                        Text(subtitle, color = Color.White.copy(alpha = 0.5f), fontSize = 13.sp)
+                        Text(subtitle, color = Color.White.copy(alpha = 0.5f), fontSize = 13.sp, fontFamily = InterFontFamily)
                     }
                 }
                 if (control != null) {
@@ -3904,6 +4192,9 @@ fun AppleSettingsRow(
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  Full Settings Screen
+// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 fun SettingsScreen(
@@ -3922,17 +4213,22 @@ fun SettingsScreen(
     var wakeWordInput by remember { mutableStateOf(isWakeWordMode) }
     var historyLoggingInput by remember { mutableStateOf(sharedPrefs.getBoolean("HISTORY_LOGGING", true)) }
     var waterReminderInput by remember { mutableStateOf(sharedPrefs.getBoolean("WATER_REMINDER", false)) }
-    var advancedAiInput by remember { mutableStateOf(isAdvancedAiMode) }
+    var waterInterval by remember { mutableStateOf(sharedPrefs.getInt("WATER_REMINDER_INTERVAL", 30)) }
     var onlineModeInput by remember { mutableStateOf(isOnlineModeEnabled) }
     var adminKeyInput by remember { mutableStateOf(useAdminPanelKey) }
     var geminiKeyInput by remember { mutableStateOf(sharedPrefs.getString("GEMINI_API_KEY", "") ?: "") }
     var showApiKey by remember { mutableStateOf(false) }
+
+    // Expanded states for each device config card
+    var expandedDevId by remember { mutableStateOf<String?>(null) }
     
     val context = LocalContext.current
     
     var showPasswordDialog by remember { mutableStateOf(false) }
     var passwordInput by remember { mutableStateOf("") }
     var passwordError by remember { mutableStateOf(false) }
+
+    var showResetConfirmDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -3947,7 +4243,7 @@ fun SettingsScreen(
         ) {
             // Header
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp, start = 8.dp, end = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp, start = 8.dp, end = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -3959,7 +4255,7 @@ fun SettingsScreen(
                     fontFamily = InterFontFamily
                 )
                 TextButton(onClick = { onSave(apiKeyInput, selectedModel, wakeWordInput) }) {
-                    Text("Done", color = Color(0xFF0A84FF), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Done", color = Color(0xFF0A84FF), fontSize = 17.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily)
                 }
             }
             
@@ -3974,7 +4270,7 @@ fun SettingsScreen(
                     AppleSettingsRow(
                         title = "Hands-Free Wake Word",
                         subtitle = "Say 'Hey Jasica' to activate",
-                        icon = "🎙️",
+                        icon = { LucideMic(tint = Color.White) },
                         iconBgColor = Color(0xFF007AFF),
                         showDivider = true,
                         control = {
@@ -3989,7 +4285,7 @@ fun SettingsScreen(
                     AppleSettingsRow(
                         title = "Save History",
                         subtitle = "Log conversations locally",
-                        icon = "🕒",
+                        icon = { LucideClock(tint = Color.White) },
                         iconBgColor = Color(0xFF5856D6),
                         showDivider = true,
                         control = {
@@ -4006,10 +4302,10 @@ fun SettingsScreen(
                     
                     AppleSettingsRow(
                         title = "Water Reminder",
-                        subtitle = "30 minute intervals",
-                        icon = "💧",
+                        subtitle = "Notify every ${waterInterval} minutes",
+                        icon = { LucideDroplet(tint = Color.White) },
                         iconBgColor = Color(0xFF5AC8FA),
-                        showDivider = false,
+                        showDivider = waterReminderInput,
                         onClick = {
                             if (waterReminderInput) showPasswordDialog = true
                             else {
@@ -4026,16 +4322,43 @@ fun SettingsScreen(
                             )
                         }
                     )
+
+                    if (waterReminderInput) {
+                        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp)) {
+                            Text("Reminder Interval", color = Color.White.copy(0.6f), fontSize = 12.sp, fontFamily = InterFontFamily)
+                            Spacer(Modifier.height(8.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                listOf(15, 30, 45, 60).forEach { mins ->
+                                    val isSel = waterInterval == mins
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(if (isSel) Color(0xFF0A84FF) else Color.White.copy(0.08f))
+                                            .clickable {
+                                                waterInterval = mins
+                                                sharedPrefs.edit().putInt("WATER_REMINDER_INTERVAL", mins).apply()
+                                                WaterReminderManager.scheduleNextAlarm(context)
+                                            }
+                                            .padding(vertical = 8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("${mins}m", color = Color.White, fontSize = 13.sp, fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal, fontFamily = InterFontFamily)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // AI Mode Group
                 AppleSettingsGroup(
-                    title = "JASICA ONLINE", 
-                    footer = if (!onlineModeInput) "Offline mode is 100% free with no internet needed." else "Jasica Online uses AI to handle complex tasks."
+                    title = "JASICA ONLINE & AI", 
+                    footer = if (!onlineModeInput) "Offline mode is 100% free with no internet needed." else "Jasica Online uses Gemini AI to handle complex tasks."
                 ) {
                     AppleSettingsRow(
                         title = "Enable Jasica Online",
-                        icon = "⚡",
+                        icon = { LucideZap(tint = Color.White) },
                         iconBgColor = Color(0xFFFF9500),
                         showDivider = onlineModeInput,
                         control = {
@@ -4054,7 +4377,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Admin Panel Key",
                             subtitle = "Auto-fetched from Portfolio",
-                            icon = "🔗",
+                            icon = { LucideKey(tint = Color.White) },
                             iconBgColor = Color(0xFF34C759),
                             showDivider = true,
                             onClick = {
@@ -4070,9 +4393,9 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "My Own Key",
                             subtitle = "Use your personal API key",
-                            icon = "🔑",
+                            icon = { LucideKey(tint = Color.White) },
                             iconBgColor = Color(0xFFFF2D55),
-                            showDivider = !adminKeyInput,
+                            showDivider = true,
                             onClick = {
                                 adminKeyInput = false
                                 sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", false).apply()
@@ -4085,7 +4408,7 @@ fun SettingsScreen(
                         )
                         
                         if (!adminKeyInput) {
-                            Column(modifier = Modifier.padding(16.dp)) {
+                            Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp)) {
                                 androidx.compose.material3.OutlinedTextField(
                                     value = geminiKeyInput,
                                     onValueChange = {
@@ -4093,9 +4416,9 @@ fun SettingsScreen(
                                         sharedPrefs.edit().putString("GEMINI_API_KEY", it.trim()).apply()
                                     },
                                     placeholder = { Text("AIza...", color = Color.White.copy(alpha = 0.2f)) },
-                                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 16.sp),
+                                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 15.sp, fontFamily = InterFontFamily),
                                     modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = RoundedCornerShape(10.dp),
                                     singleLine = true,
                                     visualTransformation = if (showApiKey) androidx.compose.ui.text.input.VisualTransformation.None else androidx.compose.ui.text.input.PasswordVisualTransformation(),
                                     trailingIcon = {
@@ -4110,31 +4433,268 @@ fun SettingsScreen(
                                 )
                             }
                         }
+
+                        // AI Model Selection Chips
+                        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                LucideIconBox(backgroundColor = Color(0xFFAF52DE)) {
+                                    LucideLayers(tint = Color.White)
+                                }
+                                Spacer(Modifier.width(12.dp))
+                                Text("AI Model Selection", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Medium, fontFamily = InterFontFamily)
+                            }
+                            Spacer(Modifier.height(12.dp))
+                            
+                            val models = listOf(
+                                "gemini-2.5-flash" to "2.5 Flash (Fastest)",
+                                "gemini-2.0-flash" to "2.0 Flash",
+                                "gemini-1.5-flash" to "1.5 Flash",
+                                "gemini-1.5-pro"   to "1.5 Pro"
+                            )
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                models.forEach { (modelId, label) ->
+                                    val isSelected = selectedModel == modelId
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(if (isSelected) Color(0xFF0A84FF).copy(alpha = 0.15f) else Color.White.copy(0.04f))
+                                            .border(1.dp, if (isSelected) Color(0xFF0A84FF) else Color.Transparent, RoundedCornerShape(10.dp))
+                                            .clickable {
+                                                selectedModel = modelId
+                                                sharedPrefs.edit().putString("AI_MODEL", modelId).apply()
+                                            }
+                                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(label, color = if (isSelected) Color.White else Color.White.copy(0.7f), fontSize = 14.sp, fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal, fontFamily = InterFontFamily)
+                                        if (isSelected) {
+                                            Icon(Icons.Rounded.Check, contentDescription = null, tint = Color(0xFF0A84FF), modifier = Modifier.size(18.dp))
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 
-                // Hardware Config Group
-                AppleSettingsGroup(title = "Hardware Config", footer = "Configure Bluetooth device voice commands.") {
+                // Hardware & Device Configuration Group
+                AppleSettingsGroup(
+                    title = "Hardware Config & Device Names", 
+                    footer = "Tap any device to customize its display name, voice commands, and hardware pins."
+                ) {
                     DEFAULT_DEVICES.forEachIndexed { index, dev ->
                         var name by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName) }
                         var onCmd by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_ON_CMD", dev.defaultOnCmd) ?: dev.defaultOnCmd) }
                         var offCmd by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_OFF_CMD", dev.defaultOffCmd) ?: dev.defaultOffCmd) }
-                        
-                        AppleSettingsRow(
-                            title = "Device '${dev.id.uppercase(java.util.Locale.getDefault())}'",
-                            icon = "⚙️",
-                            iconBgColor = Color(0xFF8E8E93),
-                            showDivider = index != DEFAULT_DEVICES.size - 1,
-                            control = {
-                                Text(name, color = Color.White.copy(0.5f), fontSize = 16.sp)
+                        var pinOn by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_PIN_ON", dev.defaultPinOn) ?: dev.defaultPinOn) }
+                        var pinOff by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_PIN_OFF", dev.defaultPinOff) ?: dev.defaultPinOff) }
+
+                        val isExpanded = expandedDevId == dev.id
+
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { expandedDevId = if (isExpanded) null else dev.id }
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                    LucideIconBox(backgroundColor = Color(0xFF636366)) {
+                                        LucideCpu(tint = Color.White)
+                                    }
+                                    Spacer(Modifier.width(14.dp))
+                                    Column {
+                                        Text(name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily)
+                                        Spacer(Modifier.height(2.dp))
+                                        Text("Pin [$pinOn/$pinOff] • \"$onCmd\"", color = Color.White.copy(0.5f), fontSize = 12.sp, fontFamily = InterFontFamily)
+                                    }
+                                }
+                                if (isExpanded) {
+                                    LucideChevronUp(tint = Color(0xFF0A84FF))
+                                } else {
+                                    LucideChevronDown(tint = Color.White.copy(0.4f))
+                                }
                             }
-                        )
+
+                            // Expanded Form Editor
+                            if (isExpanded) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(Color(0xFF2C2C2E))
+                                        .padding(16.dp)
+                                ) {
+                                    // 1. Device Name
+                                    Text("Device Display Name", color = Color.White.copy(0.6f), fontSize = 12.sp, fontFamily = InterFontFamily)
+                                    Spacer(Modifier.height(4.dp))
+                                    androidx.compose.material3.OutlinedTextField(
+                                        value = name,
+                                        onValueChange = {
+                                            name = it
+                                            sharedPrefs.edit().putString("DEV_${dev.id}_NAME", it.trim()).apply()
+                                        },
+                                        placeholder = { Text(dev.defaultName, color = Color.White.copy(0.2f)) },
+                                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 14.sp, fontFamily = InterFontFamily),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(8.dp),
+                                        singleLine = true,
+                                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = Color(0xFF0A84FF),
+                                            unfocusedBorderColor = Color(0xFF38383A)
+                                        )
+                                    )
+
+                                    Spacer(Modifier.height(12.dp))
+
+                                    // 2. Voice Turn ON Command
+                                    Text("Voice ON Trigger Phrase", color = Color.White.copy(0.6f), fontSize = 12.sp, fontFamily = InterFontFamily)
+                                    Spacer(Modifier.height(4.dp))
+                                    androidx.compose.material3.OutlinedTextField(
+                                        value = onCmd,
+                                        onValueChange = {
+                                            onCmd = it
+                                            sharedPrefs.edit().putString("DEV_${dev.id}_ON_CMD", it.trim().lowercase(java.util.Locale.ROOT)).apply()
+                                        },
+                                        placeholder = { Text(dev.defaultOnCmd, color = Color.White.copy(0.2f)) },
+                                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 14.sp, fontFamily = InterFontFamily),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(8.dp),
+                                        singleLine = true,
+                                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = Color(0xFF0A84FF),
+                                            unfocusedBorderColor = Color(0xFF38383A)
+                                        )
+                                    )
+
+                                    Spacer(Modifier.height(12.dp))
+
+                                    // 3. Voice Turn OFF Command
+                                    Text("Voice OFF Trigger Phrase", color = Color.White.copy(0.6f), fontSize = 12.sp, fontFamily = InterFontFamily)
+                                    Spacer(Modifier.height(4.dp))
+                                    androidx.compose.material3.OutlinedTextField(
+                                        value = offCmd,
+                                        onValueChange = {
+                                            offCmd = it
+                                            sharedPrefs.edit().putString("DEV_${dev.id}_OFF_CMD", it.trim().lowercase(java.util.Locale.ROOT)).apply()
+                                        },
+                                        placeholder = { Text(dev.defaultOffCmd, color = Color.White.copy(0.2f)) },
+                                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 14.sp, fontFamily = InterFontFamily),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(8.dp),
+                                        singleLine = true,
+                                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = Color(0xFF0A84FF),
+                                            unfocusedBorderColor = Color(0xFF38383A)
+                                        )
+                                    )
+
+                                    Spacer(Modifier.height(12.dp))
+
+                                    // 4. Hardware Character Pins
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text("Pin ON Char", color = Color.White.copy(0.6f), fontSize = 12.sp, fontFamily = InterFontFamily)
+                                            Spacer(Modifier.height(4.dp))
+                                            androidx.compose.material3.OutlinedTextField(
+                                                value = pinOn,
+                                                onValueChange = {
+                                                    pinOn = it.take(5)
+                                                    sharedPrefs.edit().putString("DEV_${dev.id}_PIN_ON", it).apply()
+                                                },
+                                                textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 14.sp, fontFamily = InterFontFamily),
+                                                modifier = Modifier.fillMaxWidth(),
+                                                shape = RoundedCornerShape(8.dp),
+                                                singleLine = true,
+                                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF0A84FF), unfocusedBorderColor = Color(0xFF38383A))
+                                            )
+                                        }
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text("Pin OFF Char", color = Color.White.copy(0.6f), fontSize = 12.sp, fontFamily = InterFontFamily)
+                                            Spacer(Modifier.height(4.dp))
+                                            androidx.compose.material3.OutlinedTextField(
+                                                value = pinOff,
+                                                onValueChange = {
+                                                    pinOff = it.take(5)
+                                                    sharedPrefs.edit().putString("DEV_${dev.id}_PIN_OFF", it).apply()
+                                                },
+                                                textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 14.sp, fontFamily = InterFontFamily),
+                                                modifier = Modifier.fillMaxWidth(),
+                                                shape = RoundedCornerShape(8.dp),
+                                                singleLine = true,
+                                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF0A84FF), unfocusedBorderColor = Color(0xFF38383A))
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (index != DEFAULT_DEVICES.size - 1) {
+                                androidx.compose.material3.Divider(modifier = Modifier.padding(start = 60.dp), color = Color(0xFF38383A), thickness = 0.5.dp)
+                            }
+                        }
                     }
                 }
+
+                // Danger & Reset Group
+                AppleSettingsGroup(title = "Reset & Maintenance") {
+                    AppleSettingsRow(
+                        title = "Reset Devices to Default",
+                        subtitle = "Restore 1st LED to 6th LED",
+                        icon = { LucideRotateCcw(tint = Color.White) },
+                        iconBgColor = Color(0xFFFF9500),
+                        showDivider = true,
+                        onClick = {
+                            showResetConfirmDialog = true
+                        }
+                    )
+                }
+
                 Spacer(Modifier.height(40.dp))
             }
         }
 
+        // Reset Confirmation Dialog
+        if (showResetConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = { showResetConfirmDialog = false },
+                title = { Text("Reset Hardware Config?", color = Color.White, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily) },
+                text = { Text("All device names, commands, and pins will be reset to default values (1st LED – 6th LED).", color = Color.White.copy(0.7f), fontSize = 14.sp, fontFamily = InterFontFamily) },
+                containerColor = Color(0xFF1E1E2E),
+                shape = RoundedCornerShape(20.dp),
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            DEFAULT_DEVICES.forEach { dev ->
+                                sharedPrefs.edit()
+                                    .remove("DEV_${dev.id}_NAME")
+                                    .remove("DEV_${dev.id}_ON_CMD")
+                                    .remove("DEV_${dev.id}_OFF_CMD")
+                                    .remove("DEV_${dev.id}_PIN_ON")
+                                    .remove("DEV_${dev.id}_PIN_OFF")
+                                    .apply()
+                            }
+                            showResetConfirmDialog = false
+                            android.widget.Toast.makeText(context, "Devices Reset to Defaults", android.widget.Toast.LENGTH_SHORT).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF453A)),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Reset", color = Color.White, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showResetConfirmDialog = false }) {
+                        Text("Cancel", color = Color.White.copy(0.6f), fontFamily = InterFontFamily)
+                    }
+                }
+            )
+        }
+
+        // Water reminder password dialog
         if (showPasswordDialog) {
             AlertDialog(
                 onDismissRequest = { 
@@ -4142,22 +4702,22 @@ fun SettingsScreen(
                     passwordError = false
                     passwordInput = ""
                 },
-                title = { Text("Enter Admin Password", color = Color.White, fontWeight = FontWeight.Bold) },
+                title = { Text("Enter Admin Password", color = Color.White, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily) },
                 text = {
                     Column {
-                        Text("A password is required to turn off the water reminder.", color = Color.White.copy(0.7f), fontSize = 14.sp)
+                        Text("A password is required to turn off the water reminder.", color = Color.White.copy(0.7f), fontSize = 14.sp, fontFamily = InterFontFamily)
                         Spacer(modifier = Modifier.height(16.dp))
                         androidx.compose.material3.OutlinedTextField(
                             value = passwordInput,
                             onValueChange = { passwordInput = it; passwordError = false },
-                            label = { Text("Password", color = Color.White.copy(0.5f)) },
+                            label = { Text("Password", color = Color.White.copy(0.5f), fontFamily = InterFontFamily) },
                             isError = passwordError,
-                            textStyle = androidx.compose.ui.text.TextStyle(color = Color.White),
+                            textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontFamily = InterFontFamily),
                             shape = RoundedCornerShape(12.dp),
                             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFFFF9800), unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
                         )
                         if (passwordError) {
-                            Text("Incorrect password", color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+                            Text("Incorrect password", color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp), fontFamily = InterFontFamily)
                         }
                     }
                 },
@@ -4182,7 +4742,7 @@ fun SettingsScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Confirm", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Confirm", color = Color.White, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily)
                     }
                 },
                 dismissButton = {
@@ -4191,7 +4751,7 @@ fun SettingsScreen(
                         passwordError = false
                         passwordInput = ""
                     }) {
-                        Text("Cancel", color = Color.White.copy(0.5f))
+                        Text("Cancel", color = Color.White.copy(0.5f), fontFamily = InterFontFamily)
                     }
                 }
             )
