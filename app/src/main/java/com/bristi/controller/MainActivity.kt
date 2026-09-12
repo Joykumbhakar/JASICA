@@ -78,10 +78,10 @@ import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Lightbulb
-import androidx.compose.material.icons.outlined.PowerSettingsNew
-import androidx.compose.material.icons.outlined.Block
-import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.rounded.Lightbulb
+import androidx.compose.material.icons.rounded.PowerSettingsNew
+import androidx.compose.material.icons.rounded.Block
+import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.TabRowDefaults
@@ -259,6 +259,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     // ── Timer & Blink Control Memory ─────────────────────────────────────────
     private var activeBlinkJob: Job? = null
     private val activeTimerJobs = java.util.concurrent.ConcurrentHashMap<String, Job>()
+    internal val activeTimerEndTimes = androidx.compose.runtime.mutableStateMapOf<String, Long>()
 
     // ── System Prompt ─────────────────────────────────────────────────────────
     private fun getSystemInstruction(): String {
@@ -808,6 +809,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
         // Cancel previous timer for this device if active
         activeTimerJobs[dev.id]?.cancel()
+        activeTimerEndTimes.remove(dev.id)
 
         // Trigger initial state
         processCommandAndSync(initialPin)
@@ -816,6 +818,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             delay(timer.durationMs)
             processCommandAndSync(finalPin)
             activeTimerJobs.remove(dev.id)
+            activeTimerEndTimes.remove(dev.id)
 
             val finishMsg = if (timer.isTurningOn) {
                 "${dev.name}-এর ${timer.durationLabel} সময় শেষ হয়েছে, তাই অফ করে দিলাম বৃষ্টি।"
@@ -830,7 +833,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 speakMultilingual(finishMsg, "JASICA_TIMER_DONE")
             }
         }
-        activeTimerJobs[dev.id] = job
+        activeTimerEndTimes[dev.id] = System.currentTimeMillis() + timer.durationMs
+            activeTimerJobs[dev.id] = job
     }
 
     private fun handleBlinkExecution(blink: SpecialCommandResult.Blink, spokenText: String) {
@@ -1102,6 +1106,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         activeBlinkJob?.cancel()
         activeTimerJobs.values.forEach { it.cancel() }
         activeTimerJobs.clear()
+        activeTimerEndTimes.clear()
         stopEverything()
         if (::tts.isInitialized) tts.shutdown()
         if (::speechRecognizer.isInitialized) speechRecognizer.destroy()
@@ -2114,12 +2119,15 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                         else -> 60000L
                     }
                     activeTimerJobs[devName]?.cancel()
+                    activeTimerEndTimes.remove(devName)
                     processCommandAndSync(pinOn)
                     val job = lifecycleScope.launch(Dispatchers.IO) {
                         delay(durationMs)
                         processCommandAndSync(pinOff)
                         activeTimerJobs.remove(devName)
+                        activeTimerEndTimes.remove(devName)
                     }
+                    activeTimerEndTimes[devName] = System.currentTimeMillis() + durationMs
                     activeTimerJobs[devName] = job
                 }
             } else if (cmdPayload.startsWith("BLINK:")) {
@@ -3063,7 +3071,6 @@ fun ManualControlsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .clickable(enabled = false) {}
             .background(bgColor)
     ) {
         Column(
@@ -3127,7 +3134,7 @@ fun ManualControlsScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34C759))
                 ) {
-                    Icon(imageVector = Icons.Outlined.PowerSettingsNew, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
+                    Icon(imageVector = Icons.Rounded.PowerSettingsNew, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
                     Spacer(Modifier.width(6.dp))
                     Text("All ON", color = Color.White, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily, fontSize = 15.sp)
                 }
@@ -3144,7 +3151,7 @@ fun ManualControlsScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = if (isDark) Color(0xFF2C2C2E) else Color(0xFF8E8E93))
                 ) {
-                    Icon(imageVector = Icons.Outlined.Block, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
+                    Icon(imageVector = Icons.Rounded.Block, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
                     Spacer(Modifier.width(6.dp))
                     Text("All OFF", color = Color.White, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily, fontSize = 15.sp)
                 }
@@ -3158,7 +3165,13 @@ fun ManualControlsScreen(
                 items(devices, key = { it.id }) { device ->
                     val isChecked = optimisticStates[device.id] == true
                     val startTime = deviceOnTime[device.id]
-                    val elapsed: String? = if (isChecked && startTime != null) {
+                    val context = androidx.compose.ui.platform.LocalContext.current
+                    val mainActivity = context as? MainActivity
+                    val endTime = mainActivity?.activeTimerEndTimes?.get(device.id)
+                    val elapsed: String? = if (endTime != null && endTime > tick) {
+                        val remainingSecs = ((endTime - tick) / 1000L).coerceAtLeast(0L)
+                        "Timer · ${remainingSecs / 60}:${(remainingSecs % 60).toString().padStart(2, '0')}"
+                    } else if (isChecked && startTime != null) {
                         val secs = ((tick - startTime) / 1000L).coerceAtLeast(0L)
                         "${secs / 60}:${(secs % 60).toString().padStart(2, '0')}"
                     } else null
@@ -3243,7 +3256,7 @@ fun DeviceControlCard(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.Lightbulb,
+                    imageVector = Icons.Rounded.Lightbulb,
                     contentDescription = null,
                     tint = if (isChecked) activeAccent else subTextColor,
                     modifier = Modifier.size(20.dp)
@@ -3318,7 +3331,7 @@ fun DeviceControlCard(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFF3B30))
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Cancel,
+                        imageVector = Icons.Rounded.Cancel,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )
@@ -5432,7 +5445,15 @@ fun SettingsScreen(
 
 @SuppressLint("MissingPermission")
 @Composable
-fun DeviceSelectionDialog(pairedDevices: List<BluetoothDevice>, availableDevices: List<BluetoothDevice>, isScanning: Boolean, hazeState: dev.chrisbanes.haze.HazeState?, onDeviceSelect: (BluetoothDevice) -> Unit, onScanTap: () -> Unit, onDismiss: () -> Unit) {
+fun DeviceSelectionDialog(
+    pairedDevices: List<BluetoothDevice>,
+    availableDevices: List<BluetoothDevice>,
+    isScanning: Boolean,
+    hazeState: dev.chrisbanes.haze.HazeState?,
+    onDeviceSelect: (BluetoothDevice) -> Unit,
+    onScanTap: () -> Unit,
+    onDismiss: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -5441,70 +5462,169 @@ fun DeviceSelectionDialog(pairedDevices: List<BluetoothDevice>, availableDevices
                     state = hazeState,
                     style = dev.chrisbanes.haze.HazeStyle(
                         blurRadius = 24.dp,
-                        tint = dev.chrisbanes.haze.HazeTint(Color(0x55000000))
+                        tint = dev.chrisbanes.haze.HazeTint(Color.Black.copy(alpha=0.6f))
                     )
                 ) else Modifier.background(Color.Black.copy(alpha = 0.6f))
             )
             .pointerInput(Unit) { detectTapGestures(onTap = { onDismiss() }) },
         contentAlignment = Alignment.Center
     ) {
-        Box(modifier = Modifier.padding(24.dp).pointerInput(Unit) { detectTapGestures { /* consume */ } }) {
+        Box(
+            modifier = Modifier
+                .padding(24.dp)
+                .fillMaxWidth()
+                .pointerInput(Unit) { detectTapGestures { /* consume */ } }
+        ) {
             JasicaGraphicalDialogPanel(hazeState = null) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Bluetooth Devices", color = Color.White, fontFamily = InterFontFamily, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                if (isScanning) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
-                } else {
-                    Button(onClick = onScanTap, colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha=0.2f))) {
-                        Text("SCAN", color = Color.White, fontFamily = InterFontFamily, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp)) {
+                    // Header
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Bluetooth Devices",
+                            color = Color.White,
+                            fontFamily = InterFontFamily,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (isScanning) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(22.dp),
+                                color = Color(0xFF34C759),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Button(
+                                onClick = onScanTap,
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                                modifier = Modifier.height(32.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha=0.15f))
+                            ) {
+                                Text("SCAN", color = Color.White, fontFamily = InterFontFamily, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 400.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (pairedDevices.isNotEmpty()) {
+                            item {
+                                Text(
+                                    "PAIRED DEVICES",
+                                    color = Color.White.copy(alpha = 0.5f),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontFamily = InterFontFamily,
+                                    modifier = Modifier.padding(bottom = 4.dp, top = 4.dp)
+                                )
+                            }
+                            items(pairedDevices, key = { "paired_" + it.address }) { device ->
+                                val name = try { device.name ?: "Unknown Device" } catch (e: SecurityException) { "Unknown Device" }
+                                DeviceListItem(name, device.address, true) { onDeviceSelect(device) }
+                            }
+                        }
+
+                        item {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "AVAILABLE DEVICES",
+                                color = Color.White.copy(alpha = 0.5f),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = InterFontFamily,
+                                modifier = Modifier.padding(bottom = 4.dp, top = 4.dp)
+                            )
+                        }
+
+                        if (availableDevices.isEmpty() && !isScanning) {
+                            item {
+                                Box(modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
+                                    Text("No devices found.", color = Color.White.copy(alpha=0.4f), fontSize = 14.sp, fontFamily = InterFontFamily)
+                                }
+                            }
+                        } else {
+                            items(availableDevices, key = { "avail_" + it.address }) { device ->
+                                val name = try { device.name ?: "Unknown Signal" } catch (e: SecurityException) { "Unknown Signal" }
+                                DeviceListItem(name, device.address, false) { onDeviceSelect(device) }
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(24.dp))
+
+                    // Close Button
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.1f))
+                    ) {
+                        Text("Close", color = Color.White, fontFamily = InterFontFamily, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            LazyColumn(modifier = Modifier.heightIn(max = 350.dp)) {
-                if (pairedDevices.isNotEmpty()) {
-                    item { Text("PAIRED DEVICES", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp, fontFamily = InterFontFamily, modifier = Modifier.padding(vertical = 8.dp)) }
-                    items(pairedDevices, key = { it.address }) { device -> DeviceListItem(try { device.name ?: "Unknown Device" } catch (e: SecurityException) { "Unknown Device" }, device.address) { onDeviceSelect(device) } }
-                }
-
-                item { Spacer(Modifier.height(12.dp)); Text("AVAILABLE DEVICES", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp, fontFamily = InterFontFamily, modifier = Modifier.padding(vertical = 8.dp)) }
-
-                if (availableDevices.isEmpty() && !isScanning) {
-                    item { Text("No devices found.", color = Color.White.copy(alpha=0.6f), fontSize = 14.sp, fontFamily = InterFontFamily, modifier = Modifier.padding(vertical = 12.dp)) }
-                } else {
-                    items(availableDevices, key = { it.address }) { device -> DeviceListItem(try { device.name ?: "Unknown Signal" } catch (e: SecurityException) { "Unknown Signal" }, device.address) { onDeviceSelect(device) } }
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
-                Text("CLOSE", color = Color.White.copy(alpha=0.9f), fontFamily = InterFontFamily, fontSize = 14.sp)
             }
         }
     }
 }
-}
 
 @Composable
-fun DeviceListItem(name: String, address: String, onClick: () -> Unit) {
+fun DeviceListItem(name: String, address: String, isPaired: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(Color.White.copy(alpha = 0.08f))
             .clickable { onClick() }
-            .padding(12.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(imageVector = Icons.Outlined.Bluetooth, contentDescription = null, tint = Color.White)
-        Spacer(Modifier.width(12.dp))
-        Column {
-            Text(name, color = Color.White, fontSize = 15.sp, fontFamily = InterFontFamily, fontWeight = FontWeight.SemiBold)
-            Text(address, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, fontFamily = InterFontFamily)
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Bluetooth,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = name,
+                color = Color.White,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                fontFamily = InterFontFamily,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+            Text(
+                text = address,
+                color = Color.White.copy(alpha = 0.5f),
+                fontSize = 12.sp,
+                fontFamily = InterFontFamily
+            )
+        }
+        if (isPaired) {
+            Icon(
+                imageVector = Icons.Rounded.Check,
+                contentDescription = null,
+                tint = Color(0xFF34C759).copy(alpha = 0.8f),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
