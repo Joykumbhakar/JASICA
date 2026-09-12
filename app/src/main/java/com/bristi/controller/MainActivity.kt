@@ -934,8 +934,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         useAdminPanelKey.value    = sharedPrefs.getBoolean("USE_ADMIN_PANEL_KEY", true)
 
         // Load device states into memory map
-        listOf("a", "b", "c", "d", "e", "f").forEach { id ->
-            deviceStates[id] = sharedPrefs.getBoolean("DEV_$id", false)
+        DEFAULT_DEVICES.forEach { dev ->
+            deviceStates[dev.id] = sharedPrefs.getBoolean("DEV_${dev.id}", false)
         }
 
         // Check if user has seen setup
@@ -1163,22 +1163,34 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         }
 
         // Sync states to memory and view model based on the command executed
-        if (command == "on") {
-            listOf("a", "b", "c", "d", "e", "f").forEach { id ->
-                deviceStates[id] = true
-                sharedPrefs.edit().putBoolean("DEV_$id", true).apply()
+        if (command == "on" || command == "on\n") {
+            DEFAULT_DEVICES.forEach { dev ->
+                deviceStates[dev.id] = true
+                sharedPrefs.edit().putBoolean("DEV_${dev.id}", true).apply()
             }
-        } else if (command == "off") {
-            listOf("a", "b", "c", "d", "e", "f").forEach { id ->
-                deviceStates[id] = false
-                sharedPrefs.edit().putBoolean("DEV_$id", false).apply()
+        } else if (command == "off" || command == "off\n") {
+            DEFAULT_DEVICES.forEach { dev ->
+                deviceStates[dev.id] = false
+                sharedPrefs.edit().putBoolean("DEV_${dev.id}", false).apply()
             }
-        } else if (command.length == 1) {
-            val id = command.lowercase(Locale.ROOT)
-            val isOn = (command == id) // According to mapping, lowercase like 'a' means ON, 'A' means OFF
-            if (deviceStates.containsKey(id)) {
-                deviceStates[id] = isOn
-                sharedPrefs.edit().putBoolean("DEV_$id", isOn).apply()
+        } else {
+            val cleanCommand = command.trim()
+            val matchedDeviceOn = DEFAULT_DEVICES.find { dev ->
+                val pinOn = sharedPrefs.getString("DEV_${dev.id}_PIN_ON", dev.defaultPinOn) ?: dev.defaultPinOn
+                pinOn == cleanCommand
+            }
+            if (matchedDeviceOn != null) {
+                deviceStates[matchedDeviceOn.id] = true
+                sharedPrefs.edit().putBoolean("DEV_${matchedDeviceOn.id}", true).apply()
+            } else {
+                val matchedDeviceOff = DEFAULT_DEVICES.find { dev ->
+                    val pinOff = sharedPrefs.getString("DEV_${dev.id}_PIN_OFF", dev.defaultPinOff) ?: dev.defaultPinOff
+                    pinOff == cleanCommand
+                }
+                if (matchedDeviceOff != null) {
+                    deviceStates[matchedDeviceOff.id] = false
+                    sharedPrefs.edit().putBoolean("DEV_${matchedDeviceOff.id}", false).apply()
+                }
             }
         }
 
@@ -3127,8 +3139,8 @@ fun ManualControlsScreen(
                         devices.forEach { dev ->
                             optimisticStates[dev.id] = true
                             if (!deviceOnTime.containsKey(dev.id)) deviceOnTime[dev.id] = System.currentTimeMillis()
-                            try { onSendCommand(dev.cmdOn) } catch (e: Exception) { Log.e("ControlCenter", "Failed: ${e.message}") }
                         }
+                        try { onSendCommand("on") } catch (e: Exception) { Log.e("ControlCenter", "Failed: ${e.message}") }
                     },
                     modifier = Modifier.weight(1f).height(46.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -3144,8 +3156,8 @@ fun ManualControlsScreen(
                         devices.forEach { dev ->
                             optimisticStates[dev.id] = false
                             deviceOnTime.remove(dev.id)
-                            try { onSendCommand(dev.cmdOff) } catch (e: Exception) { Log.e("ControlCenter", "Failed: ${e.message}") }
                         }
+                        try { onSendCommand("off") } catch (e: Exception) { Log.e("ControlCenter", "Failed: ${e.message}") }
                     },
                     modifier = Modifier.weight(1f).height(46.dp),
                     shape = RoundedCornerShape(12.dp),
