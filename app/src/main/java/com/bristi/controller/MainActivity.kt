@@ -130,6 +130,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.material.icons.outlined.Info
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.io.InputStream
@@ -3554,7 +3557,7 @@ fun AppleSettingsRow(
                 }
             }
             if (showDivider) {
-                androidx.compose.material.Divider(modifier = Modifier.padding(top = 12.dp), color = Color(0xFF38383A), thickness = 0.5.dp)
+                androidx.compose.material3.Divider(modifier = Modifier.padding(top = 12.dp), color = Color(0xFF38383A), thickness = 0.5.dp)
             }
         }
     }
