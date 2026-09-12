@@ -1,0 +1,55 @@
+<?xml version="1.0" standalone="no"?>
+<svg id="macos-avatar-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+        <defs>
+            <!-- Enhanced Background Gradient for deeper contrast and metallic shine -->
+            <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#E2E5E9"/>
+                <stop offset="100%" stop-color="#9BA2AE"/>
+            </linearGradient>
+
+            <!-- Enhanced Silhouette Gradient for cleaner, brighter whites -->
+            <linearGradient id="silGradient" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse">
+                <stop offset="10%" stop-color="#FFFFFF"/>
+                <stop offset="90%" stop-color="#D5D9E0"/>
+            </linearGradient>
+
+            <!-- Sharper, more realistic glass-like Inner Border -->
+            <linearGradient id="borderGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="rgba(255,255,255,0.7)"/>
+                <stop offset="100%" stop-color="rgba(0,0,0,0.2)"/>
+            </linearGradient>
+
+            <!-- Layered Drop Shadow for realistic ambient occlusion and premium depth -->
+            <filter id="silhouetteShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <!-- Ambient soft shadow -->
+                <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#000000" flood-opacity="0.10"/>
+                <!-- Direct contact shadow -->
+                <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.12"/>
+            </filter>
+
+            <!-- Circular Clip Path to contain the avatar shoulders -->
+            <clipPath id="circleClip">
+                <circle cx="256" cy="256" r="256"/>
+            </clipPath>
+        </defs>
+
+        <!-- Base Circle Background -->
+        <circle cx="256" cy="256" r="256" fill="url(#bgGradient)"/>
+        
+        <!-- Inner Stroke Overlay (creates a polished, 3D beveled edge) -->
+        <circle cx="256" cy="256" r="254.5" fill="none" stroke="url(#borderGradient)" stroke-width="3"/>
+
+        <!-- Group clipped to the circular background -->
+        <g clip-path="url(#circleClip)">
+            
+            <!-- Silhouette Group combining head and body with dual drop shadow -->
+            <g filter="url(#silhouetteShadow)">
+                
+                <!-- Head: Kept exact proportions from provided code -->
+                <circle cx="256" cy="165" r="95" fill="url(#silGradient)"/>
+
+                <!-- Body: Replaced path with a pure geometric circle to guarantee no oval distortion -->
+                <circle cx="256" cy="530" r="250" fill="url(#silGradient)"/>
+            </g>
+        </g>
+    </svg>

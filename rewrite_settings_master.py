@@ -403,7 +403,7 @@ fun SettingsScreen(
 }
 """
 
-content = replace_block(content, "@OptIn(ExperimentalMaterial3Api::class)\n@Composable\nfun SettingsScreen(", "\n@SuppressLint(\"MissingPermission\")\n@Composable\nfun DeviceSelectionDialog(", apple_components + new_settings_screen, "SettingsScreen")
+content = replace_block(content, "@Composable\nfun SettingsScreen(", "\n@SuppressLint(\"MissingPermission\")\n@Composable\nfun DeviceSelectionDialog(", apple_components + new_settings_screen, "SettingsScreen")
 
 with open(r"E:\Controller\app\src\main\java\com\bristi\controller\MainActivity.kt", "w", encoding="utf-8") as f:
     f.write(content)

@@ -82,6 +82,7 @@ import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material.icons.rounded.Cancel
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.TabRowDefaults
@@ -2708,22 +2709,22 @@ fun JasicaScreen(
                             DropdownMenuItem(
                                 text = { Text("Manual Controls", color = Color.White, fontFamily = InterFontFamily) },
                                 onClick = { showMenu = false; onManualControlsTap() },
-                                leadingIcon = { Image(painterResource(id = R.drawable.fluentui_system_icons_home), contentDescription = null, modifier = Modifier.size(24.dp)) }
+                                leadingIcon = { Icon(Icons.Rounded.Home, contentDescription = null, modifier = Modifier.size(24.dp), tint = JasicaWhite) }
                             )
                             DropdownMenuItem(
                                 text = { Text("Chat History", color = Color.White, fontFamily = InterFontFamily) },
                                 onClick = { showMenu = false; onHistoryTap() },
-                                leadingIcon = { Image(painterResource(id = R.drawable.fluentui_system_icons_history), contentDescription = null, modifier = Modifier.size(24.dp)) }
+                                leadingIcon = { Icon(Icons.Rounded.History, contentDescription = null, modifier = Modifier.size(24.dp), tint = JasicaWhite) }
                             )
                             DropdownMenuItem(
                                 text = { Text("Arduino Code", color = Color.White, fontFamily = InterFontFamily) },
                                 onClick = { showMenu = false; onArduinoCodeTap() },
-                                leadingIcon = { Image(painterResource(id = R.drawable.fluentui_system_icons_code), contentDescription = null, modifier = Modifier.size(24.dp)) }
+                                leadingIcon = { Icon(Icons.Rounded.Code, contentDescription = null, modifier = Modifier.size(24.dp), tint = JasicaWhite) }
                             )
                             DropdownMenuItem(
                                 text = { Text("Settings", color = Color.White, fontFamily = InterFontFamily) },
                                 onClick = { showMenu = false; onSettingsTap() },
-                                leadingIcon = { Image(painterResource(id = R.drawable.fluentui_system_icons_settings), contentDescription = null, modifier = Modifier.size(24.dp)) }
+                                leadingIcon = { Icon(Icons.Rounded.Settings, contentDescription = null, modifier = Modifier.size(24.dp), tint = JasicaWhite) }
                             )
                         }
                     }
@@ -4637,7 +4638,7 @@ fun AppleRestartDialog(
                         .background(Color(0xFF007AFF).copy(alpha = 0.12f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Image(painterResource(id = R.drawable.fluentui_system_icons_arrow_clockwise_dashes), contentDescription = null, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(22.dp), tint = Color(0xFF007AFF))
                 }
                 
                 Spacer(Modifier.height(12.dp))
@@ -4907,7 +4908,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Dark Mode",
                             subtitle = "Switch between Apple Light and Dark theme",
-                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_options), contentDescription = null, modifier = Modifier.size(24.dp)) },
+                            icon = { Icon(Icons.Rounded.Build, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) },
                             iconBgColor = Color(0xFF5856D6),
                             showDivider = true,
                             isDark = darkModeInput,
@@ -4925,7 +4926,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Hands-Free Wake Word",
                             subtitle = "Say 'Hey Jasica' to activate",
-                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_mic), contentDescription = null, modifier = Modifier.size(24.dp)) },
+                            icon = { Icon(Icons.Rounded.Mic, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) },
                             iconBgColor = Color(0xFF007AFF),
                             showDivider = true,
                             isDark = darkModeInput,
@@ -4940,7 +4941,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Save History",
                             subtitle = "Log conversations locally",
-                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_history), contentDescription = null, modifier = Modifier.size(24.dp)) },
+                            icon = { Icon(Icons.Rounded.History, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) },
                             iconBgColor = Color(0xFF30B0C7),
                             showDivider = true,
                             isDark = darkModeInput,
@@ -4958,7 +4959,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Instant Offline Actions",
                             subtitle = "Execute hardware commands locally without AI delay",
-                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_wifi), contentDescription = null, modifier = Modifier.size(24.dp)) },
+                            icon = { Icon(Icons.Rounded.Wifi, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) },
                             iconBgColor = Color(0xFFFF9500),
                             showDivider = false,
                             isDark = darkModeInput,
@@ -4981,7 +4982,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "AI Model Engine",
                             subtitle = "Current: $selectedModel",
-                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_bot), contentDescription = null, modifier = Modifier.size(24.dp)) },
+                            icon = { Icon(Icons.Rounded.SmartToy, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) },
                             iconBgColor = Color(0xFF34C759),
                             showDivider = true,
                             isDark = darkModeInput,
@@ -5016,7 +5017,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Use Portfolio API Key",
                             subtitle = "Automatically load dynamic API keys from cloud",
-                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_person_key), contentDescription = null, modifier = Modifier.size(24.dp)) },
+                            icon = { Icon(Icons.Rounded.VpnKey, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) },
                             iconBgColor = Color(0xFFAF52DE),
                             showDivider = !adminKeyInput,
                             isDark = darkModeInput,
@@ -5070,7 +5071,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Smart Water Reminder",
                             subtitle = "Periodic spoken hydration alerts",
-                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_clock_alarm), contentDescription = null, modifier = Modifier.size(24.dp)) },
+                            icon = { Icon(Icons.Rounded.Alarm, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) },
                             iconBgColor = Color(0xFF007AFF),
                             showDivider = waterReminderInput,
                             isDark = darkModeInput,
@@ -5105,7 +5106,7 @@ fun SettingsScreen(
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Image(painterResource(id = R.drawable.fluentui_system_icons_clock), contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Rounded.Schedule, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
                                     Spacer(Modifier.width(12.dp))
                                     AppleSlider(
                                         value = waterInterval.toFloat(),
@@ -5154,7 +5155,7 @@ fun SettingsScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                        LucideIconBox(backgroundColor = Color(0xFF636366)) { Image(painterResource(id = R.drawable.fluentui_system_icons_bot), contentDescription = null, modifier = Modifier.size(24.dp)) }
+                                        LucideIconBox(backgroundColor = Color(0xFF636366)) { Icon(Icons.Rounded.SmartToy, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) }
                                         Spacer(Modifier.width(14.dp))
                                         Column {
                                             Text(name, color = textPrimary, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily)
@@ -5317,7 +5318,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Reset Devices to Default",
                             subtitle = "Restore 1st LED to 6th LED",
-                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_arrow_clockwise_dashes), contentDescription = null, modifier = Modifier.size(24.dp)) },
+                            icon = { Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) },
                             iconBgColor = Color(0xFFFF9500),
                             showDivider = false,
                             isDark = darkModeInput,
@@ -6143,9 +6144,9 @@ data class OnboardingPageInfo(val title: String, val subtitle: String, val icon:
 fun OnboardingScreen(onDismiss: () -> Unit) {
     val pages = listOf(
         OnboardingPageInfo("Welcome to Jasica", "Your intelligent voice assistant for complete digital and hardware control.", null, R.drawable.jasica),
-        OnboardingPageInfo("Voice Commands", "Say a command or tap the mic to control your lights, PC, AC, and more natively.", Icons.Outlined.Search, null),
-        OnboardingPageInfo("Manual Override", "Access the quick-switch panel from the top right home icon to toggle hardware without speaking.", Icons.Outlined.Home, null),
-        OnboardingPageInfo("Stay Connected", "Pair your Bluetooth smart hub via the top right icon to get started.", Icons.Outlined.Bluetooth, null)
+        OnboardingPageInfo("Voice Commands", "Say a command or tap the mic to control your lights, PC, AC, and more natively.", R.drawable.fluentui_system_icons_mic, null),
+        OnboardingPageInfo("Manual Override", "Access the quick-switch panel from the top right home icon to toggle hardware without speaking.", R.drawable.fluentui_system_icons_home, null),
+        OnboardingPageInfo("Stay Connected", "Pair your Bluetooth smart hub via the top right icon to get started.", R.drawable.fluentui_system_icons_phone_laptop, null)
     )
 
     var currentPage by remember { mutableIntStateOf(0) }
@@ -6171,12 +6172,12 @@ fun OnboardingScreen(onDismiss: () -> Unit) {
                             contentDescription = null,
                             modifier = Modifier.size(140.dp).clip(CircleShape)
                         )
-                    } else if (info.icon != null) {
+                    } else if (info.iconRes != null) {
                         Box(
                             modifier = Modifier.size(140.dp).background(JasicaCardBg, CircleShape).border(1.dp, JasicaWhite.copy(0.1f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(info.icon, contentDescription = null, modifier = Modifier.size(60.dp), tint = Color(0xFF0A84FF))
+                            Icon(painterResource(info.iconRes), contentDescription = null, modifier = Modifier.size(60.dp), tint = Color(0xFF0A84FF))
                         }
                     }
 

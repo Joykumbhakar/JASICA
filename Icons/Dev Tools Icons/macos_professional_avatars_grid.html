@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>macOS Professional Avatars</title>
+    
+    <!-- Using Tailwind CSS for modern, responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom CSS for specific subtle animations and font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0F1115;
+            color: #F8FAFC;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-6 md:p-12">
+
+    <div class="max-w-5xl mx-auto">
+        <header class="text-center mb-16 mt-8">
+            <h1 class="text-4xl md:text-5xl font-semibold tracking-tight mb-4 bg-clip-text text-transparent bg-gradient-to-r from-gray-100 to-gray-500">
+                Professional Avatars
+            </h1>
+            <p class="text-gray-400 text-lg max-w-xl mx-auto">
+                A 2x10 collection of macOS-style default profile avatars featuring new, highly professional color palettes. Ready to download as pure SVGs.
+            </p>
+        </header>
+
+        <!-- The 2x10 Flat Table Container -->
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse border border-gray-700 bg-[#16191f]">
+                <tbody id="avatar-table-body">
+                    <!-- JavaScript will populate this flat table -->
+                </tbody>
+            </table>
+        </div>
+
+        <footer class="text-center mt-20 text-gray-500 text-sm">
+            <p>Perfect geometric proportions matching Apple Human Interface Guidelines.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Array of 20 highly professional, modern gradient pairs
+        const palettes = [
+            { name: "Classic Mac", start: "#E2E5E9", end: "#9BA2AE" },
+            { name: "Space Gray", start: "#7B7B81", end: "#505054" },
+            { name: "Midnight", start: "#242D3D", end: "#11161F" },
+            { name: "Corporate Navy", start: "#1E3A8A", end: "#172554" },
+            { name: "Slate Blue", start: "#475569", end: "#1E293B" },
+            { name: "Executive Forest", start: "#166534", end: "#14532D" },
+            { name: "Burgundy Boardroom", start: "#7F1D1D", end: "#450A0A" },
+            { name: "Deep Purple", start: "#581C87", end: "#3B0764" },
+            { name: "Teal Professional", start: "#0F766E", end: "#042F2E" },
+            { name: "Charcoal", start: "#3F3F46", end: "#18181B" },
+            { name: "Bronze Executive", start: "#9A3412", end: "#431407" },
+            { name: "Steel Grey", start: "#64748B", end: "#334155" },
+            { name: "Royal Blue", start: "#2563EB", end: "#1E3A8A" },
+            { name: "Emerald Focus", start: "#059669", end: "#064E3B" },
+            { name: "Crimson Velvet", start: "#BE123C", end: "#881337" },
+            { name: "Amethyst Dark", start: "#7E22CE", end: "#4C1D95" },
+            { name: "Dark Mocha", start: "#451A03", end: "#291002" },
+            { name: "Ocean Depth", start: "#0369A1", end: "#082F49" },
+            { name: "Sapphire Night", start: "#312E81", end: "#1E1B4B" },
+            { name: "Gold Standard", start: "#B45309", end: "#78350F" }
+        ];
+
+        const tbody = document.getElementById('avatar-table-body');
+        let tableHTML = '';
+
+        // Loop through palettes to create a 2-column table (2x10)
+        for (let i = 0; i < palettes.length; i += 2) {
+            tableHTML += `<tr class="border-b border-gray-700">`;
+            
+            // First column
+            tableHTML += createTableCell(palettes[i], i);
+            
+            // Second column (if it exists)
+            if (palettes[i+1]) {
+                tableHTML += createTableCell(palettes[i+1], i+1);
+            } else {
+                tableHTML += `<td class="p-4 w-1/2"></td>`;
+            }
+            
+            tableHTML += `</tr>`;
+        }
+
+        // Append generated rows to table body
+        tbody.innerHTML = tableHTML;
+
+        function createTableCell(palette, index) {
+            const id = index + 1;
+            const svgId = `avatar-svg-${id}`;
+            const filename = `avatar-${palette.name.toLowerCase().replace(/\s+/g, '-')}.svg`;
+
+            // SVG markup without shadows or hover classes
+            const svgMarkup = `
+                <svg id="${svgId}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-20 h-20 md:w-24 md:h-24 block">
+                    <defs>
+                        <!-- Dynamic Background Gradient -->
+                        <linearGradient id="bgGradient-${id}" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="${palette.start}" />
+                            <stop offset="100%" stop-color="${palette.end}" />
+                        </linearGradient>
+
+                        <!-- Standard Silhouette Gradient -->
+                        <linearGradient id="silGradient-${id}" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse">
+                            <stop offset="10%" stop-color="#FFFFFF" />
+                            <stop offset="90%" stop-color="#D5D9E0" />
+                        </linearGradient>
+
+                        <!-- Glassy Inner Border Gradient -->
+                        <linearGradient id="borderGradient-${id}" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="rgba(255,255,255,0.6)" />
+                            <stop offset="100%" stop-color="rgba(0,0,0,0.3)" />
+                        </linearGradient>
+
+                        <!-- Circular Clip Path for the shoulders -->
+                        <clipPath id="circleClip-${id}">
+                            <circle cx="256" cy="256" r="256" />
+                        </clipPath>
+                    </defs>
+
+                    <!-- Base Circle Background -->
+                    <circle cx="256" cy="256" r="256" fill="url(#bgGradient-${id})" />
+                    
+                    <!-- Inner Bevel/Stroke Overlay -->
+                    <circle cx="256" cy="256" r="254.5" fill="none" stroke="url(#borderGradient-${id})" stroke-width="3" />
+
+                    <!-- Clipped Silhouette Group (No DropShadow filter applied) -->
+                    <g clip-path="url(#circleClip-${id})">
+                        <!-- Head: Perfect geometric circle -->
+                        <circle cx="256" cy="165" r="95" fill="url(#silGradient-${id})" />
+                        <!-- Body: Perfect geometric circle to avoid oval distortion -->
+                        <circle cx="256" cy="530" r="250" fill="url(#silGradient-${id})" />
+                    </g>
+                </svg>
+            `;
+
+            return `
+                <td class="p-6 border-r border-gray-700 last:border-r-0 align-middle w-1/2 bg-[#16191f]">
+                    <div class="flex items-center gap-6">
+                        <div class="shrink-0">
+                            ${svgMarkup}
+                        </div>
+                        <div class="flex flex-col gap-3">
+                            <h2 class="text-base font-semibold text-gray-200 m-0 tracking-wide">
+                                ${palette.name}
+                            </h2>
+                            <button 
+                                onclick="downloadSVG('${svgId}', '${filename}')" 
+                                class="px-4 py-2 bg-[#0071E3] text-white rounded-none font-medium text-sm flex items-center gap-2 max-w-max border border-[#005BB5] cursor-pointer"
+                                aria-label="Download ${palette.name} SVG">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Download
+                            </button>
+                        </div>
+                    </div>
+                </td>
+            `;
+        }
+
+        function downloadSVG(targetSvgId, targetFilename) {
+            // Get the specific SVG element from the DOM
+            const svgElement = document.getElementById(targetSvgId);
+            
+            // Serialize the SVG to a string
+            const serializer = new XMLSerializer();
+            let svgString = serializer.serializeToString(svgElement);
+            
+            // Add XML declaration so the SVG works flawlessly as a standalone file
+            svgString = '<?xml version="1.0" standalone="no"?>\r\n' + svgString;
+            
+            // Create a Blob from the SVG string
+            const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            
+            // Create a temporary link element to trigger the download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = targetFilename;
+            
+            // Append to body, trigger click, and clean up safely
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Release the object URL from memory
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+    </script>
+</body>
+</html>

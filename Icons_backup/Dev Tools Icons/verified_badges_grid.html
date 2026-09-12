@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Verified Badges</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0A0C10;
+            color: #F8FAFC;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-10">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-12 mt-6">
+            <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-white">
+                Verified Badges
+            </h1>
+            <p class="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+                A pristine collection of professional verification seals. Presented in a clean, flat data table matching Apple's modern aesthetics.
+            </p>
+        </header>
+
+        <div class="overflow-x-auto rounded-xl border border-gray-800 bg-[#111318]">
+            <table class="w-full border-collapse text-left">
+                <tbody id="badge-table-body" class="divide-y divide-gray-800">
+                    <!-- JavaScript will dynamically populate this table -->
+                </tbody>
+            </table>
+        </div>
+
+        <footer class="text-center mt-16 text-gray-500 text-sm font-medium pb-8">
+            <p>Perfect vector paths. Strictly flat presentation.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Array of 20 highly professional gradients tailored for Verified tiers
+        const palettes = [
+            { name: "Standard Blue", start: "#3B82F6", end: "#1D4ED8" },
+            { name: "Gold Premium", start: "#FBBF24", end: "#B45309" },
+            { name: "Silver Executive", start: "#9CA3AF", end: "#4B5563" },
+            { name: "Bronze Pioneer", start: "#D97706", end: "#78350F" },
+            { name: "Emerald Official", start: "#10B981", end: "#047857" },
+            { name: "Ruby Elite", start: "#F43F5E", end: "#9F1239" },
+            { name: "Amethyst Trust", start: "#A855F7", end: "#6B21A8" },
+            { name: "Midnight Core", start: "#334155", end: "#0F172A" },
+            { name: "Space Gray Auth", start: "#64748B", end: "#334155" },
+            { name: "Navy Seal", start: "#1E3A8A", end: "#172554" },
+            { name: "Teal Authentic", start: "#14B8A6", end: "#0F766E" },
+            { name: "Crimson Crown", start: "#E11D48", end: "#881337" },
+            { name: "Slate Authority", start: "#475569", end: "#1E293B" },
+            { name: "Deep Purple VIP", start: "#7E22CE", end: "#4C1D95" },
+            { name: "Ocean Sentinel", start: "#0EA5E9", end: "#0369A1" },
+            { name: "Forest Secure", start: "#22C55E", end: "#15803D" },
+            { name: "Corporate Cyan", start: "#06B6D4", end: "#0E7490" },
+            { name: "Charcoal Stealth", start: "#3F3F46", end: "#18181B" },
+            { name: "Rose Gold", start: "#FDA4AF", end: "#BE123C" },
+            { name: "Sapphire Verified", start: "#4F46E5", end: "#312E81" }
+        ];
+
+        const tbody = document.getElementById('badge-table-body');
+        let tableHTML = '';
+
+        // Loop through palettes to create a 2-column table (2x10)
+        for (let i = 0; i < palettes.length; i += 2) {
+            tableHTML += `<tr class="hover:bg-[#161920] transition-colors duration-150">`;
+            
+            // First column
+            tableHTML += createTableCell(palettes[i], i);
+            
+            // Second column (if it exists)
+            if (palettes[i+1]) {
+                tableHTML += createTableCell(palettes[i+1], i+1);
+            } else {
+                tableHTML += `<td class="p-5 md:p-6 w-1/2"></td>`;
+            }
+            
+            tableHTML += `</tr>`;
+        }
+
+        tbody.innerHTML = tableHTML;
+
+        function createTableCell(palette, index) {
+            const id = index + 1;
+            const svgId = `badge-svg-${id}`;
+            const filename = `verified-${palette.name.toLowerCase().replace(/\s+/g, '-')}.svg`;
+
+            // Perfect SVG seal and a custom, geometrically flawless bold checkmark matching the reference.
+            // Includes professional bevel gradients and subtle drop shadows for depth.
+            const svgMarkup = `
+                <svg id="${svgId}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-16 h-16 md:w-20 md:h-20 block">
+                    <defs>
+                        <linearGradient id="bgGradient-${id}" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="${palette.start}" />
+                            <stop offset="100%" stop-color="${palette.end}" />
+                        </linearGradient>
+
+                        <!-- Enhanced 3D bevel stroke matching the professional reference -->
+                        <linearGradient id="borderGradient-${id}" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="rgba(255,255,255,0.6)" />
+                            <stop offset="50%" stop-color="rgba(255,255,255,0.1)" />
+                            <stop offset="100%" stop-color="rgba(0,0,0,0.3)" />
+                        </linearGradient>
+                        
+                        <!-- Drop shadow for the badge to lift it off the background slightly -->
+                        <filter id="badgeShadow-${id}" x="-20%" y="-20%" width="140%" height="140%">
+                            <feDropShadow dx="0" dy="0.5" stdDeviation="1" flood-color="#000000" flood-opacity="0.3" />
+                        </filter>
+
+                        <!-- Subtle drop shadow for the thick checkmark to give it premium depth -->
+                        <filter id="checkShadow-${id}" x="-20%" y="-20%" width="140%" height="140%">
+                            <feDropShadow dx="0" dy="0.3" stdDeviation="0.4" flood-color="#000000" flood-opacity="0.2" />
+                        </filter>
+                    </defs>
+
+                    <!-- Official Verification Seal Path with precise edge smoothing -->
+                    <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.918-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.337 2.25c-.416-.165-.866-.25-1.336-.25-2.21 0-3.918 1.79-3.918 4 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.46.74 2.746 1.865 3.45-.06.31-.09.63-.09.95 0 2.21 1.71 4 3.918 4 .47 0 .92-.085 1.336-.25.52 1.335 1.826 2.25 3.337 2.25s2.816-.915 3.337-2.25c.416.165.866.25 1.336.25 2.21 0 3.918-1.79 3.918-4 0-.32-.03-.64-.09-.95 1.125-.705 1.865-1.99 1.865-3.45z" 
+                          fill="url(#bgGradient-${id})" 
+                          filter="url(#badgeShadow-${id})"
+                          stroke="url(#borderGradient-${id})" 
+                          stroke-width="0.5" 
+                          stroke-linejoin="round" />
+                    
+                    <!-- Redesigned, perfectly geometric bold checkmark to match reference image -->
+                    <path d="M 9.25 17.0 l -4.25 -4.25 l 1.75 -1.75 l 2.5 2.5 l 7.5 -7.5 l 1.75 1.75 z" 
+                          fill="#FFFFFF" 
+                          filter="url(#checkShadow-${id})" />
+                </svg>
+            `;
+
+            return `
+                <td class="p-5 md:p-6 border-r border-gray-800 last:border-r-0 align-middle w-1/2">
+                    <div class="flex items-center gap-5">
+                        <div class="shrink-0 flex items-center justify-center">
+                            ${svgMarkup}
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <h2 class="text-[15px] font-semibold text-gray-100 m-0 tracking-wide">
+                                ${palette.name}
+                            </h2>
+                            <button 
+                                onclick="downloadSVG('${svgId}', '${filename}')" 
+                                class="px-3.5 py-1.5 bg-[#0071E3] hover:bg-[#005cba] text-white rounded-md font-medium text-[13px] flex items-center gap-1.5 max-w-max transition-colors cursor-pointer"
+                                aria-label="Download ${palette.name} SVG">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Download
+                            </button>
+                        </div>
+                    </div>
+                </td>
+            `;
+        }
+
+        function downloadSVG(targetSvgId, targetFilename) {
+            const svgElement = document.getElementById(targetSvgId);
+            const serializer = new XMLSerializer();
+            let svgString = serializer.serializeToString(svgElement);
+            
+            // Add XML declaration
+            svgString = '<?xml version="1.0" standalone="no"?>\r\n' + svgString;
+            
+            // Create Blob and trigger download
+            const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = targetFilename;
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+    </script>
+</body>
+</html>
