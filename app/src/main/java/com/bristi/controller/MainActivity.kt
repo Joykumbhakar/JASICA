@@ -231,6 +231,11 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     // ── Conversation Memory ───────────────────────────────────────────────────
     private val conversationHistory = mutableListOf<org.json.JSONObject>()
     private val uiChatHistory       = mutableStateListOf<ChatMessage>()
+    private fun addChat(message: ChatMessage) {
+        if (sharedPrefs.getBoolean("HISTORY_LOGGING", true)) {
+            uiChatHistory.add(message)
+        }
+    }
     private val MAX_HISTORY_PAIRS   = 6
 
     // ── System Prompt ─────────────────────────────────────────────────────────
@@ -1382,7 +1387,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         }
 
         runOnUiThread {
-            uiChatHistory.add(ChatMessage(isUser = true, text = spokenText, time = getCurrentTimeString()))
+            addChat(ChatMessage(isUser = true, text = spokenText, time = getCurrentTimeString()))
         }
 
         val localMatch = matchLocalCommand(spokenText)
@@ -1670,7 +1675,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         }
 
         runOnUiThread {
-            uiChatHistory.add(ChatMessage(isUser = false, text = reply, time = getCurrentTimeString()))
+            addChat(ChatMessage(isUser = false, text = reply, time = getCurrentTimeString()))
             aiResponseText.value = reply
             appState.value = AppState.SPEAKING
             speakMultilingual(reply, "JASICA_REPLY")
@@ -1683,7 +1688,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         if (!isNetworkAvailable()) {
             runOnUiThread {
                 val msg = "I am offline right now. Please check your internet connection."
-                uiChatHistory.add(ChatMessage(isUser = false, text = msg, time = getCurrentTimeString()))
+                addChat(ChatMessage(isUser = false, text = msg, time = getCurrentTimeString()))
                 aiResponseText.value = msg
                 appState.value = AppState.SPEAKING
                 speakMultilingual(msg, "JASICA_REPLY")
@@ -1779,7 +1784,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         }
 
         runOnUiThread {
-            uiChatHistory.add(ChatMessage(isUser = false, text = speech, time = getCurrentTimeString()))
+            addChat(ChatMessage(isUser = false, text = speech, time = getCurrentTimeString()))
             aiResponseText.value = speech
             appState.value = AppState.SPEAKING
             speakMultilingual(speech, "JASICA_REPLY")
@@ -2644,58 +2649,45 @@ data class ManualDevice(val id: String, val name: String, val cmdOn: String, val
 @Composable
 fun ManualControlsScreen(deviceStates: Map<String, Boolean>, onDismiss: () -> Unit, onSendCommand: (String) -> Unit) {
     val devices = listOf(
-        ManualDevice("a", "PC / Computer", "a", "A"),
-        ManualDevice("b", "RGB Lights", "b", "B"),
-        ManualDevice("c", "Room Light", "c", "C"),
-        ManualDevice("d", "Smart Plug", "d", "D"),
-        ManualDevice("e", "Ceiling Fan", "e", "E"),
-        ManualDevice("f", "Air Conditioner", "f", "F")
+        ManualDevice("dev1", "1st LED", "a", "A"),
+        ManualDevice("dev2", "2nd LED", "b", "B"),
+        ManualDevice("dev3", "3rd LED", "c", "C"),
+        ManualDevice("dev4", "4th LED", "d", "D"),
+        ManualDevice("dev5", "5th LED", "e", "E"),
+        ManualDevice("dev6", "6th LED", "f", "F")
     )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .clickable(enabled = false) {} // Catch clicks to prevent background interaction
+            .clickable(enabled = false) {}
+            .background(Color.Black)
     ) {
-        // Background Wallpaper
-        Image(
-            painter = painterResource(id = R.drawable.wallpaper3),
-            contentDescription = "Background",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-        // Dark scrim to ensure text readability over the bright wallpaper
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.7f))
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 40.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)
+                .padding(top = 54.dp, start = 20.dp, end = 20.dp, bottom = 24.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Manual Controls",
+                    text = "Control Center",
                     color = Color.White,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.Bold,
                     fontFamily = InterFontFamily
                 )
-                IconButton(onClick = onDismiss) {
-                    Icon(imageVector = Icons.Outlined.Close, contentDescription = "Close", tint = JasicaWhite)
+                TextButton(onClick = onDismiss) {
+                    Text("Done", color = Color(0xFF0A84FF), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
 
             Text(
-                text = "Toggle hardware devices directly without voice.",
-                color = JasicaWhite.copy(alpha = 0.6f),
+                text = "Tap to toggle hardware manually.",
+                color = Color.White.copy(alpha = 0.5f),
                 fontSize = 14.sp,
                 fontFamily = InterFontFamily,
                 modifier = Modifier.padding(bottom = 24.dp)
@@ -2715,7 +2707,6 @@ fun ManualControlsScreen(deviceStates: Map<String, Boolean>, onDismiss: () -> Un
                                 onSendCommand = onSendCommand
                             )
                         }
-                        // Handle odd number of items to prevent stretching
                         if (rowItems.size == 1) {
                             Spacer(modifier = Modifier.weight(1f))
                         }
@@ -2734,20 +2725,12 @@ fun DeviceControlCard(
     onSendCommand: (String) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-
-    // Animated glow when ON
-    val glowAlpha by animateFloatAsState(
-        targetValue = if (isChecked) 0.7f else 0f,
-        animationSpec = tween(400),
-        label = "glow"
-    )
     val cardScale by animateFloatAsState(
-        targetValue = if (isChecked) 1f else 0.97f,
+        targetValue = if (isChecked) 1f else 0.98f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "scale"
     )
 
-    // Per-device icon
     val deviceIcon = when (device.id) {
         "a" -> "💻"
         "b" -> "🌈"
@@ -2761,141 +2744,58 @@ fun DeviceControlCard(
     Box(
         modifier = modifier
             .scale(cardScale)
+            .aspectRatio(1f)
             .clip(RoundedCornerShape(24.dp))
+            .background(if (isChecked) Color.White else Color(0xFF1C1C1E))
             .clickable {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 onSendCommand(if (!isChecked) device.cmdOn else device.cmdOff)
             }
     ) {
-        // Card background image
-        Image(
-            painter = painterResource(id = R.drawable.orangeandpurplebg),
-            contentDescription = null,
-            modifier = Modifier.matchParentSize(),
-            contentScale = ContentScale.Crop
-        )
-
-        // Dark overlay
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(Color.Black.copy(alpha = if (isChecked) 0.25f else 0.55f))
-        )
-
-        // Active glow overlay
-        if (isChecked) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                JasicaOrange.copy(alpha = glowAlpha * 0.4f),
-                                Color.Transparent
-                            )
-                        )
-                    )
-            )
-        }
-
-        // Border — orange when ON, subtle when OFF
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .border(
-                    width = if (isChecked) 1.5.dp else 1.dp,
-                    brush = if (isChecked)
-                        Brush.linearGradient(listOf(JasicaOrange.copy(alpha = 0.9f), JasicaPurple.copy(alpha = 0.5f)))
-                    else
-                        Brush.linearGradient(listOf(Color.White.copy(alpha = 0.15f), Color.White.copy(alpha = 0.05f))),
-                    shape = RoundedCornerShape(24.dp)
-                )
-        )
-
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp)
+            modifier = Modifier.padding(16.dp).fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Top row: emoji icon + status dot
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-                Text(text = deviceIcon, fontSize = 26.sp)
                 Box(
                     modifier = Modifier
-                        .size(10.dp)
+                        .size(44.dp)
                         .clip(CircleShape)
-                        .background(
-                            if (isChecked) Color(0xFF00E676) else Color.White.copy(alpha = 0.25f)
-                        )
-                )
+                        .background(if (isChecked) Color(0xFF0A84FF) else Color.White.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = deviceIcon, fontSize = 20.sp)
+                }
+                
+                if (isChecked) {
+                    Text("ON", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+                }
             }
 
-            Spacer(Modifier.height(14.dp))
-
-            // Device name
-            Text(
-                text = device.name,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontFamily = InterFontFamily,
-                fontSize = 14.sp,
-                lineHeight = 18.sp
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            // Custom toggle pill
-            val pillColor by animateColorAsState(
-                targetValue = if (isChecked)
-                    Brush.linearGradient(listOf(JasicaOrange, Color(0xFFFF6B35))).let { JasicaOrange }
-                else Color(0xFF2A2A3A),
-                animationSpec = tween(300),
-                label = "pill"
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(32.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(
-                        if (isChecked)
-                            Brush.horizontalGradient(listOf(JasicaOrange, Color(0xFFFF6B35)))
-                        else
-                            Brush.horizontalGradient(listOf(Color(0xFF2A2A3A), Color(0xFF1E1E2E)))
-                    )
-                    .border(
-                        1.dp,
-                        if (isChecked) JasicaOrange.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.1f),
-                        RoundedCornerShape(50)
-                    )
-                    .clickable {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onSendCommand(if (!isChecked) device.cmdOn else device.cmdOff)
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = if (isChecked) "● ON" else "○ OFF",
-                        color = if (isChecked) Color.White else Color.White.copy(alpha = 0.5f),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = InterFontFamily,
-                        letterSpacing = 1.sp
-                    )
-                }
+            Column {
+                Text(
+                    text = device.name,
+                    color = if (isChecked) Color.Black else Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = InterFontFamily,
+                    fontSize = 15.sp,
+                    lineHeight = 18.sp
+                )
+                Text(
+                    text = if (isChecked) "Running" else "Off",
+                    color = if (isChecked) Color.Black.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.4f),
+                    fontFamily = InterFontFamily,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
             }
         }
     }
 }
-
-
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Quick Action Chips
@@ -3045,7 +2945,6 @@ data class ChatMessage(val isUser: Boolean, val text: String, val time: String)
 fun ChatHistoryScreen(history: List<ChatMessage>, onDismiss: () -> Unit) {
     val listState = rememberLazyListState()
 
-    // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(history.size) {
         if (history.isNotEmpty()) {
             listState.animateScrollToItem(history.size - 1)
@@ -3055,28 +2954,28 @@ fun ChatHistoryScreen(history: List<ChatMessage>, onDismiss: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xE6121212)) // Deep dark overlay
+            .background(Color.Black)
             .clickable(enabled = false) {}
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 40.dp, start = 20.dp, end = 20.dp, bottom = 24.dp)
+                .padding(top = 54.dp, start = 16.dp, end = 16.dp, bottom = 24.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp, start = 8.dp, end = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Conversation History",
+                    text = "Recents",
                     color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.Bold,
                     fontFamily = InterFontFamily
                 )
-                IconButton(onClick = onDismiss) {
-                    Icon(imageVector = Icons.Outlined.Close, contentDescription = "Close", tint = JasicaWhite)
+                TextButton(onClick = onDismiss) {
+                    Text("Done", color = Color(0xFF0A84FF), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
 
@@ -3095,7 +2994,7 @@ fun ChatHistoryScreen(history: List<ChatMessage>, onDismiss: () -> Unit) {
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
                     items(history) { message ->
@@ -3111,16 +3010,16 @@ fun ChatHistoryScreen(history: List<ChatMessage>, onDismiss: () -> Unit) {
 fun ChatBubble(message: ChatMessage) {
     val isUser = message.isUser
     val alignment = if (isUser) Alignment.End else Alignment.Start
-    val bubbleColor = if (isUser) Color(0xFF2A2A35) else JasicaPurple.copy(alpha = 0.4f)
-    val textColor = if (isUser) Color.White.copy(alpha = 0.9f) else Color.White
+    val bubbleColor = if (isUser) Color(0xFF0A84FF) else Color(0xFF2C2C2E)
+    val textColor = Color.White
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
         horizontalAlignment = alignment
     ) {
         Box(
             modifier = Modifier
-                .widthIn(max = 300.dp)
+                .widthIn(max = 280.dp)
                 .clip(RoundedCornerShape(
                     topStart = 20.dp,
                     topEnd = 20.dp,
@@ -3128,21 +3027,17 @@ fun ChatBubble(message: ChatMessage) {
                     bottomEnd = if (isUser) 4.dp else 20.dp
                 ))
                 .background(bubbleColor)
-                .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(
-                    topStart = 20.dp, topEnd = 20.dp,
-                    bottomStart = if (isUser) 20.dp else 4.dp,
-                    bottomEnd = if (isUser) 4.dp else 20.dp
-                ))
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
             MessageFormattedText(message.text, textColor)
         }
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
         Text(
-            text = if (isUser) "You • ${message.time}" else "Jasica • ${message.time}",
-            color = Color.White.copy(alpha = 0.4f),
-            fontSize = 11.sp,
-            fontFamily = InterFontFamily
+            text = message.time,
+            color = Color.White.copy(alpha = 0.3f),
+            fontSize = 10.sp,
+            fontFamily = InterFontFamily,
+            modifier = Modifier.padding(horizontal = 4.dp)
         )
     }
 }
@@ -3422,32 +3317,21 @@ fun BottomMicButton(appState: AppState, onClick: () -> Unit) {
 fun JasicaGraphicalDialogPanel(content: @Composable ColumnScope.() -> Unit) {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = Color.Transparent, // Transparent to allow Box background
+        color = Color.Transparent,
         modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(Color(0xFF4A00E0), Color(0xFF2A0090)))) // Deep Purple Gradient
+                .background(Color(0xE61C1C1E))
+                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp))
         ) {
-            // Background Canvas Graphics (Subtle abstract shapes & light bursts)
-            Canvas(modifier = Modifier.matchParentSize()) {
-                // Large overlapping subtle circles
-                drawCircle(color = Color.White.copy(alpha = 0.06f), radius = size.width * 0.5f, center = Offset(size.width * 0.9f, 0f))
-                drawCircle(color = Color.White.copy(alpha = 0.04f), radius = size.width * 0.7f, center = Offset(0f, size.height))
-
-                // Sweeping abstract wave path across the bottom of the dialog
-                val path = Path()
-                path.moveTo(0f, size.height * 0.75f)
-                path.quadraticBezierTo(size.width * 0.4f, size.height * 0.6f, size.width, size.height * 0.85f)
-                path.lineTo(size.width, size.height)
-                path.lineTo(0f, size.height)
-                path.close()
-                drawPath(path, Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.1f), Color.Transparent)))
-            }
-
-            // Actual Content Area
-            Column(modifier = Modifier.padding(20.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 content()
             }
         }
@@ -3589,7 +3473,94 @@ fun MicErrorDialog(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+
+@Composable
+fun AppleSettingsGroup(
+    title: String? = null,
+    footer: String? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+        if (title != null) {
+            Text(
+                title.uppercase(java.util.Locale.getDefault()),
+                color = Color.White.copy(alpha = 0.5f),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+            )
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0xFF1C1C1E))
+        ) {
+            content()
+        }
+        if (footer != null) {
+            Text(
+                footer,
+                color = Color.White.copy(alpha = 0.5f),
+                fontSize = 13.sp,
+                modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun AppleSettingsRow(
+    title: String,
+    subtitle: String? = null,
+    icon: String? = null,
+    iconBgColor: Color = Color.Transparent,
+    showDivider: Boolean = true,
+    onClick: (() -> Unit)? = null,
+    control: (@Composable () -> Unit)? = null
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
+            .padding(start = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (icon != null) {
+            Box(
+                modifier = Modifier
+                    .size(30.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(iconBgColor),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(icon, fontSize = 16.sp)
+            }
+            Spacer(Modifier.width(16.dp))
+        }
+        
+        Column(modifier = Modifier.weight(1f).padding(vertical = 12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(end = 16.dp)) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                    if (subtitle != null) {
+                        Spacer(Modifier.height(2.dp))
+                        Text(subtitle, color = Color.White.copy(alpha = 0.5f), fontSize = 13.sp)
+                    }
+                }
+                if (control != null) {
+                    Spacer(Modifier.width(12.dp))
+                    control()
+                }
+            }
+            if (showDivider) {
+                androidx.compose.material.Divider(modifier = Modifier.padding(top = 12.dp), color = Color(0xFF38383A), thickness = 0.5.dp)
+            }
+        }
+    }
+}
+
+
 @Composable
 fun SettingsScreen(
     currentApiKey: String,
@@ -3598,13 +3569,14 @@ fun SettingsScreen(
     isAdvancedAiMode: Boolean,
     isOnlineModeEnabled: Boolean,
     useAdminPanelKey: Boolean,
-    sharedPrefs: SharedPreferences,
+    sharedPrefs: android.content.SharedPreferences,
     onDismiss: () -> Unit,
     onSave: (String, String, Boolean) -> Unit
 ) {
     var apiKeyInput by remember { mutableStateOf(currentApiKey) }
     var selectedModel by remember { mutableStateOf(currentModel) }
     var wakeWordInput by remember { mutableStateOf(isWakeWordMode) }
+    var historyLoggingInput by remember { mutableStateOf(sharedPrefs.getBoolean("HISTORY_LOGGING", true)) }
     var waterReminderInput by remember { mutableStateOf(sharedPrefs.getBoolean("WATER_REMINDER", false)) }
     var advancedAiInput by remember { mutableStateOf(isAdvancedAiMode) }
     var onlineModeInput by remember { mutableStateOf(isOnlineModeEnabled) }
@@ -3612,8 +3584,7 @@ fun SettingsScreen(
     var geminiKeyInput by remember { mutableStateOf(sharedPrefs.getString("GEMINI_API_KEY", "") ?: "") }
     var showApiKey by remember { mutableStateOf(false) }
     
-    val context = androidx.compose.ui.platform.LocalContext.current
-    var currentTab by remember { mutableStateOf(0) }
+    val context = LocalContext.current
     
     var showPasswordDialog by remember { mutableStateOf(false) }
     var passwordInput by remember { mutableStateOf("") }
@@ -3622,534 +3593,201 @@ fun SettingsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0D0D12))
+            .background(Color.Black)
             .clickable(enabled = false) {}
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 44.dp, start = 20.dp, end = 20.dp, bottom = 0.dp)
+                .padding(top = 54.dp, start = 16.dp, end = 16.dp, bottom = 0.dp)
         ) {
             // Header
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp, start = 8.dp, end = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        "Settings",
-                        color = Color.White,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontFamily = InterFontFamily
-                    )
-                    Text(
-                        "Preferences & Configuration",
-                        color = Color.White.copy(alpha = 0.5f),
-                        fontSize = 13.sp,
-                        fontFamily = InterFontFamily
-                    )
+                Text(
+                    "Settings",
+                    color = Color.White,
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = InterFontFamily
+                )
+                TextButton(onClick = { onSave(apiKeyInput, selectedModel, wakeWordInput) }) {
+                    Text("Done", color = Color(0xFF0A84FF), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
-
-            Spacer(Modifier.height(24.dp))
-
-            // Tabs
-            Row(
+            
+            // Unified Scrolling Content
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White.copy(alpha = 0.05f))
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
             ) {
-                listOf("AI & System", "Hardware Config").forEachIndexed { index, title ->
-                    val isSelected = currentTab == index
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (isSelected) Color(0xFF1E1E2E) else Color.Transparent)
-                            .clickable { currentTab = index },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            title,
-                            color = if (isSelected) Color.White else Color.White.copy(alpha = 0.5f),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            fontFamily = InterFontFamily
+                // Core System Group
+                AppleSettingsGroup(title = "Core System") {
+                    AppleSettingsRow(
+                        title = "Hands-Free Wake Word",
+                        subtitle = "Say 'Hey Jasica' to activate",
+                        icon = "🎙️",
+                        iconBgColor = Color(0xFF007AFF),
+                        showDivider = true,
+                        control = {
+                            Switch(
+                                checked = wakeWordInput,
+                                onCheckedChange = { wakeWordInput = it },
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
+                            )
+                        }
+                    )
+                    
+                    AppleSettingsRow(
+                        title = "Save History",
+                        subtitle = "Log conversations locally",
+                        icon = "🕒",
+                        iconBgColor = Color(0xFF5856D6),
+                        showDivider = true,
+                        control = {
+                            Switch(
+                                checked = historyLoggingInput,
+                                onCheckedChange = { 
+                                    historyLoggingInput = it
+                                    sharedPrefs.edit().putBoolean("HISTORY_LOGGING", it).apply()
+                                },
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
+                            )
+                        }
+                    )
+                    
+                    AppleSettingsRow(
+                        title = "Water Reminder",
+                        subtitle = "30 minute intervals",
+                        icon = "💧",
+                        iconBgColor = Color(0xFF5AC8FA),
+                        showDivider = false,
+                        onClick = {
+                            if (waterReminderInput) showPasswordDialog = true
+                            else {
+                                waterReminderInput = true
+                                sharedPrefs.edit().putBoolean("WATER_REMINDER", true).apply()
+                                WaterReminderManager.scheduleNextAlarm(context)
+                            }
+                        },
+                        control = {
+                            Switch(
+                                checked = waterReminderInput,
+                                onCheckedChange = null,
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
+                            )
+                        }
+                    )
+                }
+
+                // AI Mode Group
+                AppleSettingsGroup(
+                    title = "JASICA ONLINE", 
+                    footer = if (!onlineModeInput) "Offline mode is 100% free with no internet needed." else "Jasica Online uses AI to handle complex tasks."
+                ) {
+                    AppleSettingsRow(
+                        title = "Enable Jasica Online",
+                        icon = "⚡",
+                        iconBgColor = Color(0xFFFF9500),
+                        showDivider = onlineModeInput,
+                        control = {
+                            Switch(
+                                checked = onlineModeInput,
+                                onCheckedChange = { checked ->
+                                    onlineModeInput = checked
+                                    sharedPrefs.edit().putBoolean("ONLINE_MODE_ENABLED", checked).putBoolean("ADVANCED_AI_MODE", checked).apply()
+                                },
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
+                            )
+                        }
+                    )
+                    
+                    if (onlineModeInput) {
+                        AppleSettingsRow(
+                            title = "Admin Panel Key",
+                            subtitle = "Auto-fetched from Portfolio",
+                            icon = "🔗",
+                            iconBgColor = Color(0xFF34C759),
+                            showDivider = true,
+                            onClick = {
+                                adminKeyInput = true
+                                sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", true).apply()
+                            },
+                            control = {
+                                if (adminKeyInput) {
+                                    Icon(Icons.Rounded.Check, contentDescription = null, tint = Color(0xFF0A84FF))
+                                }
+                            }
+                        )
+                        AppleSettingsRow(
+                            title = "My Own Key",
+                            subtitle = "Use your personal API key",
+                            icon = "🔑",
+                            iconBgColor = Color(0xFFFF2D55),
+                            showDivider = !adminKeyInput,
+                            onClick = {
+                                adminKeyInput = false
+                                sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", false).apply()
+                            },
+                            control = {
+                                if (!adminKeyInput) {
+                                    Icon(Icons.Rounded.Check, contentDescription = null, tint = Color(0xFF0A84FF))
+                                }
+                            }
+                        )
+                        
+                        if (!adminKeyInput) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                androidx.compose.material3.OutlinedTextField(
+                                    value = geminiKeyInput,
+                                    onValueChange = {
+                                        geminiKeyInput = it
+                                        sharedPrefs.edit().putString("GEMINI_API_KEY", it.trim()).apply()
+                                    },
+                                    placeholder = { Text("AIza...", color = Color.White.copy(alpha = 0.2f)) },
+                                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 16.sp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(8.dp),
+                                    singleLine = true,
+                                    visualTransformation = if (showApiKey) androidx.compose.ui.text.input.VisualTransformation.None else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                    trailingIcon = {
+                                        IconButton(onClick = { showApiKey = !showApiKey }) {
+                                            Text(if (showApiKey) "👁" else "🔒", fontSize = 16.sp)
+                                        }
+                                    },
+                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = Color(0xFF0A84FF),
+                                        unfocusedBorderColor = Color(0xFF38383A)
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                // Hardware Config Group
+                AppleSettingsGroup(title = "Hardware Config", footer = "Configure Bluetooth device voice commands.") {
+                    DEFAULT_DEVICES.forEachIndexed { index, dev ->
+                        var name by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName) }
+                        var onCmd by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_ON_CMD", dev.defaultOnCmd) ?: dev.defaultOnCmd) }
+                        var offCmd by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_OFF_CMD", dev.defaultOffCmd) ?: dev.defaultOffCmd) }
+                        
+                        AppleSettingsRow(
+                            title = "Device '${dev.id.uppercase(java.util.Locale.getDefault())}'",
+                            icon = "⚙️",
+                            iconBgColor = Color(0xFF8E8E93),
+                            showDivider = index != DEFAULT_DEVICES.size - 1,
+                            control = {
+                                Text(name, color = Color.White.copy(0.5f), fontSize = 16.sp)
+                            }
                         )
                     }
                 }
-            }
-
-            Spacer(Modifier.height(24.dp))
-            
-            // Content
-            Box(modifier = Modifier.weight(1f)) {
-                if (currentTab == 0) {
-                    // AI & System Tab
-                    Column(
-                        modifier = Modifier.verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(24.dp)
-                    ) {
-                        
-                        // Section: Core System
-                        Column {
-                            Text("CORE SYSTEM", color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                            Spacer(Modifier.height(12.dp))
-                            
-                            // Wake Word Toggle
-                            Row(
-                                modifier = Modifier.fillMaxWidth().clickable { wakeWordInput = !wakeWordInput }.padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("Hands-Free Wake Word", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                                    Text("Say 'Hey Jasica' to activate", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
-                                }
-                                Switch(
-                                    checked = wakeWordInput,
-                                    onCheckedChange = { wakeWordInput = it },
-                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = JasicaOrange, uncheckedThumbColor = Color.Gray, uncheckedTrackColor = Color.DarkGray)
-                                )
-                            }
-                            
-                            Divider(color = Color.White.copy(alpha = 0.05f))
-                            
-                            // Water Reminder Toggle
-                            Row(
-                                modifier = Modifier.fillMaxWidth().clickable {
-                                    if (waterReminderInput) showPasswordDialog = true
-                                    else {
-                                        waterReminderInput = true
-                                        sharedPrefs.edit().putBoolean("WATER_REMINDER", true).apply()
-                                        WaterReminderManager.scheduleNextAlarm(context)
-                                    }
-                                }.padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("Water Drinking Reminder", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                                    Text("30 minute intervals", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
-                                }
-                                Switch(
-                                    checked = waterReminderInput,
-                                    onCheckedChange = null,
-                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF00BFFF), uncheckedThumbColor = Color.Gray, uncheckedTrackColor = Color.DarkGray)
-                                )
-                            }
-                        }
-
-                        // ── Section: AI Mode ─────────────────────────────────
-                        Column {
-                            Text(
-                                "JASICA ONLINE",
-                                color = Color.White.copy(alpha = 0.4f),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp
-                            )
-                            Spacer(Modifier.height(12.dp))
-
-                            // ── Master Online Toggle ──────────────────────────
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .background(
-                                        if (onlineModeInput) JasicaOrange.copy(alpha = 0.10f)
-                                        else Color.White.copy(alpha = 0.04f)
-                                    )
-                                    .clickable {
-                                        onlineModeInput = !onlineModeInput
-                                        sharedPrefs.edit()
-                                            .putBoolean("ONLINE_MODE_ENABLED", onlineModeInput)
-                                            .putBoolean("ADVANCED_AI_MODE", onlineModeInput) // compat
-                                            .apply()
-                                    }
-                                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(
-                                        "⚡",
-                                        fontSize = 20.sp,
-                                        modifier = Modifier.padding(end = 12.dp)
-                                    )
-                                    Column {
-                                        Text(
-                                            "Turn On Jasica Online",
-                                            color = Color.White,
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                        Text(
-                                            if (onlineModeInput)
-                                                "AI handles open questions & smart tasks"
-                                            else
-                                                "Offline only — 100% free, no internet needed",
-                                            color = if (onlineModeInput) JasicaOrange else Color.White.copy(alpha = 0.5f),
-                                            fontSize = 12.sp
-                                        )
-                                    }
-                                }
-                                Switch(
-                                    checked = onlineModeInput,
-                                    onCheckedChange = { checked ->
-                                        onlineModeInput = checked
-                                        sharedPrefs.edit()
-                                            .putBoolean("ONLINE_MODE_ENABLED", checked)
-                                            .putBoolean("ADVANCED_AI_MODE", checked)
-                                            .apply()
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color.White,
-                                        checkedTrackColor = JasicaOrange,
-                                        uncheckedThumbColor = Color.Gray,
-                                        uncheckedTrackColor = Color.DarkGray
-                                    )
-                                )
-                            }
-
-                            // ── Expanded: Online ON — Key Source ─────────────
-                            androidx.compose.animation.AnimatedVisibility(
-                                visible = onlineModeInput,
-                                enter = expandVertically() + fadeIn(),
-                                exit = shrinkVertically() + fadeOut()
-                            ) {
-                                Column {
-                                    Spacer(Modifier.height(16.dp))
-
-                                    // Key source label
-                                    Text(
-                                        "API KEY SOURCE",
-                                        color = Color.White.copy(alpha = 0.35f),
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 1.sp,
-                                        modifier = Modifier.padding(bottom = 8.dp)
-                                    )
-
-                                    // Option 1 — Admin Panel Key
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(
-                                                if (adminKeyInput) Color(0xFF1A2A1A)
-                                                else Color.White.copy(alpha = 0.04f)
-                                            )
-                                            .border(
-                                                width = 1.dp,
-                                                color = if (adminKeyInput) Color(0xFF4CAF50).copy(alpha = 0.5f)
-                                                        else Color.White.copy(alpha = 0.08f),
-                                                shape = RoundedCornerShape(12.dp)
-                                            )
-                                            .clickable {
-                                                adminKeyInput = true
-                                                sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", true).apply()
-                                            }
-                                            .padding(horizontal = 14.dp, vertical = 12.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                "🔗  Admin Panel Key",
-                                                color = Color.White,
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.SemiBold
-                                            )
-                                            Text(
-                                                "Auto-fetched from your Portfolio settings",
-                                                color = Color.White.copy(alpha = 0.5f),
-                                                fontSize = 11.sp
-                                            )
-                                            // Status indicator
-                                            val adminKey = sharedPrefs.getString("API_KEY", "") ?: ""
-                                            val hasAdminKey = adminKey.startsWith("AIza")
-                                            Text(
-                                                if (hasAdminKey) "✓ Key loaded" else "✗ No key found — set one in Admin Panel",
-                                                color = if (hasAdminKey) Color(0xFF4CAF50) else Color(0xFFFF6B6B),
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                modifier = Modifier.padding(top = 4.dp)
-                                            )
-                                        }
-                                        RadioButton(
-                                            selected = adminKeyInput,
-                                            onClick = {
-                                                adminKeyInput = true
-                                                sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", true).apply()
-                                            },
-                                            colors = RadioButtonDefaults.colors(
-                                                selectedColor = Color(0xFF4CAF50),
-                                                unselectedColor = Color.White.copy(alpha = 0.3f)
-                                            )
-                                        )
-                                    }
-
-                                    Spacer(Modifier.height(8.dp))
-
-                                    // Option 2 — My Own Key
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(
-                                                if (!adminKeyInput) Color(0xFF1A1A2A)
-                                                else Color.White.copy(alpha = 0.04f)
-                                            )
-                                            .border(
-                                                width = 1.dp,
-                                                color = if (!adminKeyInput) JasicaOrange.copy(alpha = 0.5f)
-                                                        else Color.White.copy(alpha = 0.08f),
-                                                shape = RoundedCornerShape(12.dp)
-                                            )
-                                            .clickable {
-                                                adminKeyInput = false
-                                                sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", false).apply()
-                                            }
-                                            .padding(horizontal = 14.dp, vertical = 12.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                "🔑  My Own Key",
-                                                color = Color.White,
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.SemiBold
-                                            )
-                                            Text(
-                                                "Enter your personal AI API key below",
-                                                color = Color.White.copy(alpha = 0.5f),
-                                                fontSize = 11.sp
-                                            )
-                                        }
-                                        RadioButton(
-                                            selected = !adminKeyInput,
-                                            onClick = {
-                                                adminKeyInput = false
-                                                sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", false).apply()
-                                            },
-                                            colors = RadioButtonDefaults.colors(
-                                                selectedColor = JasicaOrange,
-                                                unselectedColor = Color.White.copy(alpha = 0.3f)
-                                            )
-                                        )
-                                    }
-
-                                    // ── User's Own Key Field ──────────────────
-                                    androidx.compose.animation.AnimatedVisibility(
-                                        visible = !adminKeyInput,
-                                        enter = expandVertically() + fadeIn(),
-                                        exit = shrinkVertically() + fadeOut()
-                                    ) {
-                                        Column(modifier = Modifier.padding(top = 12.dp)) {
-                                            OutlinedTextField(
-                                                value = geminiKeyInput,
-                                                onValueChange = {
-                                                    geminiKeyInput = it
-                                                    sharedPrefs.edit().putString("GEMINI_API_KEY", it.trim()).apply()
-                                                },
-                                                label = { Text("AI API Key", color = Color.White.copy(alpha = 0.5f)) },
-                                                placeholder = { Text("AIza...", color = Color.White.copy(alpha = 0.2f)) },
-                                                textStyle = TextStyle(color = Color.White, fontSize = 14.sp),
-                                                modifier = Modifier.fillMaxWidth(),
-                                                shape = RoundedCornerShape(12.dp),
-                                                singleLine = true,
-                                                visualTransformation = if (showApiKey)
-                                                    androidx.compose.ui.text.input.VisualTransformation.None
-                                                else
-                                                    androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                                                trailingIcon = {
-                                                    IconButton(onClick = { showApiKey = !showApiKey }) {
-                                                        Text(
-                                                            if (showApiKey) "👁" else "🔒",
-                                                            fontSize = 16.sp
-                                                        )
-                                                    }
-                                                },
-                                                colors = OutlinedTextFieldDefaults.colors(
-                                                    focusedBorderColor = JasicaOrange,
-                                                    unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
-                                                    cursorColor = JasicaOrange
-                                                )
-                                            )
-                                            Spacer(Modifier.height(6.dp))
-                                            Text(
-                                                "Get your free key at aistudio.google.com →",
-                                                color = JasicaOrange.copy(alpha = 0.8f),
-                                                fontSize = 11.sp,
-                                                modifier = Modifier.clickable {
-                                                    try {
-                                                        val intent = android.content.Intent(
-                                                            android.content.Intent.ACTION_VIEW,
-                                                            android.net.Uri.parse("https://aistudio.google.com/app/apikey")
-                                                        )
-                                                        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                                        context.startActivity(intent)
-                                                    } catch (e: Exception) {}
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            // ── Offline badge (when Online Mode is OFF) ───────
-                            androidx.compose.animation.AnimatedVisibility(
-                                visible = !onlineModeInput,
-                                enter = expandVertically() + fadeIn(),
-                                exit = shrinkVertically() + fadeOut()
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 10.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Color(0xFF1A1F2E))
-                                        .padding(horizontal = 14.dp, vertical = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        "100% offline. No tokens, no limits.",
-                                        color = Color.White.copy(alpha = 0.6f),
-                                        fontSize = 12.sp
-                                    )
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(6.dp))
-                                            .background(JasicaOrange.copy(alpha = 0.15f))
-                                            .padding(horizontal = 8.dp, vertical = 3.dp)
-                                    ) {
-                                        Text(
-                                            "FREE",
-                                            color = JasicaOrange,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.ExtraBold
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        Spacer(Modifier.height(40.dp))
-                    }
-                } else {
-                    // Devices Tab
-                    LazyColumn(
-                        contentPadding = PaddingValues(bottom = 80.dp),
-                        verticalArrangement = Arrangement.spacedBy(24.dp)
-                    ) {
-                        items(DEFAULT_DEVICES.size) { index ->
-                            val dev = DEFAULT_DEVICES[index]
-                            var name by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName) }
-                            var onCmd by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_ON_CMD", dev.defaultOnCmd) ?: dev.defaultOnCmd) }
-                            var offCmd by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_OFF_CMD", dev.defaultOffCmd) ?: dev.defaultOffCmd) }
-                            var pinOn by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_PIN_ON", dev.defaultPinOn) ?: dev.defaultPinOn) }
-                            var pinOff by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_PIN_OFF", dev.defaultPinOff) ?: dev.defaultPinOff) }
-
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(JasicaOrange))
-                                    Spacer(Modifier.width(8.dp))
-                                    Text("DEVICE '${dev.id.uppercase()}'", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                                }
-                                Spacer(Modifier.height(12.dp))
-                                
-                                OutlinedTextField(
-                                    value = name, 
-                                    onValueChange = { name = it; sharedPrefs.edit().putString("DEV_${dev.id}_NAME", it).apply() },
-                                    label = { Text("Display Name", color = Color.White.copy(0.5f)) },
-                                    textStyle = TextStyle(color = Color.White),
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = JasicaOrange, unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
-                                )
-                                Spacer(Modifier.height(12.dp))
-                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    OutlinedTextField(
-                                        value = onCmd, 
-                                        onValueChange = { onCmd = it; sharedPrefs.edit().putString("DEV_${dev.id}_ON_CMD", it).apply() },
-                                        label = { Text("ON Voice Cmd", color = Color.White.copy(0.5f)) },
-                                        textStyle = TextStyle(color = Color.White),
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = JasicaOrange, unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
-                                    )
-                                    OutlinedTextField(
-                                        value = offCmd, 
-                                        onValueChange = { offCmd = it; sharedPrefs.edit().putString("DEV_${dev.id}_OFF_CMD", it).apply() },
-                                        label = { Text("OFF Voice Cmd", color = Color.White.copy(0.5f)) },
-                                        textStyle = TextStyle(color = Color.White),
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = JasicaOrange, unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
-                                    )
-                                }
-                                Spacer(Modifier.height(12.dp))
-                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    OutlinedTextField(
-                                        value = pinOn, 
-                                        onValueChange = { pinOn = it; sharedPrefs.edit().putString("DEV_${dev.id}_PIN_ON", it).apply() },
-                                        label = { Text("ON Pin (Char)", color = Color.White.copy(0.5f)) },
-                                        textStyle = TextStyle(color = Color.White),
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = JasicaOrange, unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
-                                    )
-                                    OutlinedTextField(
-                                        value = pinOff, 
-                                        onValueChange = { pinOff = it; sharedPrefs.edit().putString("DEV_${dev.id}_PIN_OFF", it).apply() },
-                                        label = { Text("OFF Pin (Char)", color = Color.White.copy(0.5f)) },
-                                        textStyle = TextStyle(color = Color.White),
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = JasicaOrange, unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
-                                    )
-                                }
-                                
-                                Spacer(Modifier.height(8.dp))
-                                Divider(color = Color.White.copy(alpha = 0.05f))
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // Bottom Action Buttons
-            Spacer(Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = onDismiss) {
-                    Text("CANCEL", color = Color.White.copy(alpha = 0.5f), fontFamily = InterFontFamily, fontWeight = FontWeight.Bold)
-                }
-                Spacer(Modifier.width(16.dp))
-                Button(
-                    onClick = { onSave(apiKeyInput, selectedModel, wakeWordInput) },
-                    colors = ButtonDefaults.buttonColors(containerColor = JasicaOrange),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.height(48.dp).padding(horizontal = 16.dp)
-                ) {
-                    Text("SAVE SETTINGS", color = Color.White, fontFamily = InterFontFamily, fontWeight = FontWeight.Bold)
-                }
+                Spacer(Modifier.height(40.dp))
             }
         }
 
@@ -4165,14 +3803,14 @@ fun SettingsScreen(
                     Column {
                         Text("A password is required to turn off the water reminder.", color = Color.White.copy(0.7f), fontSize = 14.sp)
                         Spacer(modifier = Modifier.height(16.dp))
-                        OutlinedTextField(
+                        androidx.compose.material3.OutlinedTextField(
                             value = passwordInput,
                             onValueChange = { passwordInput = it; passwordError = false },
                             label = { Text("Password", color = Color.White.copy(0.5f)) },
                             isError = passwordError,
-                            textStyle = TextStyle(color = Color.White),
+                            textStyle = androidx.compose.ui.text.TextStyle(color = Color.White),
                             shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = JasicaOrange, unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
+                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFFFF9800), unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
                         )
                         if (passwordError) {
                             Text("Incorrect password", color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
@@ -4197,7 +3835,7 @@ fun SettingsScreen(
                                 passwordError = true
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = JasicaOrange),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("Confirm", color = Color.White, fontWeight = FontWeight.Bold)
@@ -4216,7 +3854,6 @@ fun SettingsScreen(
         }
     }
 }
-
 
 @SuppressLint("MissingPermission")
 @Composable
@@ -4267,7 +3904,7 @@ fun DeviceListItem(name: String, address: String, onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(vertical = 6.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.15f)) // Frosted Glass Item
+            .background(Color.White.copy(alpha = 0.08f))
             .clickable { onClick() }
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -4816,7 +4453,7 @@ fun OnboardingScreen(onDismiss: () -> Unit) {
                             modifier = Modifier.size(140.dp).background(JasicaCardBg, CircleShape).border(1.dp, JasicaWhite.copy(0.1f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(info.icon, contentDescription = null, modifier = Modifier.size(60.dp), tint = JasicaOrange)
+                            Icon(info.icon, contentDescription = null, modifier = Modifier.size(60.dp), tint = Color(0xFF0A84FF))
                         }
                     }
 
@@ -4846,7 +4483,7 @@ fun OnboardingScreen(onDismiss: () -> Unit) {
             Row(horizontalArrangement = Arrangement.Center) {
                 pages.indices.forEach { index ->
                     val isSelected = index == currentPage
-                    val color = if (isSelected) JasicaOrange else Color.DarkGray
+                    val color = if (isSelected) Color.White else Color.White.copy(alpha = 0.3f)
                     val width = animateFloatAsState(if (isSelected) 24f else 8f, label = "dot")
                     Box(
                         modifier = Modifier
@@ -4867,7 +4504,7 @@ fun OnboardingScreen(onDismiss: () -> Unit) {
                     if (currentPage < pages.size - 1) currentPage++ else onDismiss()
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = JasicaPurple),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0A84FF)),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
@@ -5107,16 +4744,11 @@ fun ArduinoCodeScreen(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
 
-    // 0 = UNO + HC-05, 1 = ESP32
     var selectedBoard by remember { mutableStateOf(0) }
     var copied by remember { mutableStateOf(false) }
 
-    val boards = listOf("Arduino UNO + HC-05", "ESP32 Dev v1")
+    val boards = listOf("Arduino UNO", "ESP32 Dev v1")
     val codes = listOf(ARDUINO_UNO_CODE, ESP32_CODE)
-    val boardColors = listOf(
-        listOf(Color(0xFF00979C), Color(0xFF005F60)),  // Arduino teal
-        listOf(Color(0xFFE7352C), Color(0xFF8B1010))   // ESP32 red
-    )
 
     LaunchedEffect(copied) {
         if (copied) {
@@ -5128,75 +4760,57 @@ fun ArduinoCodeScreen(onDismiss: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0D0D12))
+            .background(Color.Black)
             .clickable(enabled = false) {}
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 44.dp, start = 20.dp, end = 20.dp, bottom = 24.dp)
+                .padding(top = 54.dp, start = 16.dp, end = 16.dp, bottom = 24.dp)
         ) {
-            // Header
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp, start = 8.dp, end = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        "Arduino Code",
-                        color = Color.White,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontFamily = InterFontFamily
-                    )
-                    Text(
-                        "Ready to upload firmware",
-                        color = Color.White.copy(alpha = 0.5f),
-                        fontSize = 13.sp,
-                        fontFamily = InterFontFamily
-                    )
-                }
-                IconButton(onClick = onDismiss) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = Color.White)
+                Text(
+                    "Firmware",
+                    color = Color.White,
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = InterFontFamily
+                )
+                TextButton(onClick = onDismiss) {
+                    Text("Done", color = Color(0xFF0A84FF), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
-
-            // Board Selector Tabs
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White.copy(alpha = 0.06f))
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    .height(36.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFF1C1C1E))
+                    .padding(2.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 boards.forEachIndexed { index, name ->
                     val isSelected = selectedBoard == index
-                    val tabColor = if (isSelected) boardColors[index] else listOf(Color.Transparent, Color.Transparent)
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Brush.horizontalGradient(tabColor))
-                            .border(
-                                if (isSelected) 1.dp else 0.dp,
-                                Color.White.copy(alpha = if (isSelected) 0.2f else 0f),
-                                RoundedCornerShape(12.dp)
-                            )
-                            .clickable { selectedBoard = index; copied = false }
-                            .padding(vertical = 12.dp),
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(if (isSelected) Color(0xFF636366) else Color.Transparent)
+                            .clickable { selectedBoard = index },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = name,
-                            color = if (isSelected) Color.White else Color.White.copy(alpha = 0.4f),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = InterFontFamily,
-                            textAlign = TextAlign.Center
+                            color = if (isSelected) Color.White else Color.White.copy(alpha = 0.5f),
+                            fontSize = 13.sp,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                            fontFamily = InterFontFamily
                         )
                     }
                 }
@@ -5204,111 +4818,52 @@ fun ArduinoCodeScreen(onDismiss: () -> Unit) {
 
             Spacer(Modifier.height(16.dp))
 
-            // Board info pill
-            val boardInfo = if (selectedBoard == 0)
-                "📌 HC-05 RX→Pin 2  TX→Pin 3  |  Devices: Pins 8–13"
-            else
-                "📌 Built-in BLE  |  Devices: GPIO 13,12,14,27,26,25"
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(boardColors[selectedBoard][0].copy(alpha = 0.15f))
-                    .border(1.dp, boardColors[selectedBoard][0].copy(alpha = 0.3f), RoundedCornerShape(10.dp))
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
-            ) {
-                Text(
-                    text = boardInfo,
-                    color = boardColors[selectedBoard][0],
-                    fontSize = 12.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
-            Spacer(Modifier.height(14.dp))
-
-            // Code block — scrollable
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFF1A1A2E))
-                    .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+                    .background(Color(0xFF1C1C1E))
+                    .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
             ) {
-                // Line numbers + code
-                val scrollState = rememberScrollState()
-                val codeLines = codes[selectedBoard].lines()
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState)
-                        .padding(12.dp)
-                ) {
-                    // Line numbers column
-                    Column(
-                        modifier = Modifier.padding(end = 12.dp),
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        codeLines.forEachIndexed { i, _ ->
-                            Text(
-                                text = "${i + 1}",
-                                color = Color.White.copy(alpha = 0.2f),
-                                fontSize = 11.sp,
-                                fontFamily = FontFamily.Monospace,
-                                lineHeight = 18.sp
-                            )
-                        }
-                    }
-                    // Code column
-                    Column {
-                        codeLines.forEach { line ->
-                            val lineColor = when {
-                                line.trimStart().startsWith("//") -> Color(0xFF6A9955)
-                                line.trimStart().startsWith("#") -> Color(0xFFC586C0)
-                                line.contains("void ") || line.contains("const ") || line.contains("int ") -> Color(0xFF569CD6)
-                                line.contains("HIGH") || line.contains("LOW") -> Color(0xFFCE9178)
-                                else -> Color(0xFFD4D4D4)
-                            }
-                            Text(
-                                text = line,
-                                color = lineColor,
-                                fontSize = 11.sp,
-                                fontFamily = FontFamily.Monospace,
-                                lineHeight = 18.sp,
-                                softWrap = false
-                            )
-                        }
-                    }
+                androidx.compose.foundation.text.selection.SelectionContainer {
+                    Text(
+                        text = codes[selectedBoard],
+                        color = Color(0xFF5AC8FA),
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 12.sp,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .horizontalScroll(rememberScrollState())
+                            .padding(16.dp)
+                    )
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(16.dp))
 
-            // Copy Button
             Button(
                 onClick = {
                     clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(codes[selectedBoard]))
                     copied = true
-                    Toast.makeText(context, "Code copied! Open Arduino IDE and paste.", Toast.LENGTH_SHORT).show()
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (copied) Color(0xFF00E676) else boardColors[selectedBoard][0]
-                ),
-                shape = RoundedCornerShape(16.dp)
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = if (copied) Color(0xFF34C759) else Color(0xFF0A84FF)),
+                shape = RoundedCornerShape(14.dp)
             ) {
+                Icon(
+                    imageVector = if (copied) Icons.Rounded.Check else androidx.compose.material.icons.outlined.Info,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = Color.White
+                )
+                Spacer(Modifier.width(8.dp))
                 Text(
-                    text = if (copied) "✓  Copied to Clipboard!" else "⎘  Copy Full Code",
+                    text = if (copied) "COPIED TO CLIPBOARD" else "COPY FIRMWARE CODE",
                     color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
                     fontFamily = InterFontFamily,
-                    letterSpacing = 0.5.sp
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
