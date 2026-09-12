@@ -214,10 +214,18 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private val calibrationRecognizedText = mutableStateOf("")
     private val showArduinoCode    = mutableStateOf(false)
 
-    private val userApiKey       = mutableStateOf("")
-    private val availableApiKeys = mutableListOf<String>()
-    private val selectedAiModel  = mutableStateOf(AiModelsList[0])
-    private val isWakeWordMode   = mutableStateOf(false)
+    // Mic error state — null means no error, non-null shows the error dialog
+    enum class MicErrorType { PERMISSION_DENIED, MIC_IN_USE, HARDWARE_ERROR, RECOGNIZER_UNAVAILABLE }
+    private val micErrorType = mutableStateOf<MicErrorType?>(null)
+
+    private val userApiKey        = mutableStateOf("")
+    private val availableApiKeys  = mutableListOf<String>()
+    private val selectedAiModel   = mutableStateOf(AiModelsList[0])
+    private val isWakeWordMode    = mutableStateOf(false)
+    private val isAdvancedAiMode  = mutableStateOf(false) // kept for compat
+    // Online mode — master switch + key-source selector
+    private val isOnlineModeEnabled = mutableStateOf(false)
+    private val useAdminPanelKey    = mutableStateOf(true)  // true=portfolio key, false=user's own key
 
     // ── Conversation Memory ───────────────────────────────────────────────────
     private val conversationHistory = mutableListOf<org.json.JSONObject>()
@@ -279,54 +287,184 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         val confirmationText: String
     )
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Alias Expansion Table  — maps natural variations to canonical words
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private val WORD_ALIASES = mapOf(
+        // Action aliases
+        "switch"      to "turn",
+        "activate"    to "on",
+        "enable"      to "on",
+        "put"         to "on",
+        "deactivate"  to "off",
+        "disable"     to "off",
+        "kill"        to "off",
+        "shut"        to "off",
+        // Device aliases
+        "led"         to "light",
+        "lights"      to "light",
+        "lamp"        to "light",
+        "bulb"        to "light",
+        "white"       to "light",
+        "computer"    to "pc",
+        "laptop"      to "pc",
+        "desktop"     to "pc",
+        "hub"         to "pc",
+        "nightlight"  to "rgb",
+        "colorlight"  to "rgb",
+        "cooler"      to "ac",
+        "aircon"      to "ac",
+        "conditioner" to "ac",
+        "ceiling"     to "fan",
+        "socket"      to "plug",
+        "charger"     to "plug",
+        "outlet"      to "plug",
+        // App aliases
+        "insta"       to "instagram",
+        "ig"          to "instagram",
+        "fb"          to "facebook",
+        "linked"      to "linkedin",
+        "wa"          to "whatsapp",
+        "wapp"        to "whatsapp",
+        "tg"          to "telegram",
+        "tele"        to "telegram",
+        "yt"          to "youtube",
+        "tube"        to "youtube",
+        // Media aliases
+        "music"       to "song",
+        "tune"        to "song",
+        "track"       to "song",
+        "playlist"    to "song",
+        // Camera aliases
+        "pic"         to "photo",
+        "selfie"      to "photo",
+        "snap"        to "photo",
+        "picture"     to "photo",
+        "shoot"       to "video",
+        "filming"     to "video",
+        // General
+        "everything"  to "all",
+        "every"       to "all"
+    )
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Levenshtein Distance — for single-word typo tolerance
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private fun levenshtein(a: String, b: String): Int {
+        val m = a.length; val n = b.length
+        val dp = Array(m + 1) { IntArray(n + 1) }
+        for (i in 0..m) dp[i][0] = i
+        for (j in 0..n) dp[0][j] = j
+        for (i in 1..m) for (j in 1..n) {
+            dp[i][j] = if (a[i-1] == b[j-1]) dp[i-1][j-1]
+            else 1 + minOf(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
+        }
+        return dp[m][n]
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Fuzzy Token Expander — expands spoken words using aliases + Levenshtein
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private fun expandTokens(raw: String): Set<String> {
+        val cleaned = raw
+            .lowercase(java.util.Locale.getDefault())
+            .replace(Regex("^h[ei]y?\\s+(jasica|jessica|jessika|jasika|jesica|jazica)\\s*"), "")
+            .replace(Regex("[^a-z0-9 ]"), " ")
+        val words = cleaned.split("\\s+".toRegex()).filter { it.isNotBlank() }
+        val expanded = mutableSetOf<String>()
+        expanded.addAll(words)
+
+        words.forEach { word ->
+            // Direct alias lookup
+            WORD_ALIASES[word]?.let { expanded.add(it) }
+            // Levenshtein fuzzy match against alias keys (only for words >= 4 chars)
+            if (word.length >= 4) {
+                WORD_ALIASES.entries.forEach { (alias, canonical) ->
+                    if (levenshtein(word, alias) <= 2) {
+                        expanded.add(canonical)
+                    }
+                }
+            }
+        }
+
+        // Detect ON/OFF intent from the expanded word set
+        val onTriggers  = setOf("on", "activate", "enable", "open", "start")
+        val offTriggers = setOf("off", "deactivate", "disable", "close", "kill", "shut")
+        val bigramPairs = words.zipWithNext().map { (a, b) -> "$a $b" }
+        val hasOn  = expanded.any { it in onTriggers }  ||
+                     bigramPairs.any { it == "turn on" || it == "switch on" || it == "put on" }
+        val hasOff = expanded.any { it in offTriggers } ||
+                     bigramPairs.any { it == "turn off" || it == "switch off" || it == "shut down" }
+        if (hasOn)  expanded.add("on")
+        if (hasOff) expanded.add("off")
+
+        return expanded
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Upgraded matchLocalCommand — fuzzy + alias + scoring  (OFFLINE, API-free)
+    // ─────────────────────────────────────────────────────────────────────────
+
     private fun matchLocalCommand(spokenText: String): LocalCommand? {
         val commands = mutableListOf<LocalCommand>()
-        commands.add(LocalCommand(listOf("turn","on","all"), command = "on", confirmationText = "Activating all systems."))
-        commands.add(LocalCommand(listOf("turn","off","all"), command = "off", confirmationText = "Shutting everything down."))
-        commands.add(LocalCommand(listOf("mood"), command = "mood", confirmationText = "Mood lighting on."))
-        commands.add(LocalCommand(listOf("play", "song"), anyOf = listOf("fav", "favorite", "favourite"), command = "SYS_YT_FAV", confirmationText = "Opening YouTube for your favorite song."))
-        commands.add(LocalCommand(listOf("open", "instagram"), command = "SYS_OPEN_IG", confirmationText = "Opening Instagram."))
-        commands.add(LocalCommand(listOf("open", "facebook"), command = "SYS_OPEN_FB", confirmationText = "Opening Facebook."))
-        commands.add(LocalCommand(listOf("open", "linkedin"), command = "SYS_OPEN_LI", confirmationText = "Opening LinkedIn."))
-        commands.add(LocalCommand(listOf("open", "whatsapp"), command = "SYS_OPEN_WA", confirmationText = "Opening WhatsApp."))
-        commands.add(LocalCommand(listOf("open", "telegram"), command = "SYS_OPEN_TG", confirmationText = "Opening Telegram."))
-        commands.add(LocalCommand(listOf("open", "camera"), command = "SYS_OPEN_CAMERA", confirmationText = "Opening the camera."))
-        commands.add(LocalCommand(listOf("take", "photo"), command = "SYS_OPEN_CAMERA", confirmationText = "Opening the camera."))
-        commands.add(LocalCommand(listOf("start", "recording"), command = "SYS_RECORD_VIDEO", confirmationText = "Opening camera in video mode."))
-        commands.add(LocalCommand(listOf("record", "video"), command = "SYS_RECORD_VIDEO", confirmationText = "Opening camera in video mode."))
 
-        // Add dynamic devices
+        // ── Master controls ──────────────────────────────────────────────────
+        commands.add(LocalCommand(listOf("on","all"), command = "on", confirmationText = "Activating all systems."))
+        commands.add(LocalCommand(listOf("off","all"), command = "off", confirmationText = "Shutting everything down."))
+        commands.add(LocalCommand(listOf("mood"), command = "mood", confirmationText = "Mood lighting on."))
+
+        // ── Media / App shortcuts ────────────────────────────────────────────
+        commands.add(LocalCommand(listOf("play","song"), anyOf = listOf("fav","favorite","favourite"), command = "SYS_YT_FAV", confirmationText = "Opening YouTube for your favorite song."))
+        commands.add(LocalCommand(listOf("song"), anyOf = listOf("fav","favorite","favourite"), command = "SYS_YT_FAV", confirmationText = "Opening YouTube for your favorite song."))
+        commands.add(LocalCommand(listOf("youtube"), anyOf = listOf("fav","favorite","favourite","play"), command = "SYS_YT_FAV", confirmationText = "Opening YouTube for your favorite song."))
+        commands.add(LocalCommand(listOf("instagram"), command = "SYS_OPEN_IG", confirmationText = "Opening Instagram."))
+        commands.add(LocalCommand(listOf("facebook"), command = "SYS_OPEN_FB", confirmationText = "Opening Facebook."))
+        commands.add(LocalCommand(listOf("linkedin"), command = "SYS_OPEN_LI", confirmationText = "Opening LinkedIn."))
+        commands.add(LocalCommand(listOf("whatsapp"), command = "SYS_OPEN_WA", confirmationText = "Opening WhatsApp."))
+        commands.add(LocalCommand(listOf("telegram"), command = "SYS_OPEN_TG", confirmationText = "Opening Telegram."))
+        commands.add(LocalCommand(listOf("camera"), command = "SYS_OPEN_CAMERA", confirmationText = "Opening the camera."))
+        commands.add(LocalCommand(listOf("photo"), command = "SYS_OPEN_CAMERA", confirmationText = "Opening the camera."))
+        commands.add(LocalCommand(listOf("take","photo"), command = "SYS_OPEN_CAMERA", confirmationText = "Opening the camera."))
+        commands.add(LocalCommand(listOf("record","video"), command = "SYS_RECORD_VIDEO", confirmationText = "Opening camera in video mode."))
+        commands.add(LocalCommand(listOf("video"), anyOf = listOf("record","start","shoot","film"), command = "SYS_RECORD_VIDEO", confirmationText = "Opening camera in video mode."))
+
+        // ── Dynamic device commands ───────────────────────────────────────────
         DEFAULT_DEVICES.forEach { dev ->
-            val name = sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName
-            val onCmd = sharedPrefs.getString("DEV_${dev.id}_ON_CMD", dev.defaultOnCmd) ?: dev.defaultOnCmd
+            val devName = sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName
+            val onCmd  = sharedPrefs.getString("DEV_${dev.id}_ON_CMD",  dev.defaultOnCmd)  ?: dev.defaultOnCmd
             val offCmd = sharedPrefs.getString("DEV_${dev.id}_OFF_CMD", dev.defaultOffCmd) ?: dev.defaultOffCmd
-            val pinOn = sharedPrefs.getString("DEV_${dev.id}_PIN_ON", dev.defaultPinOn) ?: dev.defaultPinOn
+            val pinOn  = sharedPrefs.getString("DEV_${dev.id}_PIN_ON",  dev.defaultPinOn)  ?: dev.defaultPinOn
             val pinOff = sharedPrefs.getString("DEV_${dev.id}_PIN_OFF", dev.defaultPinOff) ?: dev.defaultPinOff
 
-            commands.add(LocalCommand(
-                keywords = onCmd.lowercase(java.util.Locale.getDefault()).split("\\s+".toRegex()).filter { it.isNotBlank() },
-                command = pinOn,
-                confirmationText = " on."
-            ))
-            commands.add(LocalCommand(
-                keywords = offCmd.lowercase(java.util.Locale.getDefault()).split("\\s+".toRegex()).filter { it.isNotBlank() },
-                command = pinOff,
-                confirmationText = " off."
-            ))
+            val onKeywords  = onCmd.lowercase(java.util.Locale.getDefault()).split("\\s+".toRegex()).filter { it.isNotBlank() }
+            val offKeywords = offCmd.lowercase(java.util.Locale.getDefault()).split("\\s+".toRegex()).filter { it.isNotBlank() }
+
+            commands.add(LocalCommand(keywords = onKeywords,  command = pinOn,  confirmationText = "$devName on."))
+            commands.add(LocalCommand(keywords = offKeywords, command = pinOff, confirmationText = "$devName off."))
         }
 
-        val words = spokenText
-            .lowercase(java.util.Locale.getDefault())
-            .replace(Regex("[^a-z0-9 ]"), " ")
-            .split("\\s+".toRegex())
-            .filter { it.isNotBlank() }
-            .toSet()
+        // ── Fuzzy token expansion ─────────────────────────────────────────────
+        val expandedWords = expandTokens(spokenText)
 
-        return commands.firstOrNull { cmd ->
-            val allKeywords = cmd.keywords.all { it in words }
-            val anyOfMatch  = cmd.anyOf.isEmpty() || cmd.anyOf.any { it in words }
-            allKeywords && anyOfMatch
+        // ── Scoring pass: pick best-matching command ───────────────────────────
+        // Valid if ALL keywords match (strict), OR score ratio >= 0.75 for larger sets.
+        data class ScoredCommand(val cmd: LocalCommand, val score: Int)
+        val scored = commands.mapNotNull { cmd ->
+            val matchedCount = cmd.keywords.count { it in expandedWords }
+            val anyOfMatch   = cmd.anyOf.isEmpty() || cmd.anyOf.any { it in expandedWords }
+            val allMatch     = cmd.keywords.all { it in expandedWords }
+            val ratio        = if (cmd.keywords.isEmpty()) 0f else matchedCount.toFloat() / cmd.keywords.size
+
+            if (anyOfMatch && (allMatch || (cmd.keywords.size >= 2 && ratio >= 0.75f))) {
+                ScoredCommand(cmd, matchedCount)
+            } else null
         }
+
+        // Return highest-scoring command; break ties by specificity (more keywords = more specific)
+        return scored.maxByOrNull { it.score * 100 + it.cmd.keywords.size }?.cmd
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -392,6 +530,14 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         fetchAppConfigFromPortfolio()
         selectedAiModel.value = "gemini-2.5-flash"
         isWakeWordMode.value = sharedPrefs.getBoolean("WAKE_WORD", false)
+        isAdvancedAiMode.value = sharedPrefs.getBoolean("ADVANCED_AI_MODE", false)
+        // Migrate from old ADVANCED_AI_MODE to new ONLINE_MODE_ENABLED on first run
+        if (!sharedPrefs.contains("ONLINE_MODE_ENABLED")) {
+            val legacyValue = sharedPrefs.getBoolean("ADVANCED_AI_MODE", false)
+            sharedPrefs.edit().putBoolean("ONLINE_MODE_ENABLED", legacyValue).apply()
+        }
+        isOnlineModeEnabled.value = sharedPrefs.getBoolean("ONLINE_MODE_ENABLED", false)
+        useAdminPanelKey.value    = sharedPrefs.getBoolean("USE_ADMIN_PANEL_KEY", true)
 
         // Load device states into memory map
         listOf("a", "b", "c", "d", "e", "f").forEach { id ->
@@ -475,9 +621,14 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                     calibrationIndex    = calibrationIndex.value,
                     calibrationRecognizedText = calibrationRecognizedText.value,
                     showArduinoCode     = showArduinoCode.value,
+                    micError            = micErrorType.value,
+                    onDismissMicError   = { micErrorType.value = null },
                     currentApiKey       = userApiKey.value,
                     currentModel        = selectedAiModel.value,
                     isWakeWordMode      = isWakeWordMode.value,
+                    isAdvancedAiMode    = isAdvancedAiMode.value,
+                    isOnlineModeEnabled = isOnlineModeEnabled.value,
+                    useAdminPanelKey    = useAdminPanelKey.value,
                     onMicTap            = {
                         if (appState.value != AppState.LISTENING) {
                             startListening()
@@ -509,13 +660,13 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                             showOnboarding.value = true
                         }
                     },
-                    onSaveSettings      = { newKey, newModel, wakeMode ->
-                        userApiKey.value = newKey
-                        selectedAiModel.value = newModel
+                    onSaveSettings      = { _, _, wakeMode ->
                         isWakeWordMode.value = wakeMode
+                        // Sync runtime state from SharedPrefs (the UI writes prefs directly)
+                        isOnlineModeEnabled.value = sharedPrefs.getBoolean("ONLINE_MODE_ENABLED", false)
+                        useAdminPanelKey.value    = sharedPrefs.getBoolean("USE_ADMIN_PANEL_KEY", true)
+                        isAdvancedAiMode.value    = isOnlineModeEnabled.value // keep compat
                         sharedPrefs.edit()
-                            .putString("API_KEY", newKey)
-                            .putString("AI_MODEL", newModel)
                             .putBoolean("WAKE_WORD", wakeMode)
                             .apply()
                         showSettingsDialog.value = false
@@ -897,10 +1048,18 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             override fun onError(error: Int) {
                 isRecognizerListening = false
                 val isWakeMode = appState.value == AppState.WAKE_LISTENING
+                android.util.Log.w("JasicaApp", "SpeechRecognizer error code: $error")
 
                 when (error) {
+                    // ── Transient / recoverable errors ────────────────────────────
+                    SpeechRecognizer.ERROR_NO_MATCH,
+                    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> {
+                        // No speech heard — normal, silent recovery
+                        if (isWakeMode || isWakeWordMode.value) restartWakeWordLoop()
+                        else { appState.value = AppState.IDLE; triggerWakeWordLoopIfEnabled() }
+                    }
                     SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> {
-                        // Recognizer is stuck — destroy and recreate it, then retry
+                        // Recognizer stuck — destroy, recreate, retry
                         android.util.Log.w("JasicaApp", "Recognizer busy — recreating")
                         mainHandler.postDelayed({
                             createSpeechRecognizer()
@@ -908,20 +1067,42 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                             else { appState.value = AppState.IDLE }
                         }, 600)
                     }
-                    SpeechRecognizer.ERROR_NO_MATCH,
-                    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> {
-                        // No speech heard — normal case, just restart wake loop or go idle
+                    SpeechRecognizer.ERROR_CLIENT -> {
+                        // Client-side error — recreate recognizer quietly
+                        mainHandler.postDelayed({
+                            createSpeechRecognizer()
+                            if (isWakeMode || isWakeWordMode.value) restartWakeWordLoop()
+                            else { appState.value = AppState.IDLE }
+                        }, 500)
+                    }
+                    // ── Permission denied ─────────────────────────────────────────
+                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> {
+                        appState.value = AppState.IDLE
+                        runOnUiThread { micErrorType.value = MicErrorType.PERMISSION_DENIED }
+                    }
+                    // ── Mic hardware / in use by another app ─────────────────────
+                    SpeechRecognizer.ERROR_AUDIO -> {
+                        appState.value = AppState.IDLE
+                        // Check if a phone call or other app is actively using the mic
+                        val telephonyMgr = getSystemService(android.content.Context.TELEPHONY_SERVICE)
+                                as android.telephony.TelephonyManager
+                        @Suppress("DEPRECATION")
+                        val inCall = telephonyMgr.callState != android.telephony.TelephonyManager.CALL_STATE_IDLE
+                        runOnUiThread {
+                            micErrorType.value = if (inCall) MicErrorType.MIC_IN_USE
+                                                 else MicErrorType.HARDWARE_ERROR
+                        }
+                    }
+
+                    // ── Recognizer service unavailable ────────────────────────────
+                    SpeechRecognizer.ERROR_SERVER,
+                    SpeechRecognizer.ERROR_NETWORK,
+                    SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> {
+                        // Google Speech service unreachable — go idle quietly
                         if (isWakeMode || isWakeWordMode.value) restartWakeWordLoop()
                         else { appState.value = AppState.IDLE; triggerWakeWordLoopIfEnabled() }
                     }
-                    SpeechRecognizer.ERROR_AUDIO,
-                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> {
-                        // Hardware/permission error — go idle and show message
-                        appState.value = AppState.IDLE
-                        runOnUiThread { Toast.makeText(this@MainActivity, "Mic error. Please try again.", Toast.LENGTH_SHORT).show() }
-                    }
                     else -> {
-                        // Network errors, server errors, etc.
                         if (isWakeMode || isWakeWordMode.value) restartWakeWordLoop()
                         else { appState.value = AppState.IDLE; triggerWakeWordLoopIfEnabled() }
                     }
@@ -1117,8 +1298,15 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 tts.speak(localMatch.confirmationText, TextToSpeech.QUEUE_FLUSH, null, "JASICA_LOCAL")
             }
         } else {
-            sendToGemini(spokenText)
+            // Resolve the API key based on Online Mode settings
+            val resolvedKey = resolveApiKey()
+            if (resolvedKey != null) {
+                sendToGemini(spokenText, resolvedKey)
+            } else {
+                handleOfflineUnknown(spokenText)
+            }
         }
+
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -1148,9 +1336,246 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         }
     }
 
-    private fun sendToGemini(prompt: String) {
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Resolves which Gemini API key to use based on current settings.
+     * Returns null if online mode is disabled (→ use offline responder).
+     * - USE_ADMIN_PANEL_KEY=true  → uses the key fetched from portfolio /api/app-config
+     * - USE_ADMIN_PANEL_KEY=false → uses the key manually entered by the user
+     */
+    private fun resolveApiKey(): String? {
+        val onlineMode = sharedPrefs.getBoolean("ONLINE_MODE_ENABLED", false)
+        if (!onlineMode) return null
+
+        return if (sharedPrefs.getBoolean("USE_ADMIN_PANEL_KEY", true)) {
+            // Admin Panel key: stored under "API_KEY" after fetchAppConfigFromPortfolio()
+            val key = sharedPrefs.getString("API_KEY", "") ?: ""
+            key.takeIf { it.startsWith("AIza") }
+        } else {
+            // User's own key: stored under "GEMINI_API_KEY" from the settings text field
+            val key = sharedPrefs.getString("GEMINI_API_KEY", "") ?: ""
+            key.takeIf { it.isNotBlank() }
+        }
+    }
+
+    //  JasicaOfflineResponder — personality replies with ZERO API calls
+
+    // ─────────────────────────────────────────────────────────────────────────
+
+
+
+    private var jokeIndex = 0
+
+    private val JASICA_JOKES = listOf(
+
+        "Why did the robot go on a diet? Because it had too many bytes! 😄",
+
+        "I told my Arduino a joke. It didn't laugh — but it did blink twice! 💡",
+
+        "Why can't computers take their hat off? Because they have Windows! 🪟",
+
+        "I'm basically a genius... in a smart home. Still smarter than the toaster. 🍞"
+
+    )
+
+
+
+    private val JASICA_GREETINGS = listOf(
+
+        "Hey Bristi! What's up? 😊",
+
+        "Hello! I'm right here — what do you need?",
+
+        "Hii! What can I do for you today?",
+
+        "Sup! Ready to help as always! 🚀"
+
+    )
+
+
+
+    private val JASICA_THANKS = listOf(
+
+        "Anytime, Bristi! I'm always here. 💙",
+
+        "Of course! That's what I'm here for.",
+
+        "No problem at all! Just say the word.",
+
+        "Happy to help! 😊"
+
+    )
+
+
+
+    private val JASICA_UNKNOWN = listOf(
+
+        "Hmm, I didn't quite catch that. Try saying it differently?",
+
+        "I'm not sure what you mean — can you rephrase that?",
+
+        "Sorry, I didn't understand. Try a simpler command?",
+
+        "I'm offline-only, so I can only handle device and app commands right now.",
+
+        "Can you say that again? I want to make sure I get it right."
+
+    )
+
+
+
+    private var unknownIdx = 0
+
+
+
+    private fun matchSmartIntent(text: String): String? {
+
+        val lower = text.lowercase(java.util.Locale.getDefault())
+
+
+
+        // Time query
+
+        if (lower.contains("time") || lower.contains("clock") || lower.contains("what time")) {
+
+            val timeStr = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault()).format(java.util.Date())
+
+            return "It's $timeStr right now."
+
+        }
+
+
+
+        // Greeting
+
+        if (lower.matches(Regex(".*\\b(hello|hi|hey|howdy|sup|hiya|namaste)\\b.*")) &&
+
+            !lower.contains("jasica") && !lower.contains("turn") && !lower.contains("open")) {
+
+            return JASICA_GREETINGS.random()
+
+        }
+
+
+
+        // How are you
+
+        if (lower.contains("how are you") || lower.contains("how r u") ||
+
+            lower.contains("kemon acho") || lower.contains("how you doing")) {
+
+            return "I'm doing great, Bristi! Always ready to help. 😄"
+
+        }
+
+
+
+        // Thanks
+
+        if (lower.matches(Regex(".*\\b(thanks|thank you|dhanyabad|shukriya|thx|ty)\\b.*"))) {
+
+            return JASICA_THANKS.random()
+
+        }
+
+
+
+        // Joke
+
+        if (lower.contains("joke") || lower.contains("funny") || lower.contains("laugh")) {
+
+            val joke = JASICA_JOKES[jokeIndex % JASICA_JOKES.size]
+
+            jokeIndex++
+
+            return joke
+
+        }
+
+
+
+        // Name / who are you
+
+        if (lower.contains("your name") || lower.contains("who are you") || lower.contains("what are you")) {
+
+            return "I'm Jasica — your personal AI assistant, built by Bristi! 😊"
+
+        }
+
+
+
+        // Status / are you there
+
+        if (lower.contains("are you there") || lower.contains("you there") || lower.contains("status")) {
+
+            return "All systems good! I'm right here, ready to help."
+
+        }
+
+
+
+        // Weather (unsupported offline)
+
+        if (lower.contains("weather") || lower.contains("temperature") || lower.contains("forecast")) {
+
+            return "I can't check the weather without internet right now."
+
+        }
+
+
+
+        // Bluetooth status
+
+        return null
+
+    }
+
+
+
+    private fun handleOfflineUnknown(spokenText: String) {
+
+        // First try smart intent classification
+
+        val smartReply = matchSmartIntent(spokenText)
+
+        val reply = smartReply ?: run {
+
+            val r = JASICA_UNKNOWN[unknownIdx % JASICA_UNKNOWN.size]
+
+            unknownIdx++
+
+            r
+
+        }
+
+
+
+        runOnUiThread {
+
+            uiChatHistory.add(ChatMessage(isUser = false, text = reply, time = getCurrentTimeString()))
+
+            aiResponseText.value = reply
+
+            appState.value = AppState.SPEAKING
+
+            speakMultilingual(reply, "JASICA_REPLY")
+
+        }
+
+    }
+
+
+
+    private fun sendToGemini(prompt: String, apiKey: String) {
         if (!isNetworkAvailable()) {
-            handleAIResponse("I am currently offline. Please check the network connection.")
+            runOnUiThread {
+                val msg = "I am offline right now. Please check your internet connection."
+                uiChatHistory.add(ChatMessage(isUser = false, text = msg, time = getCurrentTimeString()))
+                aiResponseText.value = msg
+                appState.value = AppState.SPEAKING
+                speakMultilingual(msg, "JASICA_REPLY")
+            }
             return
         }
 
@@ -1164,7 +1589,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                     .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
                     .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
                     .build()
-                
+
                 val historyArray = org.json.JSONArray()
                 conversationHistory.forEach { historyArray.put(it) }
 
@@ -1172,8 +1597,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                     put("system_instruction", getSystemInstruction())
                     put("history", historyArray)
                     put("prompt", prompt)
-                    put("api_key", userApiKey.value)
-                    put("model", selectedAiModel.value)
+                    put("api_key", apiKey)
+                    put("model", "gemini-2.5-flash")
                 }
 
                 val mediaType = "application/json; charset=utf-8".toMediaType()
@@ -1188,9 +1613,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
                 if (response.isSuccessful && responseBodyStr.isNotBlank()) {
                     val jsonResponse = org.json.JSONObject(responseBodyStr)
-                    val reply = jsonResponse.optString("text", "Uh oh, something went wrong.")
+                    val reply = jsonResponse.optString("text", "Something went wrong. Try again.")
 
-                    // Add to history
                     val userMsg = org.json.JSONObject().apply {
                         put("role", "user")
                         val partsArray = org.json.JSONArray()
@@ -1205,7 +1629,6 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                     }
                     conversationHistory.add(userMsg)
                     conversationHistory.add(modelMsg)
-
                     while (conversationHistory.size > MAX_HISTORY_PAIRS * 2) {
                         conversationHistory.removeAt(0)
                         conversationHistory.removeAt(0)
@@ -1214,13 +1637,21 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                     sendLogToVercel(prompt, reply, false)
                     handleAIResponse(reply)
                 } else {
-                    throw Exception("Backend returned error: $responseBodyStr")
+                    val errBody = responseBodyStr.take(200)
+                    val isQuota = errBody.contains("quota", ignoreCase = true) || errBody.contains("429", ignoreCase = true)
+                    val isInvalidKey = errBody.contains("API_KEY", ignoreCase = true) || errBody.contains("invalid", ignoreCase = true)
+                    val friendlyMsg = when {
+                        isQuota -> "Jasica's AI quota is exhausted. Please try again later."
+                        isInvalidKey -> "Your AI API key seems invalid. Please check Settings."
+                        else -> "Jasica couldn't reach the internet right now. Check your connection."
+                    }
+                    handleAIResponse(friendlyMsg)
                 }
-            } catch (e: CancellationException) {
-                // Ignore cancellation
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                // Cancelled
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { android.util.Log.e("JasicaApp", "API Error", e) }
-                handleAIResponse("Server connection failed. Check network stability.")
+                android.util.Log.e("JasicaApp", "AI API error", e)
+                handleAIResponse("Jasica couldn't connect right now. Check your internet and try again.")
             }
         }
     }
@@ -1574,9 +2005,14 @@ fun JasicaScreen(
     calibrationIndex    : Int,
     calibrationRecognizedText: String,
     showArduinoCode     : Boolean,
+    micError            : MainActivity.MicErrorType?,
+    onDismissMicError   : () -> Unit,
     currentApiKey       : String,
     currentModel        : String,
     isWakeWordMode      : Boolean,
+    isAdvancedAiMode    : Boolean,
+    isOnlineModeEnabled : Boolean,
+    useAdminPanelKey    : Boolean,
     onMicTap            : () -> Unit,
     onInterrupt         : () -> Unit,
     onBtIconTap         : () -> Unit,
@@ -1696,6 +2132,11 @@ fun JasicaScreen(
                 shape = RoundedCornerShape(16.dp)
             )
         }
+        // ── Mic Error Dialog ─────────────────────────────────────────────
+        if (micError != null) {
+            MicErrorDialog(errorType = micError, onDismiss = onDismissMicError, context = context)
+        }
+
         // 1. Full Screen Generated Background
         Image(
             painter = painterResource(id = R.drawable.wallpaper3), // Assumes existing drawable
@@ -2034,7 +2475,17 @@ fun JasicaScreen(
             DeviceSelectionDialog(pairedDevices, availableDevices, isScanning, onDeviceSelect, onScanTap, onDismissDialog)
         }
         if (showSettings) {
-            SettingsScreen(currentApiKey, currentModel, isWakeWordMode, sharedPrefs, onDismissSettings, onSaveSettings)
+            SettingsScreen(
+                currentApiKey       = currentApiKey,
+                currentModel        = currentModel,
+                isWakeWordMode      = isWakeWordMode,
+                isAdvancedAiMode    = isAdvancedAiMode,
+                isOnlineModeEnabled = isOnlineModeEnabled,
+                useAdminPanelKey    = useAdminPanelKey,
+                sharedPrefs         = sharedPrefs,
+                onDismiss           = onDismissSettings,
+                onSave              = onSaveSettings
+            )
         }
 
         // Arduino Code Screen Overlay
@@ -2895,12 +3346,146 @@ fun JasicaGraphicalDialogPanel(content: @Composable ColumnScope.() -> Unit) {
 //  Dialogs (Adapted with Orange Theme & High Contrast text)
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  Mic Error Dialog
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+fun MicErrorDialog(
+    errorType  : MainActivity.MicErrorType,
+    onDismiss  : () -> Unit,
+    context    : android.content.Context
+) {
+    val (icon, title, body, actionLabel, onAction) = when (errorType) {
+        MainActivity.MicErrorType.PERMISSION_DENIED -> listOf(
+            "🎙️",
+            "Microphone Access Denied",
+            "Jasica needs the microphone permission to hear you.\n\nGo to Settings → App Permissions → Microphone and enable it.",
+            "Open Settings",
+            {
+                val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                intent.data = android.net.Uri.fromParts("package", context.packageName, null)
+                intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            }
+        )
+        MainActivity.MicErrorType.MIC_IN_USE -> listOf(
+            "📞",
+            "Microphone is Busy",
+            "The microphone is currently in use by another app (like a phone call or recording app).\n\nEnd your call or close the other app, then try again.",
+            "Got It",
+            { /* just dismiss */ }
+        )
+        MainActivity.MicErrorType.HARDWARE_ERROR -> listOf(
+            "⚠️",
+            "Microphone Error",
+            "There was a problem accessing your microphone.\n\nTry restarting the app. If the issue persists, check if another app is blocking the mic or try restarting your phone.",
+            "Dismiss",
+            { /* just dismiss */ }
+        )
+        MainActivity.MicErrorType.RECOGNIZER_UNAVAILABLE -> listOf(
+            "🔇",
+            "Speech Service Unavailable",
+            "The speech recognition service is unavailable.\n\nMake sure Google app is installed and up to date, then try again.",
+            "Dismiss",
+            { /* just dismiss */ }
+        )
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    val action = onAction as () -> Unit
+
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = androidx.compose.ui.Modifier
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color(0xFF1A1A2E))
+                .border(1.dp, when (errorType) {
+                    MainActivity.MicErrorType.PERMISSION_DENIED -> JasicaOrange
+                    MainActivity.MicErrorType.MIC_IN_USE        -> Color(0xFF3A86FF)
+                    else                                         -> Color(0xFFFF4444)
+                }.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
+                .padding(28.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                // Icon
+                Box(
+                    modifier = androidx.compose.ui.Modifier
+                        .size(72.dp)
+                        .clip(CircleShape)
+                        .background(when (errorType) {
+                            MainActivity.MicErrorType.PERMISSION_DENIED -> JasicaOrange
+                            MainActivity.MicErrorType.MIC_IN_USE        -> Color(0xFF3A86FF)
+                            else                                         -> Color(0xFFFF4444)
+                        }.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(icon as String, fontSize = 32.sp)
+                }
+
+                Spacer(androidx.compose.ui.Modifier.height(20.dp))
+
+                // Title
+                Text(
+                    title as String,
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = InterFontFamily,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(androidx.compose.ui.Modifier.height(12.dp))
+
+                // Body
+                Text(
+                    body as String,
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 13.sp,
+                    fontFamily = InterFontFamily,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
+                )
+
+                Spacer(androidx.compose.ui.Modifier.height(28.dp))
+
+                // Action button
+                Button(
+                    onClick = { action(); onDismiss() },
+                    modifier = androidx.compose.ui.Modifier.fillMaxWidth().height(50.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = when (errorType) {
+                            MainActivity.MicErrorType.PERMISSION_DENIED -> JasicaOrange
+                            MainActivity.MicErrorType.MIC_IN_USE        -> Color(0xFF3A86FF)
+                            else                                         -> Color(0xFFFF4444)
+                        }
+                    )
+                ) {
+                    Text(actionLabel as String, color = Color.White, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily)
+                }
+
+                Spacer(androidx.compose.ui.Modifier.height(8.dp))
+
+                // Dismiss link
+                TextButton(onClick = onDismiss) {
+                    Text("Not now", color = Color.White.copy(alpha = 0.4f), fontSize = 12.sp, fontFamily = InterFontFamily)
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     currentApiKey: String,
     currentModel: String,
     isWakeWordMode: Boolean,
+    isAdvancedAiMode: Boolean,
+    isOnlineModeEnabled: Boolean,
+    useAdminPanelKey: Boolean,
     sharedPrefs: SharedPreferences,
     onDismiss: () -> Unit,
     onSave: (String, String, Boolean) -> Unit
@@ -2909,6 +3494,11 @@ fun SettingsScreen(
     var selectedModel by remember { mutableStateOf(currentModel) }
     var wakeWordInput by remember { mutableStateOf(isWakeWordMode) }
     var waterReminderInput by remember { mutableStateOf(sharedPrefs.getBoolean("WATER_REMINDER", false)) }
+    var advancedAiInput by remember { mutableStateOf(isAdvancedAiMode) }
+    var onlineModeInput by remember { mutableStateOf(isOnlineModeEnabled) }
+    var adminKeyInput by remember { mutableStateOf(useAdminPanelKey) }
+    var geminiKeyInput by remember { mutableStateOf(sharedPrefs.getString("GEMINI_API_KEY", "") ?: "") }
+    var showApiKey by remember { mutableStateOf(false) }
     
     val context = androidx.compose.ui.platform.LocalContext.current
     var currentTab by remember { mutableStateOf(0) }
@@ -3045,27 +3635,306 @@ fun SettingsScreen(
                             }
                         }
 
-                        // Section: AI Configuration
+                        // ── Section: AI Mode ─────────────────────────────────
                         Column {
-                            Text("AI CONFIGURATION", color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                            Spacer(Modifier.height(12.dp))
-                            // API Key input removed for security
-                            
-                            OutlinedTextField(
-                                value = selectedModel,
-                                onValueChange = { selectedModel = it },
-                                label = { Text("Model Version", color = Color.White.copy(alpha = 0.5f)) },
-                                textStyle = TextStyle(color = Color.White, fontSize = 14.sp),
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = JasicaOrange,
-                                    unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
-                                    cursorColor = JasicaOrange
-                                )
+                            Text(
+                                "JASICA ONLINE",
+                                color = Color.White.copy(alpha = 0.4f),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
                             )
+                            Spacer(Modifier.height(12.dp))
+
+                            // ── Master Online Toggle ──────────────────────────
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(
+                                        if (onlineModeInput) JasicaOrange.copy(alpha = 0.10f)
+                                        else Color.White.copy(alpha = 0.04f)
+                                    )
+                                    .clickable {
+                                        onlineModeInput = !onlineModeInput
+                                        sharedPrefs.edit()
+                                            .putBoolean("ONLINE_MODE_ENABLED", onlineModeInput)
+                                            .putBoolean("ADVANCED_AI_MODE", onlineModeInput) // compat
+                                            .apply()
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        "⚡",
+                                        fontSize = 20.sp,
+                                        modifier = Modifier.padding(end = 12.dp)
+                                    )
+                                    Column {
+                                        Text(
+                                            "Turn On Jasica Online",
+                                            color = Color.White,
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            if (onlineModeInput)
+                                                "AI handles open questions & smart tasks"
+                                            else
+                                                "Offline only — 100% free, no internet needed",
+                                            color = if (onlineModeInput) JasicaOrange else Color.White.copy(alpha = 0.5f),
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+                                Switch(
+                                    checked = onlineModeInput,
+                                    onCheckedChange = { checked ->
+                                        onlineModeInput = checked
+                                        sharedPrefs.edit()
+                                            .putBoolean("ONLINE_MODE_ENABLED", checked)
+                                            .putBoolean("ADVANCED_AI_MODE", checked)
+                                            .apply()
+                                    },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = Color.White,
+                                        checkedTrackColor = JasicaOrange,
+                                        uncheckedThumbColor = Color.Gray,
+                                        uncheckedTrackColor = Color.DarkGray
+                                    )
+                                )
+                            }
+
+                            // ── Expanded: Online ON — Key Source ─────────────
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = onlineModeInput,
+                                enter = expandVertically() + fadeIn(),
+                                exit = shrinkVertically() + fadeOut()
+                            ) {
+                                Column {
+                                    Spacer(Modifier.height(16.dp))
+
+                                    // Key source label
+                                    Text(
+                                        "API KEY SOURCE",
+                                        color = Color.White.copy(alpha = 0.35f),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 1.sp,
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+
+                                    // Option 1 — Admin Panel Key
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(
+                                                if (adminKeyInput) Color(0xFF1A2A1A)
+                                                else Color.White.copy(alpha = 0.04f)
+                                            )
+                                            .border(
+                                                width = 1.dp,
+                                                color = if (adminKeyInput) Color(0xFF4CAF50).copy(alpha = 0.5f)
+                                                        else Color.White.copy(alpha = 0.08f),
+                                                shape = RoundedCornerShape(12.dp)
+                                            )
+                                            .clickable {
+                                                adminKeyInput = true
+                                                sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", true).apply()
+                                            }
+                                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                "🔗  Admin Panel Key",
+                                                color = Color.White,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            Text(
+                                                "Auto-fetched from your Portfolio settings",
+                                                color = Color.White.copy(alpha = 0.5f),
+                                                fontSize = 11.sp
+                                            )
+                                            // Status indicator
+                                            val adminKey = sharedPrefs.getString("API_KEY", "") ?: ""
+                                            val hasAdminKey = adminKey.startsWith("AIza")
+                                            Text(
+                                                if (hasAdminKey) "✓ Key loaded" else "✗ No key found — set one in Admin Panel",
+                                                color = if (hasAdminKey) Color(0xFF4CAF50) else Color(0xFFFF6B6B),
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(top = 4.dp)
+                                            )
+                                        }
+                                        RadioButton(
+                                            selected = adminKeyInput,
+                                            onClick = {
+                                                adminKeyInput = true
+                                                sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", true).apply()
+                                            },
+                                            colors = RadioButtonDefaults.colors(
+                                                selectedColor = Color(0xFF4CAF50),
+                                                unselectedColor = Color.White.copy(alpha = 0.3f)
+                                            )
+                                        )
+                                    }
+
+                                    Spacer(Modifier.height(8.dp))
+
+                                    // Option 2 — My Own Key
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(
+                                                if (!adminKeyInput) Color(0xFF1A1A2A)
+                                                else Color.White.copy(alpha = 0.04f)
+                                            )
+                                            .border(
+                                                width = 1.dp,
+                                                color = if (!adminKeyInput) JasicaOrange.copy(alpha = 0.5f)
+                                                        else Color.White.copy(alpha = 0.08f),
+                                                shape = RoundedCornerShape(12.dp)
+                                            )
+                                            .clickable {
+                                                adminKeyInput = false
+                                                sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", false).apply()
+                                            }
+                                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                "🔑  My Own Key",
+                                                color = Color.White,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            Text(
+                                                "Enter your personal AI API key below",
+                                                color = Color.White.copy(alpha = 0.5f),
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                        RadioButton(
+                                            selected = !adminKeyInput,
+                                            onClick = {
+                                                adminKeyInput = false
+                                                sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", false).apply()
+                                            },
+                                            colors = RadioButtonDefaults.colors(
+                                                selectedColor = JasicaOrange,
+                                                unselectedColor = Color.White.copy(alpha = 0.3f)
+                                            )
+                                        )
+                                    }
+
+                                    // ── User's Own Key Field ──────────────────
+                                    androidx.compose.animation.AnimatedVisibility(
+                                        visible = !adminKeyInput,
+                                        enter = expandVertically() + fadeIn(),
+                                        exit = shrinkVertically() + fadeOut()
+                                    ) {
+                                        Column(modifier = Modifier.padding(top = 12.dp)) {
+                                            OutlinedTextField(
+                                                value = geminiKeyInput,
+                                                onValueChange = {
+                                                    geminiKeyInput = it
+                                                    sharedPrefs.edit().putString("GEMINI_API_KEY", it.trim()).apply()
+                                                },
+                                                label = { Text("AI API Key", color = Color.White.copy(alpha = 0.5f)) },
+                                                placeholder = { Text("AIza...", color = Color.White.copy(alpha = 0.2f)) },
+                                                textStyle = TextStyle(color = Color.White, fontSize = 14.sp),
+                                                modifier = Modifier.fillMaxWidth(),
+                                                shape = RoundedCornerShape(12.dp),
+                                                singleLine = true,
+                                                visualTransformation = if (showApiKey)
+                                                    androidx.compose.ui.text.input.VisualTransformation.None
+                                                else
+                                                    androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                                trailingIcon = {
+                                                    IconButton(onClick = { showApiKey = !showApiKey }) {
+                                                        Text(
+                                                            if (showApiKey) "👁" else "🔒",
+                                                            fontSize = 16.sp
+                                                        )
+                                                    }
+                                                },
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    focusedBorderColor = JasicaOrange,
+                                                    unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
+                                                    cursorColor = JasicaOrange
+                                                )
+                                            )
+                                            Spacer(Modifier.height(6.dp))
+                                            Text(
+                                                "Get your free key at aistudio.google.com →",
+                                                color = JasicaOrange.copy(alpha = 0.8f),
+                                                fontSize = 11.sp,
+                                                modifier = Modifier.clickable {
+                                                    try {
+                                                        val intent = android.content.Intent(
+                                                            android.content.Intent.ACTION_VIEW,
+                                                            android.net.Uri.parse("https://aistudio.google.com/app/apikey")
+                                                        )
+                                                        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                        context.startActivity(intent)
+                                                    } catch (e: Exception) {}
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // ── Offline badge (when Online Mode is OFF) ───────
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = !onlineModeInput,
+                                enter = expandVertically() + fadeIn(),
+                                exit = shrinkVertically() + fadeOut()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 10.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color(0xFF1A1F2E))
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        "100% offline. No tokens, no limits.",
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        fontSize = 12.sp
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(JasicaOrange.copy(alpha = 0.15f))
+                                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                                    ) {
+                                        Text(
+                                            "FREE",
+                                            color = JasicaOrange,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.ExtraBold
+                                        )
+                                    }
+                                }
+                            }
                         }
-                        
+
                         Spacer(Modifier.height(40.dp))
                     }
                 } else {
@@ -3589,9 +4458,14 @@ fun JasicaScreenIdlePreview() {
             calibrationIndex = 0,
             calibrationRecognizedText = "",
             showArduinoCode = false,
+            micError = null,
+            onDismissMicError = {},
             currentApiKey = "",
             currentModel = AiModelsList[0],
             isWakeWordMode = false,
+            isAdvancedAiMode = false,
+            isOnlineModeEnabled = false,
+            useAdminPanelKey = true,
             onMicTap = {},
             onInterrupt = {},
             onBtIconTap = {},
