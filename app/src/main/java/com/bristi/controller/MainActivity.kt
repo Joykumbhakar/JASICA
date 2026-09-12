@@ -181,6 +181,8 @@ val AiModelsList = listOf("gemini-2.5-flash")
 @SuppressLint("MissingPermission")
 class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
+    private val sharedOkHttpClient = okhttp3.OkHttpClient()
+
     // ── Config ────────────────────────────────────────────────────────────────
     // Replace this URL with your actual portfolio admin panel API endpoint
         private val DEFAULT_API_KEY = "YOUR_GEMINI_API_KEY"
@@ -1104,6 +1106,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     override fun onDestroy() {
         super.onDestroy()
+        stopScans()
+        mainHandler.removeCallbacksAndMessages(null)
         activeBlinkJob?.cancel()
         activeTimerJobs.values.forEach { it.cancel() }
         activeTimerJobs.clear()
@@ -1324,7 +1328,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private val PORTFOLIO_CONFIG_URL = "https://joykumbhakar.vercel.app/api/app-config"
 
     private fun fetchAppConfigFromPortfolio() {
-        val client = okhttp3.OkHttpClient()
+        val client = sharedOkHttpClient
         val request = okhttp3.Request.Builder()
             .url(PORTFOLIO_CONFIG_URL)
             .build()
@@ -1425,14 +1429,16 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             pm.setComponentEnabledSetting(component, state, android.content.pm.PackageManager.DONT_KILL_APP)
         }
         
-        setComponentState(favDiComponent, enableFavDi)
-        setComponentState(sonaDiComponent, enableSonaDi)
-        setComponentState(tithiComponent, enableTithi)
-        setComponentState(jijuDidiComponent, enableJijuDidi)
-        setComponentState(qweenComponent, enableQween)
-        setComponentState(thinkingComponent, enableThinking)
-        setComponentState(thinking2Component, enableThinking2)
-        setComponentState(defaultComponent, enableDefault)
+        lifecycleScope.launch(Dispatchers.IO) {
+            setComponentState(favDiComponent, enableFavDi)
+            setComponentState(sonaDiComponent, enableSonaDi)
+            setComponentState(tithiComponent, enableTithi)
+            setComponentState(jijuDidiComponent, enableJijuDidi)
+            setComponentState(qweenComponent, enableQween)
+            setComponentState(thinkingComponent, enableThinking)
+            setComponentState(thinking2Component, enableThinking2)
+            setComponentState(defaultComponent, enableDefault)
+        }
     }
 
     // Track whether the recognizer is actively running to prevent double-starts
@@ -1768,7 +1774,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                     .url("https://joykumbhakar.vercel.app/api/log")
                     .post(body)
                     .build()
-                okhttp3.OkHttpClient().newCall(request).execute()
+                sharedOkHttpClient.newCall(request).execute()
             } catch (e: Exception) {
                 // Ignore log failures
             }
@@ -2318,7 +2324,13 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         stopScans()
         disconnectAll()
 
-        if (device.type == BluetoothDevice.DEVICE_TYPE_LE) {
+        val isLE = try {
+            device.type == BluetoothDevice.DEVICE_TYPE_LE
+        } catch (e: SecurityException) {
+            false
+        }
+
+        if (isLE) {
             proceedWithConnection(device)
         } else {
             try {
@@ -2462,7 +2474,16 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         if (isClassicConnected && classicOutStream != null) {
             lifecycleScope.launch(Dispatchers.IO) { try { classicOutStream?.write(payload); classicOutStream?.flush() } catch (e: IOException) { disconnectAll() } }
         } else if (isBleConnected && bluetoothGatt != null && bleWriteChar != null) {
-            try { bleWriteChar?.value = payload; bluetoothGatt?.writeCharacteristic(bleWriteChar) } catch (e: Exception) { Log.e("BLE", "Write failed: ${e.message}") }
+            try {
+                if (android.os.Build.VERSION.SDK_INT >= 33) {
+                    bluetoothGatt?.writeCharacteristic(bleWriteChar!!, payload, android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+                } else {
+                    @Suppress("DEPRECATION")
+                    bleWriteChar?.value = payload
+                    @Suppress("DEPRECATION")
+                    bluetoothGatt?.writeCharacteristic(bleWriteChar)
+                }
+            } catch (e: Exception) { Log.e("BLE", "Write failed: ${e.message}") }
         }
     }
 }
