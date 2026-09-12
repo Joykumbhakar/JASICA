@@ -6138,7 +6138,7 @@ fun VoiceCalibrationScreen(
 //  Onboarding Walkthrough Screen
 // ─────────────────────────────────────────────────────────────────────────────
 
-data class OnboardingPageInfo(val title: String, val subtitle: String, val icon: ImageVector?, val image: Int?)
+data class OnboardingPageInfo(val title: String, val subtitle: String, val iconRes: Int?, val image: Int?)
 
 @Composable
 fun OnboardingScreen(onDismiss: () -> Unit) {
