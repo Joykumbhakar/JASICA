@@ -3036,9 +3036,9 @@ fun ManualControlsScreen(
     val devices = remember(sharedPrefs) {
         DEFAULT_DEVICES.map { dev ->
             val name = sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName
-            val onCmd = sharedPrefs.getString("DEV_${dev.id}_ON_CMD", dev.defaultOnCmd) ?: dev.defaultOnCmd
-            val offCmd = sharedPrefs.getString("DEV_${dev.id}_OFF_CMD", dev.defaultOffCmd) ?: dev.defaultOffCmd
-            ManualDevice(dev.id, name, onCmd, offCmd)
+            val pinOn = sharedPrefs.getString("DEV_${dev.id}_PIN_ON", dev.defaultPinOn) ?: dev.defaultPinOn
+            val pinOff = sharedPrefs.getString("DEV_${dev.id}_PIN_OFF", dev.defaultPinOff) ?: dev.defaultPinOff
+            ManualDevice(dev.id, name, pinOn, pinOff)
         }
     }
 
