@@ -3002,9 +3002,9 @@ fun JasicaScreen(
                             state = hazeState,
                             style = dev.chrisbanes.haze.HazeStyle(
                                 blurRadius = 24.dp,
-                                tint = dev.chrisbanes.haze.HazeTint(Color(0xFFF2F2F7).copy(alpha=0.6f))
+                                tint = dev.chrisbanes.haze.HazeTint(Color.White.copy(alpha=0.65f))
                             )
-                        ) else Modifier.background(Color(0xFFF2F2F7).copy(alpha = 0.95f))
+                        ) else Modifier.background(Color.White.copy(alpha = 0.95f))
                     )
             ) {
                 Column {
