@@ -67,6 +67,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.outlined.Bluetooth
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DateRange
@@ -297,16 +298,25 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         "activate"    to "on",
         "enable"      to "on",
         "put"         to "on",
+        "jalao"       to "on",
+        "chalu"       to "on",
+        "khulo"       to "on",
+        "lagao"       to "on",
         "deactivate"  to "off",
         "disable"     to "off",
         "kill"        to "off",
         "shut"        to "off",
+        "nevao"       to "off",
+        "bondho"      to "off",
+        "nijhao"      to "off",
         // Device aliases
         "led"         to "light",
+        "leds"        to "light",
         "lights"      to "light",
         "lamp"        to "light",
         "bulb"        to "light",
         "white"       to "light",
+        "alo"         to "light",
         "computer"    to "pc",
         "laptop"      to "pc",
         "desktop"     to "pc",
@@ -317,6 +327,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         "aircon"      to "ac",
         "conditioner" to "ac",
         "ceiling"     to "fan",
+        "pakha"       to "fan",
         "socket"      to "plug",
         "charger"     to "plug",
         "outlet"      to "plug",
@@ -327,6 +338,17 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         "linked"      to "linkedin",
         "wa"          to "whatsapp",
         "wapp"        to "whatsapp",
+        "w"           to "whatsapp",
+        "watsapp"     to "whatsapp",
+        "watshap"     to "whatsapp",
+        "whatsup"     to "whatsapp",
+        "watsup"      to "whatsapp",
+        "whatapp"     to "whatsapp",
+        "wsp"         to "whatsapp",
+        "wup"         to "whatsapp",
+        "whats"       to "whatsapp",
+        "wat"         to "whatsapp",
+        "whata"       to "whatsapp",
         "tg"          to "telegram",
         "tele"        to "telegram",
         "yt"          to "youtube",
@@ -336,16 +358,27 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         "tune"        to "song",
         "track"       to "song",
         "playlist"    to "song",
+        "gaan"        to "song",
+        "gana"        to "song",
+        "bajna"       to "song",
         // Camera aliases
         "pic"         to "photo",
         "selfie"      to "photo",
         "snap"        to "photo",
         "picture"     to "photo",
+        "chobi"       to "photo",
         "shoot"       to "video",
         "filming"     to "video",
+        // Water
+        "water"       to "water",
+        "jol"         to "water",
+        "pani"        to "water",
+        "drink"       to "water",
         // General
         "everything"  to "all",
-        "every"       to "all"
+        "every"       to "all",
+        "sob"         to "all",
+        "shob"        to "all"
     )
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -377,13 +410,32 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         val expanded = mutableSetOf<String>()
         expanded.addAll(words)
 
+        val nonWaWords = setOf(
+            "water", "white", "weather", "who", "what", "where", "when", "why",
+            "work", "with", "would", "will", "wah", "won", "whose", "which",
+            "wait", "wake", "welcome", "world", "week", "weekend", "wish",
+            "watch", "warm", "window", "windows", "working", "we", "was",
+            "were", "well", "walk", "way", "wall", "wife", "wrong", "write",
+            "without", "word", "words", "website", "want", "went"
+        )
+
         words.forEach { word ->
             // Direct alias lookup
             WORD_ALIASES[word]?.let { expanded.add(it) }
+
+            // If any word starts with 'w', automatically recognize WhatsApp intent
+            if (word.startsWith("w") && !nonWaWords.contains(word)) {
+                expanded.add("whatsapp")
+                expanded.add("wa")
+            }
+
             // Levenshtein fuzzy match against alias keys (only for words >= 4 chars)
             if (word.length >= 4) {
                 WORD_ALIASES.entries.forEach { (alias, canonical) ->
-                    if (levenshtein(word, alias) <= 2) {
+                    val dist = levenshtein(word, alias)
+                    if (alias.length >= 6 && dist <= 2) {
+                        expanded.add(canonical)
+                    } else if (alias.length >= 4 && dist <= 1) {
                         expanded.add(canonical)
                     }
                 }
@@ -391,13 +443,13 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         }
 
         // Detect ON/OFF intent from the expanded word set
-        val onTriggers  = setOf("on", "activate", "enable", "open", "start")
-        val offTriggers = setOf("off", "deactivate", "disable", "close", "kill", "shut")
+        val onTriggers  = setOf("on", "activate", "enable", "open", "start", "jalao", "chalu", "lagao")
+        val offTriggers = setOf("off", "deactivate", "disable", "close", "kill", "shut", "nevao", "bondho")
         val bigramPairs = words.zipWithNext().map { (a, b) -> "$a $b" }
         val hasOn  = expanded.any { it in onTriggers }  ||
-                     bigramPairs.any { it == "turn on" || it == "switch on" || it == "put on" }
+                     bigramPairs.any { it == "turn on" || it == "switch on" || it == "put on" || it == "on koro" || it == "chalu koro" }
         val hasOff = expanded.any { it in offTriggers } ||
-                     bigramPairs.any { it == "turn off" || it == "switch off" || it == "shut down" }
+                     bigramPairs.any { it == "turn off" || it == "switch off" || it == "shut down" || it == "off koro" || it == "bondho koro" }
         if (hasOn)  expanded.add("on")
         if (hasOff) expanded.add("off")
 
@@ -412,24 +464,31 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         val commands = mutableListOf<LocalCommand>()
 
         // ── Master controls ──────────────────────────────────────────────────
-        commands.add(LocalCommand(listOf("on","all"), command = "on", confirmationText = "Activating all systems."))
-        commands.add(LocalCommand(listOf("off","all"), command = "off", confirmationText = "Shutting everything down."))
-        commands.add(LocalCommand(listOf("mood"), command = "mood", confirmationText = "Mood lighting on."))
+        commands.add(LocalCommand(listOf("on","all"), command = "on", confirmationText = "ঠিক আছে বৃষ্টি বস! তোমার ঘরের সব ডিভাইস একসাথে অন করে দিচ্ছি!"))
+        commands.add(LocalCommand(listOf("off","all"), command = "off", confirmationText = "ঠিক আছে বৃষ্টি! সব ডিভাইস একসাথে অফ করে দিলাম, শান্তিতে থাকো!"))
+        commands.add(LocalCommand(listOf("mood"), command = "mood", confirmationText = "বাহ্ বৃষ্টি! মুড লাইটিং অন করে দিচ্ছি, একদম দারুণ পরিবেশ!"))
 
         // ── Media / App shortcuts ────────────────────────────────────────────
-        commands.add(LocalCommand(listOf("play","song"), anyOf = listOf("fav","favorite","favourite"), command = "SYS_YT_FAV", confirmationText = "Opening YouTube for your favorite song."))
-        commands.add(LocalCommand(listOf("song"), anyOf = listOf("fav","favorite","favourite"), command = "SYS_YT_FAV", confirmationText = "Opening YouTube for your favorite song."))
-        commands.add(LocalCommand(listOf("youtube"), anyOf = listOf("fav","favorite","favourite","play"), command = "SYS_YT_FAV", confirmationText = "Opening YouTube for your favorite song."))
-        commands.add(LocalCommand(listOf("instagram"), command = "SYS_OPEN_IG", confirmationText = "Opening Instagram."))
-        commands.add(LocalCommand(listOf("facebook"), command = "SYS_OPEN_FB", confirmationText = "Opening Facebook."))
-        commands.add(LocalCommand(listOf("linkedin"), command = "SYS_OPEN_LI", confirmationText = "Opening LinkedIn."))
-        commands.add(LocalCommand(listOf("whatsapp"), command = "SYS_OPEN_WA", confirmationText = "Opening WhatsApp."))
-        commands.add(LocalCommand(listOf("telegram"), command = "SYS_OPEN_TG", confirmationText = "Opening Telegram."))
-        commands.add(LocalCommand(listOf("camera"), command = "SYS_OPEN_CAMERA", confirmationText = "Opening the camera."))
-        commands.add(LocalCommand(listOf("photo"), command = "SYS_OPEN_CAMERA", confirmationText = "Opening the camera."))
-        commands.add(LocalCommand(listOf("take","photo"), command = "SYS_OPEN_CAMERA", confirmationText = "Opening the camera."))
-        commands.add(LocalCommand(listOf("record","video"), command = "SYS_RECORD_VIDEO", confirmationText = "Opening camera in video mode."))
-        commands.add(LocalCommand(listOf("video"), anyOf = listOf("record","start","shoot","film"), command = "SYS_RECORD_VIDEO", confirmationText = "Opening camera in video mode."))
+        commands.add(LocalCommand(listOf("play","song"), anyOf = listOf("fav","favorite","favourite","sad","sad song","favorite song"), command = "SYS_YT_FAV", confirmationText = "ঠিক আছে বস, আজ মন খারাপ বুঝি যে স্যাড গান চালাতে বলছো? যাই হোক, আমি ইউটিউব থেকে তোমার পছন্দের গানটা চালিয়ে দিচ্ছি!"))
+        commands.add(LocalCommand(listOf("song"), anyOf = listOf("fav","favorite","favourite","sad","sad song"), command = "SYS_YT_FAV", confirmationText = "ঠিক আছে বস, আজ মন খারাপ বুঝি যে স্যাড গান চালাতে বলছো? যাই হোক, আমি ইউটিউব থেকে তোমার পছন্দের গানটা চালিয়ে দিচ্ছি!"))
+        commands.add(LocalCommand(listOf("sad","song"), command = "SYS_YT_FAV", confirmationText = "ঠিক আছে বস, আজ মন খারাপ বুঝি যে স্যাড গান চালাতে বলছো? যাই হোক, আমি ইউটিউব থেকে তোমার পছন্দের গানটা চালিয়ে দিচ্ছি!"))
+        commands.add(LocalCommand(listOf("youtube"), anyOf = listOf("fav","favorite","favourite","play","sad","song"), command = "SYS_YT_FAV", confirmationText = "ঠিক আছে বস, আজ মন খারাপ বুঝি যে স্যাড গান চালাতে বলছো? যাই হোক, আমি ইউটিউব থেকে তোমার পছন্দের গানটা চালিয়ে দিচ্ছি!"))
+        commands.add(LocalCommand(listOf("instagram"), command = "SYS_OPEN_IG", confirmationText = "ঠিক আছে বৃষ্টি বস, ইনস্টাগ্রাম ওপেন করে দিচ্ছি!"))
+        commands.add(LocalCommand(listOf("facebook"), command = "SYS_OPEN_FB", confirmationText = "অবশ্যই বৃষ্টি, ফেসবুক ওপেন করে দিচ্ছি!"))
+        commands.add(LocalCommand(listOf("linkedin"), command = "SYS_OPEN_LI", confirmationText = "ঠিক আছে বৃষ্টি, লিঙ্কডইন ওপেন করে দিচ্ছি!"))
+        commands.add(LocalCommand(listOf("whatsapp"), command = "SYS_OPEN_WA", confirmationText = "ঠিক আছে বৃষ্টি, হোয়াটসঅ্যাপ খুলে দিচ্ছি!"))
+        commands.add(LocalCommand(listOf("wa"), command = "SYS_OPEN_WA", confirmationText = "ঠিক আছে বৃষ্টি, হোয়াটসঅ্যাপ খুলে দিচ্ছি!"))
+        commands.add(LocalCommand(listOf("w"), command = "SYS_OPEN_WA", confirmationText = "ঠিক আছে বৃষ্টি, হোয়াটসঅ্যাপ খুলে দিচ্ছি!"))
+        commands.add(LocalCommand(listOf("telegram"), command = "SYS_OPEN_TG", confirmationText = "ঠিক আছে বৃষ্টি বস, টেলিগ্রাম ওপেন করে দিচ্ছি!"))
+        commands.add(LocalCommand(listOf("camera"), command = "SYS_OPEN_CAMERA", confirmationText = "স্মাইল বৃষ্টি! ক্যামেরা ওপেন করে দিচ্ছি, সুন্দর একটা ছবি তোলো!"))
+        commands.add(LocalCommand(listOf("photo"), command = "SYS_OPEN_CAMERA", confirmationText = "স্মাইল বৃষ্টি! ক্যামেরা ওপেন করে দিচ্ছি, সুন্দর একটা ছবি তোলো!"))
+        commands.add(LocalCommand(listOf("take","photo"), command = "SYS_OPEN_CAMERA", confirmationText = "স্মাইল বৃষ্টি! ক্যামেরা ওপেন করে দিচ্ছি, সুন্দর একটা ছবি তোলো!"))
+        commands.add(LocalCommand(listOf("record","video"), command = "SYS_RECORD_VIDEO", confirmationText = "ভিডিও রেকর্ডিং মোড অন করে দিচ্ছি বৃষ্টি বস!"))
+        commands.add(LocalCommand(listOf("video"), anyOf = listOf("record","start","shoot","film"), command = "SYS_RECORD_VIDEO", confirmationText = "ভিডিও রেকর্ডিং মোড অন করে দিচ্ছি বৃষ্টি বস!"))
+
+        // ── Water Reminder Shortcut ──────────────────────────────────────────
+        commands.add(LocalCommand(listOf("water"), anyOf = listOf("drink","jol","pani","remind","reminder"), command = "SYS_WATER", confirmationText = "একদম বৃষ্টি! ৩০ মিনিট পর আবার জল খাওয়ার রিমাইন্ডার দিয়ে দেব, সুস্থ থাকা দরকার!"))
+        commands.add(LocalCommand(listOf("drink","water"), command = "SYS_WATER", confirmationText = "একদম বৃষ্টি! ৩০ মিনিট পর আবার জল খাওয়ার রিমাইন্ডার দিয়ে দেব, সুস্থ থাকা দরকার!"))
 
         // ── Dynamic device commands ───────────────────────────────────────────
         DEFAULT_DEVICES.forEach { dev ->
@@ -442,8 +501,31 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             val onKeywords  = onCmd.lowercase(java.util.Locale.getDefault()).split("\\s+".toRegex()).filter { it.isNotBlank() }
             val offKeywords = offCmd.lowercase(java.util.Locale.getDefault()).split("\\s+".toRegex()).filter { it.isNotBlank() }
 
-            commands.add(LocalCommand(keywords = onKeywords,  command = pinOn,  confirmationText = "$devName on."))
-            commands.add(LocalCommand(keywords = offKeywords, command = pinOff, confirmationText = "$devName off."))
+            val isLedOrLight = devName.contains("LED", true) || devName.contains("Light", true) || devName.contains("White", true)
+            val onConfirm = if (isLedOrLight) {
+                listOf(
+                    "হ্যাঁ বৃষ্টি, আমি লাইট অন করে দিচ্ছি। তোমার আর কিছু অন করতে লাগবে?",
+                    "ঠিক আছে বস, লাইট জ্বালিয়ে দিলাম।",
+                    "লাইট অন করা হয়েছে বৃষ্টি বস!",
+                    "অবশ্যই বৃষ্টি, লাইট অন করে দিচ্ছি!"
+                ).random()
+            } else {
+                listOf(
+                    "ঠিক আছে বৃষ্টি বস, তোমার কথামতো $devName অন করে দিচ্ছি!",
+                    "অবশ্যই বস, $devName অন করা হলো।",
+                    "$devName অন করে দিয়েছি বৃষ্টি!",
+                    "হ্যাঁ বৃষ্টি, $devName চালু করে দিলাম।"
+                ).random()
+            }
+            val offConfirm = listOf(
+                "ঠিক আছে বৃষ্টি বস, $devName অফ করে দিলাম।",
+                "ওকে বস, $devName বন্ধ করা হয়েছে।",
+                "হ্যাঁ বৃষ্টি, $devName অফ করে দিয়েছি।",
+                "$devName বন্ধ করে দিলাম বৃষ্টি!"
+            ).random()
+
+            commands.add(LocalCommand(keywords = onKeywords,  command = pinOn,  confirmationText = onConfirm))
+            commands.add(LocalCommand(keywords = offKeywords, command = pinOff, confirmationText = offConfirm))
         }
 
         // ── Fuzzy token expansion ─────────────────────────────────────────────
@@ -748,6 +830,10 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         // Intercept System intents before hardware syncing
         if (command == "SYS_YT_FAV") {
             playFavoriteSongOnYouTube()
+            return
+        }
+        if (command == "SYS_WATER") {
+            WaterReminderManager.scheduleNextAlarm(this)
             return
         }
         if (command.startsWith("SYS_OPEN_") && command != "SYS_OPEN_CAMERA") {
@@ -1359,210 +1445,223 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         }
     }
 
-    //  JasicaOfflineResponder — personality replies with ZERO API calls
-
     // ─────────────────────────────────────────────────────────────────────────
-
-
+    //  JasicaOfflineResponder — personality replies with ZERO API calls
+    // ─────────────────────────────────────────────────────────────────────────
 
     private var jokeIndex = 0
 
     private val JASICA_JOKES = listOf(
-
+        "একটা রোবট দোকানে গেছে নাট-বোল্ট কিনতে, দোকানদার বলল ডিসকাউন্ট চাই? রোবট বলল না, আমার মেমোরি ফুল আছে! 😂",
         "Why did the robot go on a diet? Because it had too many bytes! 😄",
-
-        "I told my Arduino a joke. It didn't laugh — but it did blink twice! 💡",
-
-        "Why can't computers take their hat off? Because they have Windows! 🪟",
-
-        "I'm basically a genius... in a smart home. Still smarter than the toaster. 🍞"
-
+        "আমি আমার আরডুইনোকে একটা জোক বলেছিলাম। ও হাসেনি ঠিকই, তবে এলইডিটা দু'বার ব্লিঙ্ক করেছিল! 💡",
+        "কম্পিউটার কেন টুপি খুলতে পারে না? কারণ ওর কাছে উইন্ডোজ আছে! 🪟",
+        "আমি হলাম স্মার্ট হোমের বুদ্ধিমান সদস্য... অন্তত টোস্টারের চেয়ে তো অনেক চালাক! 🍞"
     )
-
-
 
     private val JASICA_GREETINGS = listOf(
-
-        "Hey Bristi! What's up? 😊",
-
-        "Hello! I'm right here — what do you need?",
-
-        "Hii! What can I do for you today?",
-
-        "Sup! Ready to help as always! 🚀"
-
+        "হেই বৃষ্টি! আমি একদম তৈরি, বলো কী করতে হবে? 😊",
+        "হ্যালো বৃষ্টি বস! কী খবর বলো?",
+        "নমস্কার বৃষ্টি! বলো আজকে কী সাহায্য লাগবে?",
+        "হায় বৃষ্টি! আজ তোমাকে কীভাবে সাহায্য করতে পারি? 🚀"
     )
-
-
 
     private val JASICA_THANKS = listOf(
-
-        "Anytime, Bristi! I'm always here. 💙",
-
-        "Of course! That's what I'm here for.",
-
-        "No problem at all! Just say the word.",
-
-        "Happy to help! 😊"
-
+        "সবসময় হাজির বৃষ্টি বস! তোমাকে সাহায্য করাই আমার কাজ! 💙",
+        "ওয়েলকাম বৃষ্টি! আর কিছু লাগলে অবশ্যই জানিও।",
+        "কোনো ব্যাপার না বৃষ্টি! সবসময় তোমার পাশে আছি।",
+        "তোমাকে সাহায্য করতে পেরে খুব ভালো লাগল বৃষ্টি! 😊"
     )
-
-
 
     private val JASICA_UNKNOWN = listOf(
-
-        "Hmm, I didn't quite catch that. Try saying it differently?",
-
-        "I'm not sure what you mean — can you rephrase that?",
-
-        "Sorry, I didn't understand. Try a simpler command?",
-
-        "I'm offline-only, so I can only handle device and app commands right now.",
-
-        "Can you say that again? I want to make sure I get it right."
-
+        "হুম, আমি ঠিক বুঝতে পারলাম না। আরেকবার বলবে কি?",
+        "আমি অফলাইন মোডে আছি, তুমি ডিভাইস বা সহজ কমান্ড বললে আমি সাথে সাথে করে দেব!",
+        "আরেকবার বলবে বৃষ্টি? আমি ঠিকঠাক শুনতে চাই।"
     )
-
-
 
     private var unknownIdx = 0
 
-
-
     private fun matchSmartIntent(text: String): String? {
+        val raw = text.lowercase(java.util.Locale.getDefault()).trim()
 
-        val lower = text.lowercase(java.util.Locale.getDefault())
+        // 1. Clean and normalize punctuation, wake words, and question filler wrappers
+        val cleaned = raw
+            .replace(Regex("(?i)^(hey|hi|hello|ok|hie)?\\s*(jasica|jessica|jessika|jasika|jesica|jazica)\\s*"), "")
+            .replace(Regex("(?i)^(can you please|can you|could you|please|tell me|do you know|amake bolo|bolo to|ekto bolo|shono|janiye dao|bolbe)\\s*"), "")
+            .replace(Regex("[^a-z0-9\\s]"), " ")
+            .trim()
 
+        val tokens = cleaned.split("\\s+".toRegex()).filter { it.isNotBlank() }.toSet()
+        val tokenStr = " $cleaned "
 
+        // Helper for fuzzy or partial match with single-character typo tolerance
+        fun hasAny(vararg words: String): Boolean {
+            return words.any { w ->
+                tokens.contains(w) || tokenStr.contains(" $w ") || (w.length >= 4 && tokens.any { levenshtein(it, w) <= 1 })
+            }
+        }
 
-        // Time query
+        fun hasAnySubstring(vararg sub: String): Boolean {
+            return sub.any { cleaned.contains(it) || raw.contains(it) }
+        }
 
-        if (lower.contains("time") || lower.contains("clock") || lower.contains("what time")) {
+        val hasCreator = hasAny("bristi", "bristy", "bristee", "brishti", "creator", "maker", "boss", "owner", "admin", "malik", "her", "she")
+        val hasBot = hasAny("you", "your", "yourself", "jasica", "jessica", "tumi", "tomar", "apni", "apnar", "app", "bot", "assistant")
 
+        // ── 1. Creator Specific Details ──
+
+        // Location / Home
+        val hasLoc = hasAny("live", "living", "stay", "staying", "reside", "residence", "home", "house", "bari", "thake", "thakis", "thaken", "durgapur", "city", "shohor", "address", "jayga", "kothay", "kothakar", "where")
+        if ((hasCreator || hasAnySubstring("bristi", "creator")) && hasLoc) {
+            return "বৃষ্টি দুর্গাপুরে থাকে! দুর্গাপুর হলো স্টিল সিটি আর খুব সুন্দর একটা জায়গা।"
+        }
+
+        // Job / Work / Internship / Degree / Education
+        val hasWork = hasAny("job", "work", "working", "kaj", "kaaj", "kore", "korchen", "intern", "internship", "degree", "study", "studying", "porashona", "iti", "ge", "company", "office", "profession", "career")
+        if ((hasCreator || hasAnySubstring("bristi", "creator")) && hasWork) {
+            return "বৃষ্টি আইটিআই পাস করে জিই (GE)-তে ইন্টার্নশিপ করছে! ও ওর কাজ খুব ভালোবাসে এবং অনেক মন দিয়ে কাজ করে।"
+        }
+
+        // Favorite Food
+        val hasFood = hasAny("food", "dish", "eat", "eating", "khabar", "khaddo", "khay", "khete", "biriyani", "biryani", "momo", "momos", "lunch", "dinner", "priyo", "favorite", "favourite", "pochondo")
+        if ((hasCreator || hasAnySubstring("bristi", "creator")) && hasFood) {
+            return "বৃষ্টির সবচেয়ে প্রিয় খাবার হলো বিরিয়ানি আর মোমো! এগুলো পেলে ওর মন একদম খুশি হয়ে যায়! 🍲🥟"
+        }
+
+        // Beauty Spot / Appearance
+        val hasBeauty = hasAny("beauty", "spot", "beautyspot", "mole", "til", "cheek", "cheeks", "gal", "gale", "face", "facial", "look", "looks", "sundor", "smile")
+        if ((hasCreator || hasAnySubstring("bristi", "creator")) && hasBeauty) {
+            return "বৃষ্টির ডান গালের ওপর একটা খুব কিউট বিউটি স্পট আছে, যা ওর মিষ্টি হাসিকে আরও সুন্দর করে তোলে! 😊"
+        }
+
+        // Personality / Nature
+        val hasNature = hasAny("nature", "personality", "behaviour", "behavior", "kemon", "charitro", "sobhab", "swobhab", "caring", "person", "human", "meye", "meyeti")
+        if ((hasCreator || hasAnySubstring("bristi", "creator")) && hasNature) {
+            return "বৃষ্টি খুব যত্নশীল, পরিশ্রমী আর পরিবারকে ভালোবাসে এমন একজন মানুষ। ও সবার যত্ন নেয় আর পরিবারকে সবসময় সুন্দর ও খুশি রাখে! 💖"
+        }
+
+        // Brother / Bodyguard
+        val hasBrother = hasAny("brother", "bhai", "bhaiya", "bro", "bodyguard", "protector")
+        if ((hasCreator || hasAnySubstring("bristi", "creator")) && hasBrother) {
+            return "বৃষ্টির ছোট ভাই হলো জয় কুম্ভকার! ও বৃষ্টির বডিগার্ড আর সফটওয়্যার ডেভেলপারও!"
+        }
+
+        // General Creator / Who made you / Full name
+        if (hasAny("created", "creator", "made", "maker", "built", "build", "developed", "developer", "author", "boss", "baniyeche", "banalo") ||
+            (hasCreator && hasAny("who", "ke", "name", "naam", "somporke", "about", "identity", "puro", "full", "details"))) {
+            return "আমাকে বানিয়েছে বৃষ্টি কুম্ভকার! বৃষ্টি আইটিআই পাস করে জিই (GE)-তে ইন্টার্নশিপ করছে, দুর্গাপুরে থাকে। বিরিয়ানি আর মোমো খেতে খুব পছন্দ করে, আর ওর ডান গালে একটা কিউট বিউটি স্পট আছে! ওর সাথে জয় কুম্ভকারও আছে!"
+        }
+
+        // ── 2. Relatives ──
+        if (hasAny("joy", "kumbhakar") && !hasAnySubstring("bristi")) {
+            return "জয় কুম্ভকার হলো বৃষ্টির ছোট ভাই, সফটওয়্যার ডেভেলপার আর বডিগার্ড! ও আমাকে তৈরি আর ডেভেলপ করতে সাহায্য করেছে।"
+        }
+        if (hasAny("sonadi", "sona") || hasAnySubstring("sona di", "sonadi")) {
+            return "সোনা দি হলো বৃষ্টির খুব প্রিয় আর মিষ্টি দিদি, ওর সাথে বৃষ্টির সম্পর্ক খুব স্পেশাল!"
+        }
+        if (hasAny("tithi") || hasAnySubstring("tithi")) {
+            return "তিথি হলো বৃষ্টির অনেক প্রিয় একজন, পরিবারের খুব আদরের মানুষ!"
+        }
+        if (hasAny("jiju", "jijaji") || hasAnySubstring("jiju")) {
+            return "জিজু আর দিদি হলো আমাদের পরিবারের সবচেয়ে সেরা জুটি, সবার খুব প্রিয়!"
+        }
+        if (hasAny("favdi") || hasAnySubstring("fav di", "favdi", "favourite di", "didi")) {
+            return "ফেভারিট দিদি হলো বৃষ্টির সবচেয়ে প্রিয় দিদি, ওর জন্য সবসময় অনেক ভালোবাসা!"
+        }
+
+        // ── 3. Self Introduction / Bot Identity ──
+        if ((hasBot || tokens.contains("jasica")) && hasAny("who", "what", "name", "naam", "introduce", "introduction", "yourself", "porichoy", "tumi", "ke")) {
+            return "আমি জ্যাসিকা — বৃষ্টির তৈরি স্মার্ট এআই অ্যাসিস্ট্যান্ট! আমি স্মার্ট হোম ডিভাইস কন্ট্রোল করতে পারি, তোমার সাথে কথা বলতে পারি, আর ফোনের অনেক কাজও করে দিতে পারি। বলো বৃষ্টি, কী সাহায্য লাগবে?"
+        }
+
+        // ── 4. Daily Chit-Chat & Utilities ──
+        // Time
+        if (hasAny("time", "clock", "ghori", "somoy", "baje")) {
             val timeStr = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault()).format(java.util.Date())
-
-            return "It's $timeStr right now."
-
+            return "এখন সময় $timeStr, বৃষ্টি।"
         }
-
-
-
-        // Greeting
-
-        if (lower.matches(Regex(".*\\b(hello|hi|hey|howdy|sup|hiya|namaste)\\b.*")) &&
-
-            !lower.contains("jasica") && !lower.contains("turn") && !lower.contains("open")) {
-
-            return JASICA_GREETINGS.random()
-
-        }
-
-
 
         // How are you
-
-        if (lower.contains("how are you") || lower.contains("how r u") ||
-
-            lower.contains("kemon acho") || lower.contains("how you doing")) {
-
-            return "I'm doing great, Bristi! Always ready to help. 😄"
-
+        if (hasAnySubstring("how are you", "how r u", "kemon acho", "kemon achis", "how you doing", "ki khobor")) {
+            val moodReplies = listOf(
+                "আমি একদম ভালো আছি বৃষ্টি! তুমি কেমন আছো বলো? 😄",
+                "আমি সুপার ফাইন বৃষ্টি বস! তোমার সব হার্ডওয়্যার ও হোম ডিভাইস কন্ট্রোল করতে একদম প্রস্তুত।",
+                "আমি খুব ভালো আছি! তুমি সুস্থ আছো তো? ঠিকমতো জল খেয়েছ তো?"
+            )
+            return moodReplies.random()
         }
 
+        // What are you doing
+        if (hasAnySubstring("what are you doing", "ki korcho", "ki korchis", "what r u doing")) {
+            val doingReplies = listOf(
+                "আমি তোমার কথা শোনার জন্য একদম রেডি হয়ে বসে আছি বৃষ্টি! বলো কী আদেশ?",
+                "তোমার জন্য স্মার্ট হোম মনিটর করছি বৃষ্টি বস! কোনো কমান্ড থাকলে বলো।"
+            )
+            return doingReplies.random()
+        }
 
+        // Good Morning / Afternoon / Night
+        if (hasAny("morning", "suprobhat", "suprokhat") || hasAnySubstring("shuvo sokal", "good morning")) {
+            return "শুভ সকাল বৃষ্টি! আজকের দিনটা যেন তোমার খুব ভালো কাটে! ☀️"
+        }
+        if (hasAny("afternoon") || hasAnySubstring("shuvo dupur", "good afternoon")) {
+            return "শুভ দুপুর বৃষ্টি! দুপুরের খাওয়া-দাওয়া হয়েছে তো? 🍽️"
+        }
+        if (hasAny("night", "sleep", "ghum") || hasAnySubstring("shuvo ratri", "good night", "ghume por")) {
+            return "শুভ রাত্রি বৃষ্টি! ঘুমাতে যাও এবার, মিষ্টি স্বপ্ন দেখো! 🌙"
+        }
+
+        // Love & Caring
+        if (hasAny("love", "bhalobashi", "valobasi", "sweet", "cute") || hasAnySubstring("love you", "tumi khub bhalo")) {
+            return "অনেক ধন্যবাদ বৃষ্টি! আমিও তোমাকে খুব ভালোবাসি এবং সবসময় তোমার অনুগত অ্যাসিস্ট্যান্ট হয়ে থাকব! 💙"
+        }
+
+        // Listening Check
+        if (hasAny("listen", "hear", "sunte", "shunte") || hasAnySubstring("are you there", "can you hear me", "sunte pachho", "sunte pachhis")) {
+            return "হ্যাঁ বৃষ্টি, আমি মন দিয়ে তোমার কথাই শুনছি! বলো কী প্রয়োজন?"
+        }
+
+        // Greetings
+        if (hasAny("hello", "hi", "hey", "howdy", "sup", "hiya", "namaste", "nomoshkar", "kire", "ola") &&
+            !hasAny("turn", "switch", "open", "close", "on", "off")) {
+            return JASICA_GREETINGS.random()
+        }
 
         // Thanks
-
-        if (lower.matches(Regex(".*\\b(thanks|thank you|dhanyabad|shukriya|thx|ty)\\b.*"))) {
-
+        if (hasAny("thanks", "thank", "dhanyabad", "dhonnobad", "shukriya", "thx", "ty")) {
             return JASICA_THANKS.random()
-
         }
 
-
-
-        // Joke
-
-        if (lower.contains("joke") || lower.contains("funny") || lower.contains("laugh")) {
-
+        // Jokes
+        if (hasAny("joke", "jokes", "funny", "laugh", "hasao", "koutuk", "comedy")) {
             val joke = JASICA_JOKES[jokeIndex % JASICA_JOKES.size]
-
             jokeIndex++
-
             return joke
-
         }
 
-
-
-        // Name / who are you
-
-        if (lower.contains("your name") || lower.contains("who are you") || lower.contains("what are you")) {
-
-            return "I'm Jasica — your personal AI assistant, built by Bristi! 😊"
-
+        // Weather offline note
+        if (hasAny("weather", "temperature", "forecast", "abhawa")) {
+            return "অফলাইন মোডে আমি আবহাওয়ার তথ্য দিতে পারছি না বৃষ্টি। ইন্টারনেট কানেক্ট থাকলে জানিয়ে দেব।"
         }
-
-
-
-        // Status / are you there
-
-        if (lower.contains("are you there") || lower.contains("you there") || lower.contains("status")) {
-
-            return "All systems good! I'm right here, ready to help."
-
-        }
-
-
-
-        // Weather (unsupported offline)
-
-        if (lower.contains("weather") || lower.contains("temperature") || lower.contains("forecast")) {
-
-            return "I can't check the weather without internet right now."
-
-        }
-
-
-
-        // Bluetooth status
 
         return null
-
     }
 
-
-
     private fun handleOfflineUnknown(spokenText: String) {
-
         // First try smart intent classification
-
         val smartReply = matchSmartIntent(spokenText)
-
         val reply = smartReply ?: run {
-
             val r = JASICA_UNKNOWN[unknownIdx % JASICA_UNKNOWN.size]
-
             unknownIdx++
-
             r
-
         }
-
-
 
         runOnUiThread {
-
             uiChatHistory.add(ChatMessage(isUser = false, text = reply, time = getCurrentTimeString()))
-
             aiResponseText.value = reply
-
             appState.value = AppState.SPEAKING
-
             speakMultilingual(reply, "JASICA_REPLY")
-
         }
-
     }
 
 
@@ -4170,7 +4269,7 @@ fun DeviceListItem(name: String, address: String, onClick: () -> Unit) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Voice Calibration Screen
+//  Voice Calibration Screen (Apple Design System / Cupertino HIG)
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
@@ -4182,133 +4281,481 @@ fun VoiceCalibrationScreen(
     onSkip: () -> Unit
 ) {
     val phrases = listOf("Turn off the light", "Turn on all", "Turn on the PC")
+    val totalSteps = phrases.size
+    val isComplete = currentPhraseIndex >= totalSteps
+
+    // Infinite transition for fluid Apple animations (Siri pulse and audio waveforms)
+    val infiniteTransition = rememberInfiniteTransition(label = "AppleVoiceSetup")
     
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.28f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "PulseScale"
+    )
+
+    val wave1 by infiniteTransition.animateFloat(
+        initialValue = 8f, targetValue = 28f,
+        animationSpec = infiniteRepeatable(tween(400, easing = LinearEasing), RepeatMode.Reverse),
+        label = "Wave1"
+    )
+    val wave2 by infiniteTransition.animateFloat(
+        initialValue = 18f, targetValue = 38f,
+        animationSpec = infiniteRepeatable(tween(550, easing = LinearEasing), RepeatMode.Reverse),
+        label = "Wave2"
+    )
+    val wave3 by infiniteTransition.animateFloat(
+        initialValue = 12f, targetValue = 32f,
+        animationSpec = infiniteRepeatable(tween(480, easing = LinearEasing), RepeatMode.Reverse),
+        label = "Wave3"
+    )
+    val wave4 by infiniteTransition.animateFloat(
+        initialValue = 22f, targetValue = 42f,
+        animationSpec = infiniteRepeatable(tween(620, easing = LinearEasing), RepeatMode.Reverse),
+        label = "Wave4"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0D0D12))
-            .clickable(enabled = false) {} 
+            .background(Color(0xFF000000)) // Deep Apple Space Black
+            .clickable(enabled = false) {} // Prevent backdrop pass-through
     ) {
+        // ── Apple Siri / Aurora Ambient Background Glow ───────────────────────
+        Box(
+            modifier = Modifier
+                .size(320.dp)
+                .align(Alignment.TopCenter)
+                .offset(y = 60.dp)
+                .blur(90.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded)
+                .background(
+                    Brush.radialGradient(
+                        listOf(
+                            Color(0x355856D6), // Apple Indigo
+                            Color(0x20007AFF), // Apple Blue
+                            Color(0x10AF52DE), // Apple Purple
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+
         Column(
-            modifier = Modifier.fillMaxSize().padding(24.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
+                .systemBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(40.dp))
-            Text(
-                "Voice Setup",
-                color = Color.White,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.ExtraBold,
-                fontFamily = InterFontFamily
-            )
-            Text(
-                "Let's verify your microphone",
-                color = Color.White.copy(alpha = 0.6f),
-                fontSize = 14.sp,
-                fontFamily = InterFontFamily
-            )
-            
-            Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.height(16.dp))
 
-            // Progress bar
+            // ── Apple Top Segmented Stepper Indicator ─────────────────────────
             Row(
-                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                for (i in 0..2) {
-                    val color = if (i < currentPhraseIndex) Color(0xFF00E676)
-                                else if (i == currentPhraseIndex) JasicaOrange
-                                else Color.White.copy(alpha = 0.1f)
-                    Box(modifier = Modifier.weight(1f).fillMaxHeight().background(color))
+                for (i in 0 until totalSteps) {
+                    val isStepDone = i < currentPhraseIndex
+                    val isStepCurrent = i == currentPhraseIndex && !isComplete
+                    
+                    val segmentColor by animateColorAsState(
+                        targetValue = when {
+                            isComplete || isStepDone -> Color(0xFF30D158) // Apple Green
+                            isStepCurrent -> Color(0xFF007AFF)          // Apple Blue
+                            else -> Color(0x20FFFFFF)                  // Translucent Track
+                        },
+                        animationSpec = tween(400),
+                        label = "SegmentColor"
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(segmentColor)
+                    )
                 }
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(16.dp))
 
-            // Current Phrase
-            if (currentPhraseIndex < 3) {
-                Text(
-                    "Please say:",
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 16.sp,
-                    fontFamily = InterFontFamily
-                )
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    "\"${phrases[currentPhraseIndex]}\"",
-                    color = JasicaOrange,
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = InterFontFamily,
-                    textAlign = TextAlign.Center
-                )
-                
-                Spacer(Modifier.height(40.dp))
-                
-                // Recognized text area
+            // ── Sub-header / Step Counter ─────────────────────────────────────
+            Text(
+                text = if (!isComplete) "STEP ${currentPhraseIndex + 1} OF $totalSteps".uppercase() else "COMPLETED",
+                color = if (!isComplete) Color(0xFF8E8E93) else Color(0xFF30D158),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 1.2.sp,
+                fontFamily = InterFontFamily
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            // ── Apple Title & Subtitle ─────────────────────────────────────────
+            Text(
+                text = if (!isComplete) "Set Up Voice Control" else "Voice Setup Complete",
+                color = Color.White,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.5).sp,
+                fontFamily = InterFontFamily,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(6.dp))
+
+            Text(
+                text = if (!isComplete)
+                    "Say each command clearly so Jasica can calibrate to your natural voice."
+                else
+                    "Jasica is now calibrated to your voice and ready to control your smart home.",
+                color = Color(0x99FFFFFF),
+                fontSize = 15.sp,
+                lineHeight = 21.sp,
+                fontFamily = InterFontFamily,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(Modifier.height(32.dp))
+
+            // ── Central Frosted Glass Squircle Card ───────────────────────────
+            if (!isComplete) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(80.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.White.copy(alpha = 0.05f))
-                        .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
-                        .padding(16.dp),
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color(0x18FFFFFF),
+                                    Color(0x0CFFFFFF)
+                                )
+                            )
+                        )
+                        .border(
+                            width = 0.75.dp,
+                            brush = Brush.verticalGradient(
+                                listOf(
+                                    Color(0x40FFFFFF),
+                                    Color(0x08FFFFFF)
+                                )
+                            ),
+                            shape = RoundedCornerShape(28.dp)
+                        )
+                        .padding(vertical = 28.dp, horizontal = 20.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (recognizedText.isNotEmpty()) {
-                        Text(recognizedText, color = Color.White, fontSize = 16.sp, fontFamily = InterFontFamily, textAlign = TextAlign.Center)
-                    } else if (isListening) {
-                        Text("Listening...", color = Color.White.copy(alpha = 0.5f), fontSize = 16.sp, fontFamily = InterFontFamily)
-                    } else {
-                        Text("Tap microphone to speak", color = Color.White.copy(alpha = 0.3f), fontSize = 16.sp, fontFamily = InterFontFamily)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Badge: "SAY TO JASICA"
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0x1A007AFF))
+                                .border(0.5.dp, Color(0x40007AFF), RoundedCornerShape(12.dp))
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF0A84FF))
+                                )
+                                Text(
+                                    text = "SAY TO JASICA",
+                                    color = Color(0xFF64D2FF),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.8.sp,
+                                    fontFamily = InterFontFamily
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.height(20.dp))
+
+                        // Target Spoken Phrase in High-Contrast Typography
+                        Text(
+                            text = "\"${phrases[currentPhraseIndex]}\"",
+                            color = Color.White,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = InterFontFamily,
+                            textAlign = TextAlign.Center,
+                            letterSpacing = (-0.3).sp,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+
+                        Spacer(Modifier.height(24.dp))
+
+                        // Real-time Soundwave / Status Pill
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(Color(0x14000000))
+                                .border(0.5.dp, Color(0x18FFFFFF), RoundedCornerShape(18.dp))
+                                .padding(horizontal = 16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (recognizedText.isNotBlank()) {
+                                Text(
+                                    text = recognizedText,
+                                    color = Color(0xFF30D158),
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = InterFontFamily,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1
+                                )
+                            } else if (isListening) {
+                                // Animated Apple-style Waveform Bars
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(Modifier.width(3.dp).height(wave1.dp).clip(CircleShape).background(Color(0xFF64D2FF)))
+                                    Box(Modifier.width(3.dp).height(wave2.dp).clip(CircleShape).background(Color(0xFF0A84FF)))
+                                    Box(Modifier.width(3.dp).height(wave4.dp).clip(CircleShape).background(Color(0xFF5E5CE6)))
+                                    Box(Modifier.width(3.dp).height(wave3.dp).clip(CircleShape).background(Color(0xFFBF5AF2)))
+                                    Box(Modifier.width(3.dp).height(wave1.dp).clip(CircleShape).background(Color(0xFF64D2FF)))
+                                }
+                            } else {
+                                Text(
+                                    text = "Tap the mic button below to start",
+                                    color = Color(0x60FFFFFF),
+                                    fontSize = 14.sp,
+                                    fontFamily = InterFontFamily
+                                )
+                            }
+                        }
                     }
                 }
             } else {
-                // Done
+                // ── Apple Success State Card ──────────────────────────────────
                 Box(
-                    modifier = Modifier.size(80.dp).clip(CircleShape).background(Color(0xFF00E676).copy(alpha = 0.2f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color(0x1F30D158),
+                                    Color(0x0A30D158)
+                                )
+                            )
+                        )
+                        .border(
+                            width = 0.75.dp,
+                            brush = Brush.verticalGradient(
+                                listOf(
+                                    Color(0x6030D158),
+                                    Color(0x1030D158)
+                                )
+                            ),
+                            shape = RoundedCornerShape(28.dp)
+                        )
+                        .padding(vertical = 36.dp, horizontal = 24.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("✔", color = Color(0xFF00E676), fontSize = 40.sp)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Glowing Apple Green Checkmark Ring
+                        Box(
+                            modifier = Modifier
+                                .size(72.dp)
+                                .clip(CircleShape)
+                                .background(Color(0x2030D158))
+                                .border(1.5.dp, Color(0xFF30D158), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Check,
+                                contentDescription = "Complete",
+                                tint = Color(0xFF30D158),
+                                modifier = Modifier.size(40.dp)
+                            )
+                        }
+
+                        Spacer(Modifier.height(20.dp))
+
+                        Text(
+                            text = "Ready for Hands-Free Control",
+                            color = Color.White,
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = InterFontFamily,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Text(
+                            text = "Your microphone calibration has been saved successfully.",
+                            color = Color(0x99FFFFFF),
+                            fontSize = 14.sp,
+                            fontFamily = InterFontFamily,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
-                Spacer(Modifier.height(16.dp))
-                Text("Calibration Complete!", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily)
             }
 
             Spacer(Modifier.weight(1f))
 
-            // Mic button
-            val micScale by animateFloatAsState(
-                targetValue = if (isListening) 1.2f else 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(800, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse
-                )
-            )
+            // ── Apple Siri Glowing Microphone Button & Action Trigger ─────────
+            if (!isComplete) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.size(110.dp)
+                ) {
+                    // Siri Concentric Animated Pulse Ring
+                    if (isListening) {
+                        Box(
+                            modifier = Modifier
+                                .size(88.dp)
+                                .scale(pulseScale)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.radialGradient(
+                                        listOf(
+                                            Color(0x40007AFF),
+                                            Color(0x105E5CE6),
+                                            Color.Transparent
+                                        )
+                                    )
+                                )
+                        )
+                    }
 
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .scale(if (isListening) micScale else 1f)
-                    .clip(CircleShape)
-                    .background(if (isListening) JasicaOrange else Color(0xFF1E1E2E))
-                    .clickable { onMicTap() },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = androidx.compose.ui.res.painterResource(id = R.drawable.mic),
-                    contentDescription = "Microphone",
-                    tint = Color.White,
-                    modifier = Modifier.size(32.dp)
-                )
+                    // Main Apple Tactile Mic Button
+                    Box(
+                        modifier = Modifier
+                            .size(76.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (isListening)
+                                    Brush.linearGradient(
+                                        listOf(
+                                            Color(0xFF0A84FF),
+                                            Color(0xFF5E5CE6)
+                                        )
+                                    )
+                                else
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            Color(0x24FFFFFF),
+                                            Color(0x10FFFFFF)
+                                        )
+                                    )
+                            )
+                            .border(
+                                width = 1.dp,
+                                brush = if (isListening)
+                                    Brush.linearGradient(listOf(Color(0xFF64D2FF), Color(0xFFBF5AF2)))
+                                else
+                                    Brush.verticalGradient(listOf(Color(0x40FFFFFF), Color(0x15FFFFFF))),
+                                shape = CircleShape
+                            )
+                            .clickable { onMicTap() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.mic),
+                            contentDescription = "Microphone",
+                            tint = if (isListening) Color.White else Color(0xFFF2F2F7),
+                            modifier = Modifier.size(30.dp)
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                // Status pill under microphone
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0x14FFFFFF))
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (isListening) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF30D158))
+                            )
+                        }
+                        Text(
+                            text = if (isListening) "Listening..." else "Tap to Speak",
+                            color = if (isListening) Color(0xFF30D158) else Color(0x99FFFFFF),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = InterFontFamily
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                // Apple "Set Up Later" Text Button
+                TextButton(
+                    onClick = onSkip,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                ) {
+                    Text(
+                        text = "Set Up Later",
+                        color = Color(0xFF8E8E93),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = InterFontFamily
+                    )
+                }
+            } else {
+                // Apple Full-Width "Continue" Primary Pill Button
+                Button(
+                    onClick = onSkip,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp)
+                        .clip(RoundedCornerShape(16.dp)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF007AFF) // Apple System Blue
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(
+                        text = "Continue",
+                        color = Color.White,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = InterFontFamily
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
             }
 
-            Spacer(Modifier.height(32.dp))
-            
-            TextButton(onClick = onSkip) {
-                Text("SKIP CALIBRATION", color = Color.White.copy(alpha = 0.4f), fontFamily = InterFontFamily)
-            }
+            Spacer(Modifier.height(12.dp))
         }
     }
 }
