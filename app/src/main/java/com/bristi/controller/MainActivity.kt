@@ -3001,11 +3001,12 @@ fun JasicaScreen(
                         if (hazeState != null) Modifier.hazeEffect(
                             state = hazeState,
                             style = dev.chrisbanes.haze.HazeStyle(
-                                blurRadius = 28.dp,
+                                blurRadius = 24.dp,
                                 tint = dev.chrisbanes.haze.HazeTint(Color.White.copy(alpha=0.25f))
                             )
-                        ) else Modifier.background(Color.White.copy(alpha = 0.95f))
+                        ) else Modifier
                     )
+                    .background(Color.White.copy(alpha = if (hazeState != null) 0.65f else 0.95f))
                     .border(0.5.dp, Color.White.copy(alpha=0.6f), RoundedCornerShape(16.dp))
             ) {
                 Column {
