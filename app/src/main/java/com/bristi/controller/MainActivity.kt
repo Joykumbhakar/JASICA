@@ -5505,9 +5505,9 @@ fun DeviceSelectionDialog(
                     state = hazeState,
                     style = dev.chrisbanes.haze.HazeStyle(
                         blurRadius = 24.dp,
-                        tint = dev.chrisbanes.haze.HazeTint(Color.Black.copy(alpha=0.4f))
+                        tint = dev.chrisbanes.haze.HazeTint(Color.White.copy(alpha=0.4f))
                     )
-                ) else Modifier.background(Color.Black.copy(alpha = 0.5f))
+                ) else Modifier.background(Color.White.copy(alpha = 0.5f))
             )
             .pointerInput(Unit) { detectTapGestures(onTap = { onDismiss() }) },
         contentAlignment = Alignment.Center
@@ -5517,8 +5517,7 @@ fun DeviceSelectionDialog(
                 .padding(horizontal = 24.dp)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(Color(0xFF1C1C1E).copy(alpha = 0.95f))
-                .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(24.dp))
+                .background(Color(0xFFF2F2F7).copy(alpha = 0.95f))
                 .pointerInput(Unit) { detectTapGestures { /* consume taps */ } }
         ) {
             Column(modifier = Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 16.dp, start = 20.dp, end = 20.dp)) {
@@ -5530,7 +5529,7 @@ fun DeviceSelectionDialog(
                 ) {
                     Text(
                         "Bluetooth",
-                        color = Color.White,
+                        color = Color.Black,
                         fontFamily = InterFontFamily,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
@@ -5539,18 +5538,18 @@ fun DeviceSelectionDialog(
                     if (isScanning) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = Color.White,
+                            color = Color(0xFF007AFF),
                             strokeWidth = 2.5.dp
                         )
                     } else {
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(Color.White.copy(alpha = 0.15f))
+                                .background(Color(0xFF007AFF).copy(alpha = 0.1f))
                                 .clickable { onScanTap() }
                                 .padding(horizontal = 14.dp, vertical = 6.dp)
                         ) {
-                            Text("Scan", color = Color.White, fontFamily = InterFontFamily, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Scan", color = Color(0xFF007AFF), fontFamily = InterFontFamily, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -5563,7 +5562,7 @@ fun DeviceSelectionDialog(
                         item {
                             Text(
                                 "MY DEVICES",
-                                color = Color.White.copy(alpha = 0.5f),
+                                color = Color.Black.copy(alpha = 0.5f),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
                                 fontFamily = InterFontFamily,
@@ -5573,13 +5572,13 @@ fun DeviceSelectionDialog(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(Color.White.copy(alpha = 0.05f))
+                                    .background(Color.White)
                             ) {
                                 pairedDevices.forEachIndexed { index, device ->
                                     val name = try { device.name ?: "Unknown Device" } catch (e: SecurityException) { "Unknown Device" }
                                     DeviceListItem(name, device.address, device.address == connectedDeviceAddress) { onDeviceSelect(device) }
                                     if (index < pairedDevices.size - 1) {
-                                        HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = Color.White.copy(alpha = 0.05f), thickness = 1.dp)
+                                        HorizontalDivider(modifier = Modifier.padding(start = 16.dp), color = Color.Black.copy(alpha = 0.05f), thickness = 1.dp)
                                     }
                                 }
                             }
@@ -5589,7 +5588,7 @@ fun DeviceSelectionDialog(
                     item {
                         Text(
                             "OTHER DEVICES",
-                            color = Color.White.copy(alpha = 0.5f),
+                            color = Color.Black.copy(alpha = 0.5f),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
                             fontFamily = InterFontFamily,
@@ -5600,7 +5599,7 @@ fun DeviceSelectionDialog(
                     if (availableDevices.isEmpty() && !isScanning) {
                         item {
                             Box(modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
-                                Text("No devices found.", color = Color.White.copy(alpha = 0.4f), fontSize = 15.sp, fontFamily = InterFontFamily)
+                                Text("No devices found.", color = Color.Black.copy(alpha = 0.4f), fontSize = 15.sp, fontFamily = InterFontFamily)
                             }
                         }
                     } else if (availableDevices.isNotEmpty()) {
@@ -5609,13 +5608,13 @@ fun DeviceSelectionDialog(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(Color.White.copy(alpha = 0.05f))
+                                    .background(Color.White)
                             ) {
                                 availableDevices.forEachIndexed { index, device ->
                                     val name = try { device.name ?: "Unknown Signal" } catch (e: SecurityException) { "Unknown Signal" }
                                     DeviceListItem(name, device.address, device.address == connectedDeviceAddress) { onDeviceSelect(device) }
                                     if (index < availableDevices.size - 1) {
-                                        HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = Color.White.copy(alpha = 0.05f), thickness = 1.dp)
+                                        HorizontalDivider(modifier = Modifier.padding(start = 16.dp), color = Color.Black.copy(alpha = 0.05f), thickness = 1.dp)
                                     }
                                 }
                             }
@@ -5631,11 +5630,11 @@ fun DeviceSelectionDialog(
                         .fillMaxWidth()
                         .height(50.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color.White.copy(alpha = 0.1f))
+                        .background(Color.White)
                         .clickable { onDismiss() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Close", color = Color.White, fontFamily = InterFontFamily, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Close", color = Color(0xFF007AFF), fontFamily = InterFontFamily, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -5654,7 +5653,7 @@ fun DeviceListItem(name: String, address: String, isConnected: Boolean, onClick:
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = name,
-                color = Color.White,
+                color = Color.Black,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 fontFamily = InterFontFamily,
@@ -5665,7 +5664,7 @@ fun DeviceListItem(name: String, address: String, isConnected: Boolean, onClick:
         if (isConnected) {
             Text(
                 text = "Connected",
-                color = Color.White.copy(alpha = 0.5f),
+                color = Color.Black.copy(alpha = 0.5f),
                 fontSize = 15.sp,
                 fontFamily = InterFontFamily,
                 modifier = Modifier.padding(end = 8.dp)
@@ -5673,13 +5672,13 @@ fun DeviceListItem(name: String, address: String, isConnected: Boolean, onClick:
             Icon(
                 imageVector = Icons.Rounded.Check,
                 contentDescription = null,
-                tint = Color(0xFF0A84FF),
+                tint = Color(0xFF007AFF),
                 modifier = Modifier.size(18.dp)
             )
         } else {
             Text(
                 text = "Not Connected",
-                color = Color.White.copy(alpha = 0.3f),
+                color = Color.Black.copy(alpha = 0.3f),
                 fontSize = 15.sp,
                 fontFamily = InterFontFamily
             )
