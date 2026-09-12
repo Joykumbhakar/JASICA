@@ -2567,6 +2567,7 @@ fun JasicaScreen(
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var updateNotification by remember { mutableStateOf<UpdateNotification?>(null) }
+    var showMenu by remember { mutableStateOf(false) }
     
     LaunchedEffect(Unit) {
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -2712,7 +2713,6 @@ fun JasicaScreen(
 
                 // Header Icons Container
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    var showMenu by remember { mutableStateOf(false) }
 
                     // Bluetooth Icon
                     IconButton(onClick = onBtIconTap) {
