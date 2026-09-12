@@ -90,8 +90,8 @@ class WaterAlarmActivity : ComponentActivity() {
                         .build()
                 )
                 isLooping = true
-                prepare()
-                start()
+                setOnPreparedListener { it.start() }
+                prepareAsync()
             }
         } catch (e: Exception) {
             e.printStackTrace()

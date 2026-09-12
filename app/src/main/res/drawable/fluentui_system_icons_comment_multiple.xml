@@ -1,0 +1,35 @@
+<!--
+MIT License
+
+Copyright (c) 2020 Microsoft Corporation
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#CD3E1D"
+        android:pathData="M4.5,6.75C4.5,4.95507 5.95507,3.5 7.75,3.5H15.75C18.9256,3.5 21.5,6.07436 21.5,9.25V13.25C21.5,15.0449 20.0449,16.5 18.25,16.5H9C6.51472,16.5 4.5,14.4853 4.5,12V6.75Z" />
+    <path
+        
+        android:pathData="M2,9.25C2,7.45507 3.45507,6 5.25,6H15.75C17.5449,6 19,7.45507 19,9.25V15.75C19,17.5449 17.5449,19 15.75,19H10.7475L6.98989,21.7595C6.16433,22.3657 5,21.7762 5,20.752V18.9905C3.32189,18.8629 2,17.4608 2,15.75V9.25Z" />
+</vector>

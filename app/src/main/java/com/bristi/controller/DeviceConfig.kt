@@ -10,10 +10,10 @@ data class DeviceConfig(
 )
 
 val DEFAULT_DEVICES = listOf(
-    DeviceConfig("dev1", "1st LED", "turn on 1st led", "turn off 1st led", "a", "A"),
-    DeviceConfig("dev2", "2nd LED", "turn on 2nd led", "turn off 2nd led", "b", "B"),
-    DeviceConfig("dev3", "3rd LED", "turn on 3rd led", "turn off 3rd led", "c", "C"),
-    DeviceConfig("dev4", "4th LED", "turn on 4th led", "turn off 4th led", "d", "D"),
-    DeviceConfig("dev5", "5th LED", "turn on 5th led", "turn off 5th led", "e", "E"),
-    DeviceConfig("dev6", "6th LED", "turn on 6th led", "turn off 6th led", "f", "F")
+    DeviceConfig("dev1", "LED 1", "turn on led 1", "turn off led 1", "a", "A"),
+    DeviceConfig("dev2", "LED 2", "turn on led 2", "turn off led 2", "b", "B"),
+    DeviceConfig("dev3", "LED 3", "turn on led 3", "turn off led 3", "c", "C"),
+    DeviceConfig("dev4", "LED 4", "turn on led 4", "turn off led 4", "d", "D"),
+    DeviceConfig("dev5", "LED 5", "turn on led 5", "turn off led 5", "e", "E"),
+    DeviceConfig("dev6", "LED 6", "turn on led 6", "turn off led 6", "f", "F")
 )

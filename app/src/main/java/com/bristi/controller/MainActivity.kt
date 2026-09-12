@@ -75,9 +75,13 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
-import androidx.compose.material.icons.outlined.List
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.PowerSettingsNew
+import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.TabRowDefaults
@@ -93,6 +97,18 @@ import org.json.JSONObject
 import coil.compose.AsyncImage
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
+import dev.chrisbanes.haze.*
+import androidx.compose.ui.layout.onSizeChanged
+
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.BlurredEdgeTreatment
@@ -928,10 +944,9 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             showOnboarding.value = true
         }
 
-        // Set Water Reminder Default ON
+        // Set Water Reminder Default OFF
         if (!sharedPrefs.contains("WATER_REMINDER")) {
-            sharedPrefs.edit().putBoolean("WATER_REMINDER", true).apply()
-            WaterReminderManager.scheduleNextAlarm(this)
+            sharedPrefs.edit().putBoolean("WATER_REMINDER", false).apply()
         }
 
         tts = TextToSpeech(this, this)
@@ -1092,6 +1107,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         if (::speechRecognizer.isInitialized) speechRecognizer.destroy()
         disconnectAll()
         discoveryReceiver?.let { try { unregisterReceiver(it) } catch (e: Exception) {} }
+        try { stopScans() } catch (e: Exception) {}
+        mainHandler.removeCallbacksAndMessages(null)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -1260,7 +1277,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
-            tts.language = java.util.Locale("bn", "IN")
+            tts.language = java.util.Locale.forLanguageTag("bn-IN")
             tts.setPitch(1.1f)
             tts.setSpeechRate(1.0f)
 
@@ -2162,7 +2179,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     private fun speakBuiltIn(text: String, utteranceId: String) {
         // We use bn-IN as the single voice since it handles both Bengali script and English well.
-        tts.language = java.util.Locale("bn", "IN")
+        tts.language = java.util.Locale.forLanguageTag("bn-IN")
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
     }
 
@@ -2214,24 +2231,24 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             override fun onReceive(context: Context, intent: Intent) {
                 when (intent.action) {
                     BluetoothDevice.ACTION_FOUND -> {
-                        addDevice(intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE))
+                        addDevice(if (android.os.Build.VERSION.SDK_INT >= 33) intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java) else @Suppress("DEPRECATION") intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE))
                     }
                     BluetoothAdapter.ACTION_DISCOVERY_STARTED  -> isScanning.value = true
                     BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> isScanning.value = false
                     BluetoothDevice.ACTION_BOND_STATE_CHANGED  -> {
-                        val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                        val device = if (android.os.Build.VERSION.SDK_INT >= 33) intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java) else @Suppress("DEPRECATION") intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
                         val state  = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR)
 
                         if (state == BluetoothDevice.BOND_BONDED && device != null) {
                             loadPairedDevices()
                             if (pendingDevice?.address == device.address) {
-                                val devToConnect = pendingDevice!!
+                                val devToConnect = pendingDevice ?: return
                                 pendingDevice = null
                                 proceedWithConnection(devToConnect)
                             }
                         } else if (state == BluetoothDevice.BOND_NONE && device != null) {
                             if (pendingDevice?.address == device.address) {
-                                val devToConnect = pendingDevice!!
+                                val devToConnect = pendingDevice ?: return
                                 pendingDevice = null
                                 proceedWithConnection(devToConnect)
                             }
@@ -2304,7 +2321,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         try { Toast.makeText(this, "Connecting...", Toast.LENGTH_SHORT).show() } catch (e: SecurityException) {}
         showDeviceDialog.value = false
 
-        if (device.type == BluetoothDevice.DEVICE_TYPE_LE) connectBLE(device) else connectClassic(device)
+        try { if (device.type == BluetoothDevice.DEVICE_TYPE_LE) connectBLE(device) else connectClassic(device) } catch (e: SecurityException) { connectClassic(device) }
     }
 
     @SuppressLint("MissingPermission")
@@ -2342,7 +2359,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                         sharedPrefs.edit().putString("LAST_BT_MAC", device.address).apply()
                         runOnUiThread {
                             isBtConnected.value = true
-                            connectedDeviceName.value = device.name ?: "BLE Device"
+                            connectedDeviceName.value = try { device.name ?: "BLE Device" } catch (e: SecurityException) { "BLE Device" }
                             Toast.makeText(this@MainActivity, "BLE Connected", Toast.LENGTH_SHORT).show()
                         }
                     } else {
@@ -2382,14 +2399,14 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 return@launch
             }
 
-            if (classicSocket != null && classicSocket!!.isConnected) {
+            if (classicSocket?.isConnected == true) {
                 isClassicConnected = true
                 classicOutStream = classicSocket?.outputStream
                 classicInStream = classicSocket?.inputStream
                 sharedPrefs.edit().putString("LAST_BT_MAC", device.address).apply()
                 withContext(Dispatchers.Main) {
                     isBtConnected.value = true
-                    connectedDeviceName.value = device.name ?: "BT Device"
+                    connectedDeviceName.value = try { device.name ?: "BT Device" } catch (e: SecurityException) { "BT Device" }
                     Toast.makeText(this@MainActivity, "Connected", Toast.LENGTH_SHORT).show()
                 }
 
@@ -2409,6 +2426,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private fun disconnectAll() {
         if (bluetoothGatt != null) { try { bluetoothGatt?.disconnect(); bluetoothGatt?.close() } catch (e: SecurityException) {}; bluetoothGatt = null }
         isBleConnected = false
+        if (classicOutStream != null) { try { classicOutStream?.close() } catch (e: IOException) {}; classicOutStream = null }
+        if (classicInStream != null) { try { classicInStream?.close() } catch (e: IOException) {}; classicInStream = null }
         if (classicSocket != null) { try { classicSocket?.close() } catch (e: IOException) {}; classicSocket = null }
         isClassicConnected = false
         runOnUiThread {
@@ -2422,7 +2441,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         if (isClassicConnected && classicOutStream != null) {
             lifecycleScope.launch(Dispatchers.IO) { try { classicOutStream?.write(payload); classicOutStream?.flush() } catch (e: IOException) { disconnectAll() } }
         } else if (isBleConnected && bluetoothGatt != null && bleWriteChar != null) {
-            try { bleWriteChar?.value = payload; bluetoothGatt?.writeCharacteristic(bleWriteChar) } catch (e: SecurityException) {}
+            try { bleWriteChar?.value = payload; bluetoothGatt?.writeCharacteristic(bleWriteChar) } catch (e: Exception) { Log.e("BLE", "Write failed: ${e.message}") }
         }
     }
 }
@@ -2536,8 +2555,9 @@ fun JasicaScreen(
         }
     }
 
+    val hazeState = remember { dev.chrisbanes.haze.HazeState() }
     val haptic = LocalHapticFeedback.current
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
         
         updateNotification?.let { notif ->
             AlertDialog(
@@ -2668,22 +2688,22 @@ fun JasicaScreen(
                             DropdownMenuItem(
                                 text = { Text("Manual Controls", color = Color.White, fontFamily = InterFontFamily) },
                                 onClick = { showMenu = false; onManualControlsTap() },
-                                leadingIcon = { Icon(Icons.Outlined.Home, contentDescription = null, tint = JasicaWhite) }
+                                leadingIcon = { Image(painterResource(id = R.drawable.fluentui_system_icons_home), contentDescription = null, modifier = Modifier.size(24.dp)) }
                             )
                             DropdownMenuItem(
                                 text = { Text("Chat History", color = Color.White, fontFamily = InterFontFamily) },
                                 onClick = { showMenu = false; onHistoryTap() },
-                                leadingIcon = { Icon(Icons.Outlined.History, contentDescription = null, tint = JasicaWhite) }
+                                leadingIcon = { Image(painterResource(id = R.drawable.fluentui_system_icons_history), contentDescription = null, modifier = Modifier.size(24.dp)) }
                             )
                             DropdownMenuItem(
                                 text = { Text("Arduino Code", color = Color.White, fontFamily = InterFontFamily) },
                                 onClick = { showMenu = false; onArduinoCodeTap() },
-                                leadingIcon = { Icon(painterResource(id = android.R.drawable.ic_menu_edit), contentDescription = null, tint = JasicaWhite) }
+                                leadingIcon = { Image(painterResource(id = R.drawable.fluentui_system_icons_code), contentDescription = null, modifier = Modifier.size(24.dp)) }
                             )
                             DropdownMenuItem(
                                 text = { Text("Settings", color = Color.White, fontFamily = InterFontFamily) },
                                 onClick = { showMenu = false; onSettingsTap() },
-                                leadingIcon = { Icon(Icons.Outlined.Settings, contentDescription = null, tint = JasicaWhite) }
+                                leadingIcon = { Image(painterResource(id = R.drawable.fluentui_system_icons_settings), contentDescription = null, modifier = Modifier.size(24.dp)) }
                             )
                         }
                     }
@@ -2934,7 +2954,8 @@ fun JasicaScreen(
         }
 
         if (showDialog) {
-            DeviceSelectionDialog(pairedDevices, availableDevices, isScanning, onDeviceSelect, onScanTap, onDismissDialog)
+            androidx.activity.compose.BackHandler { onDismissDialog() }
+            DeviceSelectionDialog(pairedDevices, availableDevices, isScanning, hazeState, onDeviceSelect, onScanTap, onDismissDialog)
         }
         if (showSettings) {
             SettingsScreen(
@@ -2946,7 +2967,8 @@ fun JasicaScreen(
                 useAdminPanelKey    = useAdminPanelKey,
                 sharedPrefs         = sharedPrefs,
                 onDismiss           = onDismissSettings,
-                onSave              = onSaveSettings
+                onSave              = onSaveSettings,
+                hazeState           = hazeState
             )
         }
 
@@ -3003,7 +3025,6 @@ fun ManualControlsScreen(
     val textPrimary = if (isDark) Color(0xFFFFFFFF) else Color(0xFF000000)
     val textSecondary = if (isDark) Color.White.copy(alpha = 0.5f) else Color(0xFF8E8E93)
 
-    // Dynamic list of devices with user-configured names and pins
     val devices = remember(sharedPrefs) {
         DEFAULT_DEVICES.map { dev ->
             val name = sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName
@@ -3013,13 +3034,31 @@ fun ManualControlsScreen(
         }
     }
 
-    // Optimistic state map for 0ms lag
     val optimisticStates = remember { mutableStateMapOf<String, Boolean>() }
     LaunchedEffect(deviceStates) {
         deviceStates.forEach { (k, v) -> optimisticStates[k] = v }
     }
 
+    // Per-device ON start times for the elapsed running timer
+    val deviceOnTime = remember { mutableStateMapOf<String, Long>() }
+    LaunchedEffect(deviceStates) {
+        deviceStates.forEach { (k, v) ->
+            if (v && !deviceOnTime.containsKey(k)) deviceOnTime[k] = System.currentTimeMillis()
+            if (!v) deviceOnTime.remove(k)
+        }
+    }
+
+    // Tick every second — causes elapsed strings to recompose
+    var tick by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(1000)
+            tick = System.currentTimeMillis()
+        }
+    }
+
     val haptic = LocalHapticFeedback.current
+    val activeCount = optimisticStates.values.count { it }
 
     Box(
         modifier = Modifier
@@ -3032,117 +3071,126 @@ fun ManualControlsScreen(
                 .fillMaxSize()
                 .padding(top = 54.dp, start = 20.dp, end = 20.dp, bottom = 24.dp)
         ) {
+            // Header
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Control Center",
-                    color = textPrimary,
-                    fontSize = 34.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = InterFontFamily
-                )
+                Column {
+                    Text(
+                        text = "Control Center",
+                        color = textPrimary,
+                        fontSize = 34.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = InterFontFamily
+                    )
+                    if (activeCount > 0) {
+                        Text(
+                            text = "$activeCount device${if (activeCount > 1) "s" else ""} running",
+                            color = Color(0xFF34C759),
+                            fontSize = 13.sp,
+                            fontFamily = InterFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
                 TextButton(onClick = onDismiss) {
                     Text("Done", color = Color(0xFF007AFF), fontSize = 17.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily)
                 }
             }
 
+            Spacer(Modifier.height(6.dp))
             Text(
-                text = "Tap to toggle hardware manually with instant response.",
+                text = "Toggle hardware manually with instant response.",
                 color = textSecondary,
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 fontFamily = InterFontFamily,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Master Routine Action Bar (Optimistic Batch Actions)
+            // Master Action Bar
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // All ON Button
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         devices.forEach { dev ->
                             optimisticStates[dev.id] = true
-                            try {
-                                onSendCommand(dev.cmdOn)
-                            } catch (e: Exception) {
-                                Log.e("ControlCenter", "Failed to send command: ${e.message}")
-                            }
+                            if (!deviceOnTime.containsKey(dev.id)) deviceOnTime[dev.id] = System.currentTimeMillis()
+                            try { onSendCommand(dev.cmdOn) } catch (e: Exception) { Log.e("ControlCenter", "Failed: ${e.message}") }
                         }
                     },
                     modifier = Modifier.weight(1f).height(46.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34C759))
                 ) {
-                    LucideZap(tint = Color.White, modifier = Modifier.size(16.dp))
+                    Icon(imageVector = Icons.Outlined.PowerSettingsNew, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
                     Spacer(Modifier.width(6.dp))
                     Text("All ON", color = Color.White, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily, fontSize = 15.sp)
                 }
-
-                // All OFF Button
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         devices.forEach { dev ->
                             optimisticStates[dev.id] = false
-                            try {
-                                onSendCommand(dev.cmdOff)
-                            } catch (e: Exception) {
-                                Log.e("ControlCenter", "Failed to send command: ${e.message}")
-                            }
+                            deviceOnTime.remove(dev.id)
+                            try { onSendCommand(dev.cmdOff) } catch (e: Exception) { Log.e("ControlCenter", "Failed: ${e.message}") }
                         }
                     },
                     modifier = Modifier.weight(1f).height(46.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = if (isDark) Color(0xFF2C2C2E) else Color(0xFF8E8E93))
                 ) {
-                    LucideRotateCcw(tint = Color.White, modifier = Modifier.size(16.dp))
+                    Icon(imageVector = Icons.Outlined.Block, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
                     Spacer(Modifier.width(6.dp))
                     Text("All OFF", color = Color.White, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily, fontSize = 15.sp)
                 }
             }
 
-            // Lazy loaded device cards
+            // Device list (single column)
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                items(devices.chunked(2), key = { row -> row.joinToString { it.id } }) { rowItems ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        for (device in rowItems) {
-                            val isChecked = optimisticStates[device.id] == true
-                            DeviceControlCard(
-                                modifier = Modifier.weight(1f),
-                                device = device,
-                                isChecked = isChecked,
-                                isDark = isDark,
-                                onToggle = {
-                                    val targetState = !isChecked
-                                    optimisticStates[device.id] = targetState
-                                    try {
-                                        onSendCommand(if (targetState) device.cmdOn else device.cmdOff)
-                                    } catch (e: Exception) {
-                                        Log.e("ControlCenter", "Command failed: ${e.message}")
-                                        // rollback on failure
-                                        optimisticStates[device.id] = isChecked
-                                    }
-                                }
-                            )
+                items(devices, key = { it.id }) { device ->
+                    val isChecked = optimisticStates[device.id] == true
+                    val startTime = deviceOnTime[device.id]
+                    val elapsed: String? = if (isChecked && startTime != null) {
+                        val secs = ((tick - startTime) / 1000L).coerceAtLeast(0L)
+                        "${secs / 60}:${(secs % 60).toString().padStart(2, '0')}"
+                    } else null
+
+                    DeviceControlCard(
+                        device = device,
+                        isChecked = isChecked,
+                        elapsed = elapsed,
+                        isDark = isDark,
+                        onToggle = {
+                            val targetState = !isChecked
+                            optimisticStates[device.id] = targetState
+                            if (targetState) {
+                                deviceOnTime[device.id] = System.currentTimeMillis()
+                            } else {
+                                deviceOnTime.remove(device.id)
+                            }
+                            try {
+                                onSendCommand(if (targetState) device.cmdOn else device.cmdOff)
+                            } catch (e: Exception) {
+                                Log.e("ControlCenter", "Command failed: ${e.message}")
+                                optimisticStates[device.id] = isChecked
+                                if (isChecked) deviceOnTime[device.id] = startTime ?: System.currentTimeMillis()
+                                else deviceOnTime.remove(device.id)
+                            }
+                        },
+                        onStop = {
+                            optimisticStates[device.id] = false
+                            deviceOnTime.remove(device.id)
+                            try { onSendCommand(device.cmdOff) } catch (e: Exception) { Log.e("ControlCenter", "Stop failed: ${e.message}") }
                         }
-                        if (rowItems.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
-                    }
+                    )
                 }
             }
         }
@@ -3154,114 +3202,133 @@ fun DeviceControlCard(
     modifier: Modifier = Modifier,
     device: ManualDevice,
     isChecked: Boolean,
+    elapsed: String? = null,
     isDark: Boolean = false,
-    onToggle: () -> Unit
+    onToggle: () -> Unit,
+    onStop: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    
-    val cardScale by animateFloatAsState(
-        targetValue = if (isChecked) 1.0f else 0.98f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
-        label = "scale"
-    )
+    val activeAccent = Color(0xFF34C759)
+    val cardBg = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF)
+    val cardBorder = if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)
+    val textColor = if (isDark) Color.White else Color.Black
+    val subTextColor = if (isDark) Color.White.copy(alpha = 0.5f) else Color(0xFF8E8E93)
 
-    val cardBg = when {
-        isChecked -> Color(0xFF007AFF)
-        isDark -> Color(0xFF1C1C1E)
-        else -> Color(0xFFFFFFFF)
-    }
-
-    val cardBorder = when {
-        isChecked -> Color(0xFF007AFF)
-        isDark -> Color(0xFF2C2C2E)
-        else -> Color(0xFFE5E5EA)
-    }
-
-    val textColor = when {
-        isChecked -> Color.White
-        isDark -> Color.White
-        else -> Color.Black
-    }
-
-    val subTextColor = when {
-        isChecked -> Color.White.copy(alpha = 0.8f)
-        isDark -> Color.White.copy(alpha = 0.5f)
-        else -> Color(0xFF8E8E93)
-    }
-
-    Box(
+    Column(
         modifier = modifier
-            .scale(cardScale)
-            .aspectRatio(1f)
-            .clip(RoundedCornerShape(20.dp))
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
             .background(cardBg)
-            .border(1.dp, cardBorder, RoundedCornerShape(20.dp))
-            .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onToggle()
-            }
+            .border(
+                1.dp,
+                if (isChecked) activeAccent.copy(alpha = 0.35f) else cardBorder,
+                RoundedCornerShape(16.dp)
+            )
+            .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp).fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+            // Device icon
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (isChecked) activeAccent.copy(alpha = 0.15f)
+                        else if (isDark) Color.White.copy(alpha = 0.08f)
+                        else Color(0xFFF2F2F7)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                        .background(if (isChecked) Color.White.copy(alpha = 0.25f) else (if (isDark) Color.White.copy(alpha = 0.1f) else Color(0xFFF2F2F7))),
-                    contentAlignment = Alignment.Center
-                ) {
-                    LucideCpu(
-                        tint = if (isChecked) Color.White else (if (isDark) Color.White else Color(0xFF007AFF)),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (isChecked) Color.White.copy(alpha = 0.25f) else (if (isDark) Color.White.copy(alpha = 0.08f) else Color(0xFFF2F2F7)))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = if (isChecked) "ON" else "OFF",
-                        color = if (isChecked) Color.White else subTextColor,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = InterFontFamily
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Outlined.Lightbulb,
+                    contentDescription = null,
+                    tint = if (isChecked) activeAccent else subTextColor,
+                    modifier = Modifier.size(20.dp)
+                )
             }
 
-            Column {
+            Spacer(Modifier.width(14.dp))
+
+            // Name + status text
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = device.name,
                     color = textColor,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = InterFontFamily,
                     fontSize = 15.sp,
-                    lineHeight = 18.sp,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
-                Text(
-                    text = if (isChecked) "Running [${device.cmdOn}]" else "Standby [${device.cmdOff}]",
-                    color = subTextColor,
-                    fontFamily = InterFontFamily,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(top = 2.dp)
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isChecked) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(activeAccent)
+                        )
+                        Spacer(Modifier.width(5.dp))
+                        Text(
+                            text = if (elapsed != null) "Running \u00b7 $elapsed" else "Running",
+                            color = activeAccent,
+                            fontFamily = InterFontFamily,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    } else {
+                        Text(
+                            text = "Standby",
+                            color = subTextColor,
+                            fontFamily = InterFontFamily,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            // Toggle switch
+            AppleSwitch(
+                checked = isChecked,
+                onCheckedChange = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onToggle()
+                }
+            )
+        }
+
+        // Stop button — slides in/out when device is running
+        AnimatedVisibility(
+            visible = isChecked,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+        ) {
+            Column {
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = onStop,
+                    modifier = Modifier.fillMaxWidth().height(38.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF3B30).copy(alpha = 0.6f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFF3B30))
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Cancel,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text("Stop", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily)
+                }
             }
         }
     }
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
 //  Quick Action Chips
 // ─────────────────────────────────────────────────────────────────────────────
@@ -3335,7 +3402,7 @@ fun NativeActionCards(onAction: (String) -> Unit) {
         )
         ActionCard(
             text = "Generate Project\nSummary",
-            icon = Icons.Outlined.List,
+            icon = Icons.AutoMirrored.Outlined.List,
             onClick = { onAction("Generate a project summary") }
         )
         ActionCard(
@@ -3467,7 +3534,7 @@ fun ChatHistoryScreen(history: List<ChatMessage>, onDismiss: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
-                    items(history) { message ->
+                    items(history, key = { it.hashCode() }) { message ->
                         ChatBubble(message, isDark = isDark)
                     }
                 }
@@ -3792,18 +3859,18 @@ fun BottomMicButton(appState: AppState, onClick: () -> Unit) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-fun JasicaGraphicalDialogPanel(content: @Composable ColumnScope.() -> Unit) {
+fun JasicaGraphicalDialogPanel(hazeState: dev.chrisbanes.haze.HazeState? = null, content: @Composable ColumnScope.() -> Unit) {
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color.Transparent,
         modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xE61C1C1E))
-                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp))
-        ) {
+        val baseModifier = Modifier
+            .fillMaxWidth()
+            .then(if (hazeState != null) Modifier.clip(RoundedCornerShape(24.dp)).hazeEffect(state = hazeState, style = dev.chrisbanes.haze.HazeStyle(blurRadius = 20.dp, backgroundColor = Color(0x661C1C1E), tint = dev.chrisbanes.haze.HazeTint(Color(0x331C1C1E)))) else Modifier)
+            .background(if (hazeState != null) Color.Transparent else Color(0xE61C1C1E))
+            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp))
+        Box(modifier = baseModifier) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -3965,8 +4032,7 @@ fun LucideIconBox(
     Box(
         modifier = modifier
             .size(30.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(backgroundColor),
+            .clip(RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center
     ) {
         content()
@@ -4091,6 +4157,254 @@ fun LucideKey(modifier: Modifier = Modifier.size(16.dp), tint: Color = Color.Whi
             lineTo(size.width * 0.70f, size.height * 0.53f)
         }
         drawPath(p, color = tint, style = stroke)
+    }
+}
+
+
+
+@Composable
+fun LiquidGlassKnob(
+    width: androidx.compose.ui.unit.Dp,
+    height: androidx.compose.ui.unit.Dp,
+    scale: Float,
+    baseAlpha: Float,
+    hazeState: dev.chrisbanes.haze.HazeState? = null,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(width, height)
+            .scale(scale)
+            .clip(RoundedCornerShape(50.dp))
+            .then(if (hazeState != null) Modifier.hazeEffect(state = hazeState, style = dev.chrisbanes.haze.HazeStyle(blurRadius = 20.dp, tint = dev.chrisbanes.haze.HazeTint(Color.White.copy(alpha = 0.15f)))) else Modifier)
+            .background(Color.White.copy(alpha = baseAlpha))
+            .border(0.5.dp, Color.Black.copy(alpha = 0.1f), RoundedCornerShape(50.dp))
+            .shadow(
+                elevation = 2.dp,
+                shape = RoundedCornerShape(50.dp),
+                spotColor = Color.Black.copy(alpha = 0.2f),
+                ambientColor = Color.Black.copy(alpha = 0.1f),
+                clip = false
+            )
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(start = 2.dp, end = 2.dp, top = 1.dp)
+                .fillMaxWidth()
+                .fillMaxHeight(0.48f)
+                .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomStart = 10.dp, bottomEnd = 10.dp))
+                .background(
+                    Brush.verticalGradient(
+                        0.0f to Color.White.copy(alpha = 0.95f),
+                        1.0f to Color.White.copy(alpha = 0.1f)
+                    )
+                )
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(start = 2.dp, end = 2.dp, bottom = 1.dp)
+                .fillMaxWidth()
+                .fillMaxHeight(0.35f)
+                .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp, bottomStart = 12.dp, bottomEnd = 12.dp))
+                .background(
+                    Brush.verticalGradient(
+                        0.0f to Color.Transparent,
+                        1.0f to Color.White.copy(alpha = 0.85f)
+                    )
+                )
+        )
+    }
+}
+
+@Composable
+fun AppleSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+    modifier: Modifier = Modifier,
+    steps: Int = 0,
+    hazeState: dev.chrisbanes.haze.HazeState? = null
+) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val activeTrackColor = Color(0xFF0A84FF)
+    val inactiveTrackColor = Color(0xFFE5E5EA)
+
+    var totalWidthPx by remember { mutableFloatStateOf(0f) }
+    val thumbRadiusPx = with(LocalDensity.current) { 12.dp.toPx() } 
+    val trackWidthPx = (totalWidthPx - 2 * thumbRadiusPx).coerceAtLeast(1f)
+
+    val fraction = ((value - valueRange.start) / (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
+    val thumbOffsetX = (fraction * trackWidthPx)
+
+    var isDragging by remember { mutableStateOf(false) }
+    val targetWidth = if (isDragging) 28.dp else 24.dp
+    val targetScale = if (isDragging) 1.15f else 1f
+    
+    val thumbWidth by animateDpAsState(targetWidth, animationSpec = androidx.compose.animation.core.spring(dampingRatio = 0.35f, stiffness = 500f), label = "tw")
+    val thumbScale by animateFloatAsState(targetScale, animationSpec = androidx.compose.animation.core.spring(dampingRatio = 0.35f, stiffness = 500f), label = "ts")
+    
+    val currentOnValueChange by rememberUpdatedState(onValueChange)
+    val currentValueRange by rememberUpdatedState(valueRange)
+    val currentSteps by rememberUpdatedState(steps)
+
+    fun updateValueFromOffset(offsetX: Float) {
+        val newOffsetX = (offsetX - thumbRadiusPx).coerceIn(0f, trackWidthPx)
+        val newFraction = newOffsetX / trackWidthPx
+        val newValue = currentValueRange.start + newFraction * (currentValueRange.endInclusive - currentValueRange.start)
+        
+        val roundedValue = if (currentSteps > 0) {
+            val stepSize = (currentValueRange.endInclusive - currentValueRange.start) / (currentSteps + 1)
+            Math.round(newValue / stepSize) * stepSize
+        } else newValue
+        
+        currentOnValueChange(roundedValue.coerceIn(currentValueRange.start, currentValueRange.endInclusive))
+    }
+
+    Box(
+        modifier = modifier
+            .height(22.dp)
+            .onSizeChanged { totalWidthPx = it.width.toFloat() },
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp)
+                .height(6.dp)
+                .clip(CircleShape)
+                .background(inactiveTrackColor)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(fraction)
+                    .fillMaxHeight()
+                    .clip(CircleShape)
+                    .background(activeTrackColor)
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragStart = { 
+                            isDragging = true 
+                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        },
+                        onDragEnd = { isDragging = false },
+                        onDragCancel = { isDragging = false }
+                    ) { change, _ ->
+                        change.consume()
+                        updateValueFromOffset(change.position.x)
+                    }
+                }
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = { offset ->
+                            isDragging = true
+                            updateValueFromOffset(offset.x)
+                            tryAwaitRelease()
+                            isDragging = false
+                        }
+                    )
+                }
+        )
+
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(thumbOffsetX.roundToInt(), 0) }
+                .size(width = thumbWidth, height = 18.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            LiquidGlassKnob(
+                width = thumbWidth,
+                height = 18.dp,
+                scale = thumbScale,
+                baseAlpha = 0.9f,
+                hazeState = hazeState
+            )
+        }
+    }
+}
+
+@Composable
+fun AppleSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    hazeState: dev.chrisbanes.haze.HazeState? = null
+) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    var isPressed by remember { mutableStateOf(false) }
+    val trackColor by animateColorAsState(
+        if (checked) Color(0xFF34C759) else Color(0xFFE5E5EA),
+        animationSpec = androidx.compose.animation.core.tween(300),
+        label = "trackColor"
+    )
+
+    val targetTranslation = if (checked && isPressed) 15f
+                            else if (checked) 16f
+                            else if (isPressed) -3f
+                            else 0f
+
+    val targetWidth = if (isPressed) 28.dp else 24.dp
+    // 50% bigger on press — scale causes the knob to visually overflow the unclipped track
+    val targetScale = if (isPressed) 1.5f else 1f
+
+    val jellySpring = androidx.compose.animation.core.spring<Float>(dampingRatio = 0.35f, stiffness = 500f)
+    val jellySpringDp = androidx.compose.animation.core.spring<androidx.compose.ui.unit.Dp>(dampingRatio = 0.35f, stiffness = 500f)
+
+    val thumbTranslationX by animateFloatAsState(targetTranslation, animationSpec = jellySpring, label = "tx")
+    val thumbWidth by animateDpAsState(targetWidth, animationSpec = jellySpringDp, label = "tw")
+    val thumbScale by animateFloatAsState(targetScale, animationSpec = jellySpring, label = "ts")
+
+    Box(
+        modifier = modifier
+            .minimumInteractiveComponentSize()
+            .width(44.dp)
+            .height(22.dp)
+            // NO clip on outer Box — lets the knob visually overflow the track border on press
+            .pointerInput(checked) {
+                detectTapGestures(
+                    onPress = {
+                        isPressed = true
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        tryAwaitRelease()
+                        isPressed = false
+                    },
+                    onTap = {
+                        onCheckedChange(!checked)
+                    }
+                )
+            }
+    ) {
+        // Clipped pill-shaped track background
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(100.dp))
+                .background(trackColor)
+                .border(0.5.dp, Color.Black.copy(alpha = 0.1f), RoundedCornerShape(100.dp))
+        )
+        // Knob — unclipped so it bleeds outside the track on press (iOS-authentic overflow)
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(top = 2.dp, bottom = 2.dp)
+                .offset(x = (thumbTranslationX + 2).dp)
+                .size(width = thumbWidth, height = 18.dp)
+        ) {
+            LiquidGlassKnob(
+                width = thumbWidth,
+                height = 18.dp,
+                scale = thumbScale,
+                baseAlpha = 0.1f,
+                hazeState = hazeState
+            )
+        }
     }
 }
 
@@ -4298,7 +4612,7 @@ fun AppleRestartDialog(
                         .background(Color(0xFF007AFF).copy(alpha = 0.12f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    LucideRotateCcw(tint = Color(0xFF007AFF), modifier = Modifier.size(22.dp))
+                    Image(painterResource(id = R.drawable.fluentui_system_icons_arrow_clockwise_dashes), contentDescription = null, modifier = Modifier.size(22.dp))
                 }
                 
                 Spacer(Modifier.height(12.dp))
@@ -4480,7 +4794,8 @@ fun SettingsScreen(
     useAdminPanelKey: Boolean,
     sharedPrefs: android.content.SharedPreferences,
     onDismiss: () -> Unit,
-    onSave: (String, String, Boolean) -> Unit
+    onSave: (String, String, Boolean) -> Unit,
+    hazeState: dev.chrisbanes.haze.HazeState? = null
 ) {
     var darkModeInput by remember { mutableStateOf(sharedPrefs.getBoolean("DARK_MODE", false)) }
     var apiKeyInput by remember { mutableStateOf(currentApiKey) }
@@ -4567,73 +4882,69 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Dark Mode",
                             subtitle = "Switch between Apple Light and Dark theme",
-                            icon = { LucideSliders(tint = Color.White) },
+                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_options), contentDescription = null, modifier = Modifier.size(24.dp)) },
                             iconBgColor = Color(0xFF5856D6),
                             showDivider = true,
                             isDark = darkModeInput,
                             control = {
-                                Switch(
-                                    checked = darkModeInput,
-                                    onCheckedChange = { 
+                                AppleSwitch(
+                                      checked = darkModeInput,
+                                      onCheckedChange = { 
                                         darkModeInput = it
                                         sharedPrefs.edit().putBoolean("DARK_MODE", it).apply()
-                                    },
-                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
-                                )
+                                    }
+                                  )
                             }
                         )
 
                         AppleSettingsRow(
                             title = "Hands-Free Wake Word",
                             subtitle = "Say 'Hey Jasica' to activate",
-                            icon = { LucideMic(tint = Color.White) },
+                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_mic), contentDescription = null, modifier = Modifier.size(24.dp)) },
                             iconBgColor = Color(0xFF007AFF),
                             showDivider = true,
                             isDark = darkModeInput,
                             control = {
-                                Switch(
-                                    checked = wakeWordInput,
-                                    onCheckedChange = { wakeWordInput = it },
-                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
-                                )
+                                AppleSwitch(
+                                      checked = wakeWordInput,
+                                      onCheckedChange = { wakeWordInput = it }
+                                  )
                             }
                         )
                         
                         AppleSettingsRow(
                             title = "Save History",
                             subtitle = "Log conversations locally",
-                            icon = { LucideClock(tint = Color.White) },
+                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_history), contentDescription = null, modifier = Modifier.size(24.dp)) },
                             iconBgColor = Color(0xFF30B0C7),
                             showDivider = true,
                             isDark = darkModeInput,
                             control = {
-                                Switch(
-                                    checked = historyLoggingInput,
-                                    onCheckedChange = { 
+                                AppleSwitch(
+                                      checked = historyLoggingInput,
+                                      onCheckedChange = { 
                                         historyLoggingInput = it
                                         sharedPrefs.edit().putBoolean("HISTORY_LOGGING", it).apply()
-                                    },
-                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
-                                )
+                                    }
+                                  )
                             }
                         )
 
                         AppleSettingsRow(
                             title = "Instant Offline Actions",
                             subtitle = "Execute hardware commands locally without AI delay",
-                            icon = { LucideZap(tint = Color.White) },
+                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_wifi), contentDescription = null, modifier = Modifier.size(24.dp)) },
                             iconBgColor = Color(0xFFFF9500),
                             showDivider = false,
                             isDark = darkModeInput,
                             control = {
-                                Switch(
-                                    checked = !onlineModeInput,
-                                    onCheckedChange = { 
+                                AppleSwitch(
+                                      checked = !onlineModeInput,
+                                      onCheckedChange = { 
                                         onlineModeInput = !it
                                         sharedPrefs.edit().putBoolean("ONLINE_MODE_ENABLED", !it).apply()
-                                    },
-                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
-                                )
+                                    }
+                                  )
                             }
                         )
                     }
@@ -4645,7 +4956,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "AI Model Engine",
                             subtitle = "Current: $selectedModel",
-                            icon = { LucideCpu(tint = Color.White) },
+                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_bot), contentDescription = null, modifier = Modifier.size(24.dp)) },
                             iconBgColor = Color(0xFF34C759),
                             showDivider = true,
                             isDark = darkModeInput,
@@ -4680,19 +4991,18 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Use Portfolio API Key",
                             subtitle = "Automatically load dynamic API keys from cloud",
-                            icon = { LucideKey(tint = Color.White) },
+                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_person_key), contentDescription = null, modifier = Modifier.size(24.dp)) },
                             iconBgColor = Color(0xFFAF52DE),
                             showDivider = !adminKeyInput,
                             isDark = darkModeInput,
                             control = {
-                                Switch(
-                                    checked = adminKeyInput,
-                                    onCheckedChange = { 
+                                AppleSwitch(
+                                      checked = adminKeyInput,
+                                      onCheckedChange = { 
                                         adminKeyInput = it
                                         sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", it).apply()
-                                    },
-                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
-                                )
+                                    }
+                                  )
                             }
                         )
 
@@ -4735,14 +5045,14 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Smart Water Reminder",
                             subtitle = "Periodic spoken hydration alerts",
-                            icon = { LucideDroplet(tint = Color.White) },
+                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_clock_alarm), contentDescription = null, modifier = Modifier.size(24.dp)) },
                             iconBgColor = Color(0xFF007AFF),
                             showDivider = waterReminderInput,
                             isDark = darkModeInput,
                             control = {
-                                Switch(
-                                    checked = waterReminderInput,
-                                    onCheckedChange = { isChecked ->
+                                AppleSwitch(
+                                      checked = waterReminderInput,
+                                      onCheckedChange = { isChecked ->
                                         if (!isChecked) {
                                             showPasswordDialog = true
                                         } else {
@@ -4751,9 +5061,8 @@ fun SettingsScreen(
                                             WaterReminderManager.scheduleAlarm(context, waterInterval)
                                             android.widget.Toast.makeText(context, "Water Reminder Active ($waterInterval min)", android.widget.Toast.LENGTH_SHORT).show()
                                         }
-                                    },
-                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
-                                )
+                                    }
+                                  )
                             }
                         )
 
@@ -4767,22 +5076,28 @@ fun SettingsScreen(
                                     Text("Reminder Interval", color = textPrimary, fontSize = 14.sp, fontFamily = InterFontFamily)
                                     Text("$waterInterval min", color = Color(0xFF007AFF), fontSize = 14.sp, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily)
                                 }
-                                androidx.compose.material3.Slider(
-                                    value = waterInterval.toFloat(),
-                                    onValueChange = { 
-                                        waterInterval = it.toInt()
-                                        sharedPrefs.edit().putInt("WATER_REMINDER_INTERVAL", waterInterval).apply()
-                                        if (waterReminderInput) {
-                                            WaterReminderManager.scheduleAlarm(context, waterInterval)
-                                        }
-                                    },
-                                    valueRange = 10f..120f,
-                                    steps = 10,
-                                    colors = androidx.compose.material3.SliderDefaults.colors(
-                                        thumbColor = Color(0xFF007AFF),
-                                        activeTrackColor = Color(0xFF007AFF)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Image(painterResource(id = R.drawable.fluentui_system_icons_clock), contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(12.dp))
+                                    AppleSlider(
+                                        value = waterInterval.toFloat(),
+                                        onValueChange = { 
+                                            waterInterval = it.toInt()
+                                            sharedPrefs.edit().putInt("WATER_REMINDER_INTERVAL", waterInterval).apply()
+                                            if (waterReminderInput) {
+                                                WaterReminderManager.scheduleAlarm(context, waterInterval)
+                                            }
+                                        },
+                                        valueRange = 10f..120f,
+                                        steps = 10,
+                                        modifier = Modifier.weight(1f)
                                     )
-                                )
+                                    Spacer(Modifier.width(12.dp))
+                                    Text("${waterInterval}m", color = textPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily, modifier = Modifier.width(36.dp), textAlign = androidx.compose.ui.text.style.TextAlign.End)
+                                }
                             }
                         }
                     }
@@ -4796,11 +5111,11 @@ fun SettingsScreen(
                         isDark = darkModeInput
                     ) {
                         DEFAULT_DEVICES.forEachIndexed { index, dev ->
-                            var name by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName) }
-                            var onCmd by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_ON_CMD", dev.defaultOnCmd) ?: dev.defaultOnCmd) }
-                            var offCmd by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_OFF_CMD", dev.defaultOffCmd) ?: dev.defaultOffCmd) }
-                            var pinOn by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_PIN_ON", dev.defaultPinOn) ?: dev.defaultPinOn) }
-                            var pinOff by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_PIN_OFF", dev.defaultPinOff) ?: dev.defaultPinOff) }
+                            var name by remember(dev.id) { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName) }
+                            var onCmd by remember(dev.id) { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_ON_CMD", dev.defaultOnCmd) ?: dev.defaultOnCmd) }
+                            var offCmd by remember(dev.id) { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_OFF_CMD", dev.defaultOffCmd) ?: dev.defaultOffCmd) }
+                            var pinOn by remember(dev.id) { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_PIN_ON", dev.defaultPinOn) ?: dev.defaultPinOn) }
+                            var pinOff by remember(dev.id) { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_PIN_OFF", dev.defaultPinOff) ?: dev.defaultPinOff) }
 
                             val isExpanded = expandedDevId == dev.id
 
@@ -4814,9 +5129,7 @@ fun SettingsScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                        LucideIconBox(backgroundColor = Color(0xFF636366)) {
-                                            LucideCpu(tint = Color.White)
-                                        }
+                                        LucideIconBox(backgroundColor = Color(0xFF636366)) { Image(painterResource(id = R.drawable.fluentui_system_icons_bot), contentDescription = null, modifier = Modifier.size(24.dp)) }
                                         Spacer(Modifier.width(14.dp))
                                         Column {
                                             Text(name, color = textPrimary, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily)
@@ -4825,9 +5138,9 @@ fun SettingsScreen(
                                         }
                                     }
                                     if (isExpanded) {
-                                        LucideChevronUp(tint = Color(0xFF007AFF))
+                                        Icon(Icons.Outlined.KeyboardArrowUp, contentDescription = null, tint = Color(0xFF007AFF))
                                     } else {
-                                        LucideChevronDown(tint = textSecondary)
+                                        Icon(Icons.Outlined.KeyboardArrowDown, contentDescription = null, tint = textSecondary)
                                     }
                                 }
 
@@ -4979,7 +5292,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Reset Devices to Default",
                             subtitle = "Restore 1st LED to 6th LED",
-                            icon = { LucideRotateCcw(tint = Color.White) },
+                            icon = { Image(painterResource(id = R.drawable.fluentui_system_icons_arrow_clockwise_dashes), contentDescription = null, modifier = Modifier.size(24.dp)) },
                             iconBgColor = Color(0xFFFF9500),
                             showDivider = false,
                             isDark = darkModeInput,
@@ -5119,9 +5432,24 @@ fun SettingsScreen(
 
 @SuppressLint("MissingPermission")
 @Composable
-fun DeviceSelectionDialog(pairedDevices: List<BluetoothDevice>, availableDevices: List<BluetoothDevice>, isScanning: Boolean, onDeviceSelect: (BluetoothDevice) -> Unit, onScanTap: () -> Unit, onDismiss: () -> Unit) {
-    Dialog(onDismissRequest = onDismiss) {
-        JasicaGraphicalDialogPanel {
+fun DeviceSelectionDialog(pairedDevices: List<BluetoothDevice>, availableDevices: List<BluetoothDevice>, isScanning: Boolean, hazeState: dev.chrisbanes.haze.HazeState?, onDeviceSelect: (BluetoothDevice) -> Unit, onScanTap: () -> Unit, onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .then(
+                if (hazeState != null) Modifier.hazeEffect(
+                    state = hazeState,
+                    style = dev.chrisbanes.haze.HazeStyle(
+                        blurRadius = 24.dp,
+                        tint = dev.chrisbanes.haze.HazeTint(Color(0x55000000))
+                    )
+                ) else Modifier.background(Color.Black.copy(alpha = 0.6f))
+            )
+            .pointerInput(Unit) { detectTapGestures(onTap = { onDismiss() }) },
+        contentAlignment = Alignment.Center
+    ) {
+        Box(modifier = Modifier.padding(24.dp).pointerInput(Unit) { detectTapGestures { /* consume */ } }) {
+            JasicaGraphicalDialogPanel(hazeState = null) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("Bluetooth Devices", color = Color.White, fontFamily = InterFontFamily, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 if (isScanning) {
@@ -5138,7 +5466,7 @@ fun DeviceSelectionDialog(pairedDevices: List<BluetoothDevice>, availableDevices
             LazyColumn(modifier = Modifier.heightIn(max = 350.dp)) {
                 if (pairedDevices.isNotEmpty()) {
                     item { Text("PAIRED DEVICES", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp, fontFamily = InterFontFamily, modifier = Modifier.padding(vertical = 8.dp)) }
-                    items(pairedDevices) { device -> DeviceListItem(device.name ?: "Unknown Device", device.address) { onDeviceSelect(device) } }
+                    items(pairedDevices, key = { it.address }) { device -> DeviceListItem(try { device.name ?: "Unknown Device" } catch (e: SecurityException) { "Unknown Device" }, device.address) { onDeviceSelect(device) } }
                 }
 
                 item { Spacer(Modifier.height(12.dp)); Text("AVAILABLE DEVICES", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp, fontFamily = InterFontFamily, modifier = Modifier.padding(vertical = 8.dp)) }
@@ -5146,7 +5474,7 @@ fun DeviceSelectionDialog(pairedDevices: List<BluetoothDevice>, availableDevices
                 if (availableDevices.isEmpty() && !isScanning) {
                     item { Text("No devices found.", color = Color.White.copy(alpha=0.6f), fontSize = 14.sp, fontFamily = InterFontFamily, modifier = Modifier.padding(vertical = 12.dp)) }
                 } else {
-                    items(availableDevices) { device -> DeviceListItem(device.name ?: "Unknown Signal", device.address) { onDeviceSelect(device) } }
+                    items(availableDevices, key = { it.address }) { device -> DeviceListItem(try { device.name ?: "Unknown Signal" } catch (e: SecurityException) { "Unknown Signal" }, device.address) { onDeviceSelect(device) } }
                 }
             }
 
@@ -5157,6 +5485,7 @@ fun DeviceSelectionDialog(pairedDevices: List<BluetoothDevice>, availableDevices
             }
         }
     }
+}
 }
 
 @Composable

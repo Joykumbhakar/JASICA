@@ -145,7 +145,6 @@
             </intent-filter>
         </activity-alias>
 
-        <service android:name=".JarvisService" android:foregroundServiceType="microphone|connectedDevice" android:exported="false" />
 
         <receiver android:name=".WaterAlarmReceiver" android:exported="false" />
         
