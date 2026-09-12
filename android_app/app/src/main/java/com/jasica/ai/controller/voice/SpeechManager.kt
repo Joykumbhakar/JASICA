@@ -17,6 +17,7 @@ import com.jasica.ai.controller.data.PinCommand
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.*
 import java.util.Locale
 
 class SpeechManager(
@@ -29,6 +30,9 @@ class SpeechManager(
     private var speechRecognizer: SpeechRecognizer? = null
     private val mainHandler = Handler(Looper.getMainLooper())
     private val alarmScheduler = AlarmScheduler(context)
+    private val speechScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var activeBlinkJob: Job? = null
+    private val activeTimerJobs = java.util.concurrent.ConcurrentHashMap<String, Job>()
 
     private val _isListening = MutableStateFlow(false)
     val isListening: StateFlow<Boolean> = _isListening.asStateFlow()
@@ -365,9 +369,161 @@ class SpeechManager(
         return null
     }
 
+    private fun parseNumberWord(str: String): Long? {
+        val clean = str.trim().lowercase(Locale.getDefault())
+        clean.toLongOrNull()?.let { return it }
+        val map = mapOf(
+            "a" to 1L, "an" to 1L, "one" to 1L, "two" to 2L, "three" to 3L, "four" to 4L, "five" to 5L,
+            "six" to 6L, "seven" to 7L, "eight" to 8L, "nine" to 9L, "ten" to 10L,
+            "eleven" to 11L, "twelve" to 12L, "fifteen" to 15L, "twenty" to 20L, "thirty" to 30L,
+            "forty" to 40L, "fifty" to 50L, "sixty" to 60L, "half" to 30L,
+            "ak" to 1L, "ek" to 1L, "dui" to 2L, "tin" to 3L, "char" to 4L, "paach" to 5L, "chhoy" to 6L,
+            "১" to 1L, "২" to 2L, "৩" to 3L, "৪" to 4L, "৫" to 5L, "৬" to 6L
+        )
+        return map[clean]
+    }
+
+    private fun parseDuration(durationStr: String, unitStr: String): Pair<Long, String>? {
+        val num = parseNumberWord(durationStr) ?: return null
+        val unit = unitStr.lowercase(Locale.getDefault())
+        return when {
+            unit.startsWith("s") || unit.contains("sec") -> Pair(num * 1000L, "$num সেকেন্ড")
+            unit.startsWith("m") || unit.contains("min") -> Pair(num * 60 * 1000L, "$num মিনিট")
+            unit.startsWith("h") || unit.contains("hr") || unit.contains("ghonta") -> Pair(num * 3600 * 1000L, "$num ঘণ্টা")
+            else -> Pair(num * 60 * 1000L, "$num মিনিট")
+        }
+    }
+
+    private fun resolvePinTarget(clean: String, currentPins: List<PinCommand>): PinCommand? {
+        val led1Keywords = listOf("1st led", "first led", "led 1", "led1", "1st light", "1st device", "device 1", "light 1", "led one", "1st", " 1 ")
+        val led2Keywords = listOf("2nd led", "second led", "led 2", "led2", "2nd light", "2nd device", "device 2", "light 2", "led two", "2nd", " 2 ")
+        val led3Keywords = listOf("3rd led", "third led", "led 3", "led3", "3rd light", "3rd device", "device 3", "light 3", "led three", "3rd", " 3 ")
+        val led4Keywords = listOf("4th led", "fourth led", "led 4", "led4", "4th light", "4th device", "device 4", "light 4", "led four", "4th", " 4 ")
+        val led5Keywords = listOf("5th led", "fifth led", "led 5", "led5", "5th light", "5th device", "device 5", "light 5", "led five", "5th", " 5 ")
+        val led6Keywords = listOf("6th led", "sixth led", "led 6", "led6", "6th light", "6th device", "device 6", "light 6", "led six", "6th", " 6 ")
+
+        val num = when {
+            led1Keywords.any { clean.contains(it) } -> 1
+            led2Keywords.any { clean.contains(it) } -> 2
+            led3Keywords.any { clean.contains(it) } -> 3
+            led4Keywords.any { clean.contains(it) } -> 4
+            led5Keywords.any { clean.contains(it) } -> 5
+            led6Keywords.any { clean.contains(it) } -> 6
+            else -> null
+        }
+        if (num != null) {
+            val found = currentPins.find { it.pinNumber == num }
+            if (found != null) return found
+        }
+
+        for (pin in currentPins) {
+            val label = pin.label.lowercase()
+            if (clean.contains(label) || label.contains(clean)) return pin
+        }
+
+        val digitMatch = Regex("\\b([1-6])\\b").find(clean)
+        if (digitMatch != null) {
+            val d = digitMatch.groupValues[1].toInt()
+            val found = currentPins.find { it.pinNumber == d }
+            if (found != null) return found
+        }
+
+        if (clean.contains("light") || clean.contains("led")) {
+            return currentPins.firstOrNull()
+        }
+        return null
+    }
+
     fun processVoiceCommand(input: String, allCandidates: List<String> = emptyList()) {
         val cleanInput = input.lowercase().trim()
         val currentPins = _pinStates.value.toMutableList()
+
+        // ── 0. Blink Feature ──
+        val blinkRegex = Regex("(?i)\\b(?:blink|blinking|jholkao|flash)\\b\\s*(.+?)(?:\\s+(?:for\\s+)?(\\d+|[a-z]+)\\s*(?:times|bar|count|ta)?)?$")
+        val blinkMatch = blinkRegex.find(cleanInput)
+        if (blinkMatch != null) {
+            val targetPart = blinkMatch.groupValues[1].trim()
+            val countPart = blinkMatch.groupValues.getOrNull(2)?.trim()?.ifEmpty { "5" } ?: "5"
+            val count = parseNumberWord(countPart)?.toInt() ?: 5
+            val isAll = targetPart.contains("all") || targetPart.contains("everything") || targetPart.contains("sob") || targetPart.contains("shob")
+            val targetPin = resolvePinTarget(targetPart, currentPins)
+
+            if (isAll || targetPin != null) {
+                val label = if (isAll) "সব ডিভাইস" else targetPin!!.label
+                val msg = "ঠিক আছে বৃষ্টি বস! $label $count বার ব্লিঙ্ক করাচ্ছি!"
+                _lastActionFeedback.value = msg
+                ttsManager.speak(msg, interrupt = true)
+
+                activeBlinkJob?.cancel()
+                activeBlinkJob = speechScope.launch {
+                    val blinkCount = count.coerceIn(1, 30)
+                    for (i in 1..blinkCount) {
+                        if (isAll) bluetoothManager.sendCommand("on") else bluetoothManager.sendChar(targetPin!!.onChar)
+                        delay(400)
+                        if (isAll) bluetoothManager.sendCommand("off") else bluetoothManager.sendChar(targetPin!!.offChar)
+                        if (i < blinkCount) delay(400)
+                    }
+                }
+                return
+            }
+        }
+
+        // ── 0. Timer Feature ──
+        val timerPatternA = Regex("(?i)(?:set\\s+(?:a|the)?\\s*timer|timer)\\s+(?:for|of)?\\s*(\\d+|[a-z]+)\\s*(seconds?|secs?|minutes?|mins?|minit|hours?|hrs?|ghonta|sec|s|m|h)\\s*(?:for|to|on|of|in)?\\s+(.+)")
+        val timerPatternB = Regex("(?i)\\b(turn\\s+on|switch\\s+on|turn\\s+off|switch\\s+off|jalao|chalu\\s+koro|on\\s+koro|on|nevao|bondho\\s+koro|off\\s+koro|off)\\s+(?:the\\s+)?(.+?)\\s+(?:for|after|in|during)\\s+(\\d+|[a-z]+)\\s*(seconds?|secs?|minutes?|mins?|minit|hours?|hrs?|ghonta|sec|s|m|h)")
+        val timerMatch = timerPatternA.find(cleanInput) ?: timerPatternB.find(cleanInput)
+
+        if (timerMatch != null) {
+            val isPatternA = timerPatternA.matches(cleanInput)
+            val numStr = if (isPatternA) timerMatch.groupValues[1] else timerMatch.groupValues[3]
+            val unitStr = if (isPatternA) timerMatch.groupValues[2] else timerMatch.groupValues[4]
+            val targetStr = if (isPatternA) timerMatch.groupValues[3] else timerMatch.groupValues[2]
+            val actionStr = if (isPatternA) "" else timerMatch.groupValues[1]
+
+            val duration = parseDuration(numStr, unitStr)
+            val isAll = targetStr.contains("all") || targetStr.contains("everything") || targetStr.contains("sob")
+            val targetPin = resolvePinTarget(targetStr, currentPins)
+
+            if (duration != null && (isAll || targetPin != null)) {
+                val isOn = !targetStr.contains("off") && !targetStr.contains("bondho") && !actionStr.contains("off") && !actionStr.contains("bondho")
+                val label = if (isAll) "সব ডিভাইস" else targetPin!!.label
+                val initialChar = if (isAll) (if (isOn) "on" else "off") else (if (isOn) targetPin!!.onChar.toString() else targetPin!!.offChar.toString())
+                val finalChar = if (isAll) (if (isOn) "off" else "on") else (if (isOn) targetPin!!.offChar.toString() else targetPin!!.onChar.toString())
+
+                val confirmMsg = if (isOn) {
+                    "ঠিক আছে বৃষ্টি! $label ${duration.second}-এর জন্য অন করে দিলাম। সময় শেষ হলে নিজে থেকেই অফ হয়ে যাবে।"
+                } else {
+                    "ঠিক আছে বৃষ্টি! $label ${duration.second}-এর জন্য অফ করে দিলাম।"
+                }
+
+                _lastActionFeedback.value = confirmMsg
+                ttsManager.speak(confirmMsg, interrupt = true)
+
+                val key = if (isAll) "all" else targetPin!!.pinNumber.toString()
+                activeTimerJobs[key]?.cancel()
+
+                if (isAll) bluetoothManager.sendCommand(initialChar) else bluetoothManager.sendChar(initialChar[0])
+
+                val job = speechScope.launch {
+                    delay(duration.first)
+                    if (isAll) bluetoothManager.sendCommand(finalChar) else bluetoothManager.sendChar(finalChar[0])
+                    activeTimerJobs.remove(key)
+
+                    val finishMsg = if (isOn) {
+                        "$label-এর ${duration.second} সময় শেষ হয়েছে, তাই অফ করে দিলাম বৃষ্টি।"
+                    } else {
+                        "$label-এর ${duration.second} সময় শেষ হয়েছে, তাই আবার অন করে দিলাম বৃষ্টি।"
+                    }
+
+                    mainHandler.post {
+                        _lastActionFeedback.value = finishMsg
+                        ttsManager.speak(finishMsg, interrupt = true)
+                    }
+                }
+                activeTimerJobs[key] = job
+                return
+            }
+        }
 
         // 1. Check for Macro Commands
         if (cleanInput.contains("all on") || cleanInput.contains("turn on everything") || cleanInput == "on" || cleanInput.contains("sob on") || cleanInput.contains("shob on")) {
@@ -631,6 +787,10 @@ class SpeechManager(
     }
 
     fun cleanup() {
+        speechScope.cancel()
+        activeBlinkJob?.cancel()
+        activeTimerJobs.values.forEach { it.cancel() }
+        activeTimerJobs.clear()
         mainHandler.post {
             try {
                 speechRecognizer?.destroy()

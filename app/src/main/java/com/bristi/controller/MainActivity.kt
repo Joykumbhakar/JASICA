@@ -132,7 +132,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.material.icons.outlined.Info
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.io.InputStream
@@ -241,6 +240,10 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     }
     private val MAX_HISTORY_PAIRS   = 6
 
+    // ── Timer & Blink Control Memory ─────────────────────────────────────────
+    private var activeBlinkJob: Job? = null
+    private val activeTimerJobs = java.util.concurrent.ConcurrentHashMap<String, Job>()
+
     // ── System Prompt ─────────────────────────────────────────────────────────
     private fun getSystemInstruction(): String {
         val timeNow = SimpleDateFormat("h:mm a, EEEE, MMMM d, yyyy", Locale.getDefault()).format(Date())
@@ -262,18 +265,25 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             - "Turn on all"                      -> [CMD:on]
             - "Turn off all"                     -> [CMD:off]
             - "Mood lighting / Turn on Mood"     -> [CMD:mood]
-            - "Turn on PC / Computer"            -> [CMD:a]
-            - "Turn off PC / Computer"           -> [CMD:A]
-            - "Turn on RGB / Night light"        -> [CMD:b]
-            - "Turn off RGB / Night light"       -> [CMD:B]
-            - "Turn on White LED / Room light"   -> [CMD:c]
-            - "Turn off White LED / Room light"  -> [CMD:C]
-            - "Turn on Plug"                     -> [CMD:d]
-            - "Turn off Plug"                    -> [CMD:D]
-            - "Turn on Fan"                      -> [CMD:e]
-            - "Turn off Fan"                     -> [CMD:E]
-            - "Turn on AC"                       -> [CMD:f]
-            - "Turn off AC"                      -> [CMD:F]
+            - "Turn on 1st LED / LED 1"          -> [CMD:a]
+            - "Turn off 1st LED / LED 1"         -> [CMD:A]
+            - "Turn on 2nd LED / LED 2"          -> [CMD:b]
+            - "Turn off 2nd LED / LED 2"         -> [CMD:B]
+            - "Turn on 3rd LED / LED 3"          -> [CMD:c]
+            - "Turn off 3rd LED / LED 3"         -> [CMD:C]
+            - "Turn on 4th LED / LED 4"          -> [CMD:d]
+            - "Turn off 4th LED / LED 4"         -> [CMD:D]
+            - "Turn on 5th LED / LED 5"          -> [CMD:e]
+            - "Turn off 5th LED / LED 5"         -> [CMD:E]
+            - "Turn on 6th LED / LED 6"          -> [CMD:f]
+            - "Turn off 6th LED / LED 6"         -> [CMD:F]
+            - "Turn on LED 1 for 10 seconds"     -> [CMD:TIMER:a:A:10s:1st LED]
+            - "Turn on LED 5 for 1 minute"       -> [CMD:TIMER:e:E:1m:5th LED]
+            - "Set timer for 30 minutes for LED 1" -> [CMD:TIMER:a:A:30m:1st LED]
+            - "Turn off LED 2 for 5 minutes"     -> [CMD:TIMER:B:b:5m:2nd LED]
+            - "Blink LED 1 for 5 times"          -> [CMD:BLINK:a:A:5:1st LED]
+            - "Blink LED 3 3 times"              -> [CMD:BLINK:c:C:3:3rd LED]
+            - "Blink all 4 times"                -> [CMD:BLINK:on:off:4:সব ডিভাইস]
             - "Play my Fav song"                 -> [CMD:SYS_YT_FAV]
             - "Open Instagram"                   -> [CMD:SYS_OPEN_IG]
             - "Open Facebook"                    -> [CMD:SYS_OPEN_FB]
@@ -499,7 +509,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         commands.add(LocalCommand(listOf("drink","water"), command = "SYS_WATER", confirmationText = "একদম বৃষ্টি! ৩০ মিনিট পর আবার জল খাওয়ার রিমাইন্ডার দিয়ে দেব, সুস্থ থাকা দরকার!"))
 
         // ── Dynamic device commands ───────────────────────────────────────────
-        DEFAULT_DEVICES.forEach { dev ->
+        DEFAULT_DEVICES.forEachIndexed { index, dev ->
             val devName = sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName
             val onCmd  = sharedPrefs.getString("DEV_${dev.id}_ON_CMD",  dev.defaultOnCmd)  ?: dev.defaultOnCmd
             val offCmd = sharedPrefs.getString("DEV_${dev.id}_OFF_CMD", dev.defaultOffCmd) ?: dev.defaultOffCmd
@@ -512,10 +522,10 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             val isLedOrLight = devName.contains("LED", true) || devName.contains("Light", true) || devName.contains("White", true)
             val onConfirm = if (isLedOrLight) {
                 listOf(
-                    "হ্যাঁ বৃষ্টি, আমি লাইট অন করে দিচ্ছি। তোমার আর কিছু অন করতে লাগবে?",
-                    "ঠিক আছে বস, লাইট জ্বালিয়ে দিলাম।",
-                    "লাইট অন করা হয়েছে বৃষ্টি বস!",
-                    "অবশ্যই বৃষ্টি, লাইট অন করে দিচ্ছি!"
+                    "হ্যাঁ বৃষ্টি, আমি $devName অন করে দিচ্ছি।",
+                    "ঠিক আছে বস, $devName জ্বালিয়ে দিলাম।",
+                    "$devName অন করা হয়েছে বৃষ্টি বস!",
+                    "অবশ্যই বৃষ্টি, $devName অন করে দিচ্ছি!"
                 ).random()
             } else {
                 listOf(
@@ -534,6 +544,23 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
             commands.add(LocalCommand(keywords = onKeywords,  command = pinOn,  confirmationText = onConfirm))
             commands.add(LocalCommand(keywords = offKeywords, command = pinOff, confirmationText = offConfirm))
+
+            // Extra alias variants for LED numbers (e.g. "turn on led 1", "turn on 1st led", "turn on led one")
+            val numStr = (index + 1).toString()
+            val ordinalStr = when (index + 1) {
+                1 -> "1st"; 2 -> "2nd"; 3 -> "3rd"; 4 -> "4th"; 5 -> "5th"; 6 -> "6th"; else -> "${index + 1}th"
+            }
+            val wordNum = when (index + 1) {
+                1 -> "one"; 2 -> "two"; 3 -> "three"; 4 -> "four"; 5 -> "five"; 6 -> "six"; else -> ""
+            }
+            commands.add(LocalCommand(keywords = listOf("on", "led", numStr), command = pinOn, confirmationText = onConfirm))
+            commands.add(LocalCommand(keywords = listOf("off", "led", numStr), command = pinOff, confirmationText = offConfirm))
+            commands.add(LocalCommand(keywords = listOf("on", ordinalStr, "led"), command = pinOn, confirmationText = onConfirm))
+            commands.add(LocalCommand(keywords = listOf("off", ordinalStr, "led"), command = pinOff, confirmationText = offConfirm))
+            if (wordNum.isNotEmpty()) {
+                commands.add(LocalCommand(keywords = listOf("on", "led", wordNum), command = pinOn, confirmationText = onConfirm))
+                commands.add(LocalCommand(keywords = listOf("off", "led", wordNum), command = pinOff, confirmationText = offConfirm))
+            }
         }
 
         // ── Fuzzy token expansion ─────────────────────────────────────────────
@@ -555,6 +582,263 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
         // Return highest-scoring command; break ties by specificity (more keywords = more specific)
         return scored.maxByOrNull { it.score * 100 + it.cmd.keywords.size }?.cmd
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Special Commands: Timer & Blink Logic (OFFLINE + DYNAMIC)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    data class ResolvedDevice(
+        val id: String,
+        val name: String,
+        val pinOn: String,
+        val pinOff: String
+    )
+
+    sealed class SpecialCommandResult {
+        data class Timer(
+            val device: ResolvedDevice,
+            val isTurningOn: Boolean,
+            val durationMs: Long,
+            val durationLabel: String
+        ) : SpecialCommandResult()
+
+        data class Blink(
+            val device: ResolvedDevice,
+            val count: Int
+        ) : SpecialCommandResult()
+    }
+
+    private fun getResolvedDeviceForConfig(dev: DeviceConfig): ResolvedDevice {
+        val devName = sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName
+        val pinOn  = sharedPrefs.getString("DEV_${dev.id}_PIN_ON",  dev.defaultPinOn)  ?: dev.defaultPinOn
+        val pinOff = sharedPrefs.getString("DEV_${dev.id}_PIN_OFF", dev.defaultPinOff) ?: dev.defaultPinOff
+        return ResolvedDevice(dev.id, devName, pinOn, pinOff)
+    }
+
+    private fun resolveTargetDevice(target: String): ResolvedDevice? {
+        val clean = target.lowercase(Locale.getDefault()).trim()
+
+        // 1. All devices
+        if (clean.contains("all") || clean.contains("everything") || clean.contains("sob") || clean.contains("shob") || clean.contains("সব")) {
+            return ResolvedDevice("all", "সব ডিভাইস", "on", "off")
+        }
+
+        // 2. Direct LED numbers
+        val led1Keywords = listOf("1st led", "first led", "led 1", "led1", "1st light", "1st device", "device 1", "light 1", "led one", "1st", " 1 ")
+        val led2Keywords = listOf("2nd led", "second led", "led 2", "led2", "2nd light", "2nd device", "device 2", "light 2", "led two", "2nd", " 2 ")
+        val led3Keywords = listOf("3rd led", "third led", "led 3", "led3", "3rd light", "3rd device", "device 3", "light 3", "led three", "3rd", " 3 ")
+        val led4Keywords = listOf("4th led", "fourth led", "led 4", "led4", "4th light", "4th device", "device 4", "light 4", "led four", "4th", " 4 ")
+        val led5Keywords = listOf("5th led", "fifth led", "led 5", "led5", "5th light", "5th device", "device 5", "light 5", "led five", "5th", " 5 ")
+        val led6Keywords = listOf("6th led", "sixth led", "led 6", "led6", "6th light", "6th device", "device 6", "light 6", "led six", "6th", " 6 ")
+
+        if (led1Keywords.any { clean.contains(it) }) return getResolvedDeviceForConfig(DEFAULT_DEVICES[0])
+        if (led2Keywords.any { clean.contains(it) }) return getResolvedDeviceForConfig(DEFAULT_DEVICES[1])
+        if (led3Keywords.any { clean.contains(it) }) return getResolvedDeviceForConfig(DEFAULT_DEVICES[2])
+        if (led4Keywords.any { clean.contains(it) }) return getResolvedDeviceForConfig(DEFAULT_DEVICES[3])
+        if (led5Keywords.any { clean.contains(it) }) return getResolvedDeviceForConfig(DEFAULT_DEVICES[4])
+        if (led6Keywords.any { clean.contains(it) }) return getResolvedDeviceForConfig(DEFAULT_DEVICES[5])
+
+        // 3. Match against user configured names
+        DEFAULT_DEVICES.forEach { dev ->
+            val devName = sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName
+            val nameClean = devName.lowercase(Locale.getDefault())
+            if (clean.contains(nameClean) || nameClean.contains(clean)) {
+                return getResolvedDeviceForConfig(dev)
+            }
+        }
+
+        // 4. Fallback digits (1 to 6)
+        val digitMatch = Regex("\\b([1-6])\\b").find(clean)
+        if (digitMatch != null) {
+            val idx = digitMatch.groupValues[1].toInt() - 1
+            if (idx in DEFAULT_DEVICES.indices) {
+                return getResolvedDeviceForConfig(DEFAULT_DEVICES[idx])
+            }
+        }
+
+        // 5. General "light" or "led" default to 1st LED
+        if (clean.contains("light") || clean.contains("led") || clean.contains("alo")) {
+            return getResolvedDeviceForConfig(DEFAULT_DEVICES[0])
+        }
+
+        return null
+    }
+
+    private fun parseNumberWord(str: String): Long? {
+        val clean = str.trim().lowercase(Locale.getDefault())
+        clean.toLongOrNull()?.let { return it }
+        val map = mapOf(
+            "a" to 1L, "an" to 1L, "one" to 1L, "two" to 2L, "three" to 3L, "four" to 4L, "five" to 5L,
+            "six" to 6L, "seven" to 7L, "eight" to 8L, "nine" to 9L, "ten" to 10L,
+            "eleven" to 11L, "twelve" to 12L, "fifteen" to 15L, "twenty" to 20L, "thirty" to 30L,
+            "forty" to 40L, "fifty" to 50L, "sixty" to 60L, "half" to 30L,
+            "ak" to 1L, "ek" to 1L, "dui" to 2L, "tin" to 3L, "char" to 4L, "paach" to 5L, "chhoy" to 6L,
+            "১" to 1L, "২" to 2L, "৩" to 3L, "৪" to 4L, "৫" to 5L, "৬" to 6L
+        )
+        return map[clean]
+    }
+
+    private fun parseDuration(durationStr: String, unitStr: String): Pair<Long, String>? {
+        val num = parseNumberWord(durationStr) ?: return null
+        val unit = unitStr.lowercase(Locale.getDefault())
+        return when {
+            unit.startsWith("s") || unit.contains("sec") -> Pair(num * 1000L, "$num সেকেন্ড")
+            unit.startsWith("m") || unit.contains("min") -> Pair(num * 60 * 1000L, "$num মিনিট")
+            unit.startsWith("h") || unit.contains("hr") || unit.contains("ghonta") -> Pair(num * 3600 * 1000L, "$num ঘণ্টা")
+            else -> Pair(num * 60 * 1000L, "$num মিনিট")
+        }
+    }
+
+    private fun matchTimerOrBlinkCommand(spokenText: String): SpecialCommandResult? {
+        val raw = spokenText.lowercase(Locale.getDefault()).trim()
+
+        // ── 1. Blink Commands ──
+        // "blink led 1 for 5 times", "blink 1st led 3 times", "blink light 5 times", "blink all 4 times", "blink led 2"
+        val blinkRegex = Regex("(?i)\\b(?:blink|blinking|jholkao|flash)\\b\\s*(.+?)(?:\\s+(?:for\\s+)?(\\d+|[a-z]+)\\s*(?:times|bar|count|ta)?)?$")
+        val blinkMatch = blinkRegex.find(raw)
+        if (blinkMatch != null) {
+            val targetPart = blinkMatch.groupValues[1].trim()
+            val countPart = blinkMatch.groupValues.getOrNull(2)?.trim()?.ifEmpty { "5" } ?: "5"
+            val count = parseNumberWord(countPart)?.toInt() ?: 5
+            val device = resolveTargetDevice(targetPart)
+            if (device != null) {
+                return SpecialCommandResult.Blink(device, count.coerceIn(1, 30))
+            }
+        }
+
+        // Reverse blink pattern: "led 1 ke 5 bar blink koro"
+        val revBlinkRegex = Regex("(?i)(.+?)\\s+(?:ke\\s+)?(\\d+|[a-z]+)\\s*(?:bar|times|ta)?\\s*(?:blink|jholkao|flash)")
+        val revBlinkMatch = revBlinkRegex.find(raw)
+        if (revBlinkMatch != null) {
+            val targetPart = revBlinkMatch.groupValues[1].trim()
+            val countPart = revBlinkMatch.groupValues[2].trim()
+            val count = parseNumberWord(countPart)?.toInt() ?: 5
+            val device = resolveTargetDevice(targetPart)
+            if (device != null) {
+                return SpecialCommandResult.Blink(device, count.coerceIn(1, 30))
+            }
+        }
+
+        // ── 2. Timer Commands ──
+        // Pattern A: "set (a/the) timer (for/of) 30 minutes for LED 1" or "timer for 30 minutes for LED 1"
+        val timerPatternA = Regex("(?i)(?:set\\s+(?:a|the)?\\s*timer|timer)\\s+(?:for|of)?\\s*(\\d+|[a-z]+)\\s*(seconds?|secs?|minutes?|mins?|minit|hours?|hrs?|ghonta|sec|s|m|h)\\s*(?:for|to|on|of|in)?\\s+(.+)")
+        val matchA = timerPatternA.find(raw)
+        if (matchA != null) {
+            val numStr = matchA.groupValues[1]
+            val unitStr = matchA.groupValues[2]
+            val targetStr = matchA.groupValues[3]
+            val duration = parseDuration(numStr, unitStr)
+            val device = resolveTargetDevice(targetStr)
+            if (duration != null && device != null) {
+                val isOff = targetStr.contains("off") || targetStr.contains("bondho") || targetStr.contains("nevao")
+                return SpecialCommandResult.Timer(device, isTurningOn = !isOff, duration.first, duration.second)
+            }
+        }
+
+        // Pattern B: "turn on / switch on / jalao LED 5 for 1 minutes" or "turn on the LED 1 for 30 seconds"
+        val timerPatternB = Regex("(?i)\\b(turn\\s+on|switch\\s+on|turn\\s+off|switch\\s+off|jalao|chalu\\s+koro|on\\s+koro|on|nevao|bondho\\s+koro|off\\s+koro|off)\\s+(?:the\\s+)?(.+?)\\s+(?:for|after|in|during)\\s+(\\d+|[a-z]+)\\s*(seconds?|secs?|minutes?|mins?|minit|hours?|hrs?|ghonta|sec|s|m|h)")
+        val matchB = timerPatternB.find(raw)
+        if (matchB != null) {
+            val actionStr = matchB.groupValues[1]
+            val targetStr = matchB.groupValues[2]
+            val numStr = matchB.groupValues[3]
+            val unitStr = matchB.groupValues[4]
+            val duration = parseDuration(numStr, unitStr)
+            val device = resolveTargetDevice(targetStr)
+            if (duration != null && device != null) {
+                val isOn = actionStr.contains("on") || actionStr.contains("jalao") || actionStr.contains("chalu")
+                return SpecialCommandResult.Timer(device, isTurningOn = isOn, duration.first, duration.second)
+            }
+        }
+
+        // Pattern C: "LED 1 30 minutes er jonno turn on koro" / "LED 5 ke 10 sec jalao"
+        val timerPatternC = Regex("(?i)(.+?)\\s+(?:ke\\s+)?(\\d+|[a-z]+)\\s*(seconds?|secs?|minutes?|mins?|minit|hours?|hrs?|ghonta|sec|s|m|h)\\s*(?:er\\s+jonno|jonno)?\\s*(turn\\s+on|on|jalao|chalu|turn\\s+off|off|nevao|bondho)")
+        val matchC = timerPatternC.find(raw)
+        if (matchC != null) {
+            val targetStr = matchC.groupValues[1]
+            val numStr = matchC.groupValues[2]
+            val unitStr = matchC.groupValues[3]
+            val actionStr = matchC.groupValues[4]
+            val duration = parseDuration(numStr, unitStr)
+            val device = resolveTargetDevice(targetStr)
+            if (duration != null && device != null) {
+                val isOn = actionStr.contains("on") || actionStr.contains("jalao") || actionStr.contains("chalu")
+                return SpecialCommandResult.Timer(device, isTurningOn = isOn, duration.first, duration.second)
+            }
+        }
+
+        return null
+    }
+
+    private fun handleTimerExecution(timer: SpecialCommandResult.Timer, spokenText: String) {
+        val dev = timer.device
+        val initialPin = if (timer.isTurningOn) dev.pinOn else dev.pinOff
+        val finalPin = if (timer.isTurningOn) dev.pinOff else dev.pinOn
+
+        val confirmMsg = if (timer.isTurningOn) {
+            "ঠিক আছে বৃষ্টি! ${dev.name} ${timer.durationLabel}-এর জন্য অন করে দিলাম। সময় শেষ হলে নিজে থেকেই অফ হয়ে যাবে।"
+        } else {
+            "ঠিক আছে বৃষ্টি! ${dev.name} ${timer.durationLabel}-এর জন্য অফ করে দিলাম।"
+        }
+
+        sendLogToVercel(spokenText, confirmMsg, true)
+
+        runOnUiThread {
+            aiResponseText.value = confirmMsg
+            appState.value = AppState.SPEAKING
+            speakMultilingual(confirmMsg, "JASICA_LOCAL")
+        }
+
+        // Cancel previous timer for this device if active
+        activeTimerJobs[dev.id]?.cancel()
+
+        // Trigger initial state
+        processCommandAndSync(initialPin)
+
+        val job = lifecycleScope.launch(Dispatchers.IO) {
+            delay(timer.durationMs)
+            processCommandAndSync(finalPin)
+            activeTimerJobs.remove(dev.id)
+
+            val finishMsg = if (timer.isTurningOn) {
+                "${dev.name}-এর ${timer.durationLabel} সময় শেষ হয়েছে, তাই অফ করে দিলাম বৃষ্টি।"
+            } else {
+                "${dev.name}-এর ${timer.durationLabel} সময় শেষ হয়েছে, তাই আবার অন করে দিলাম বৃষ্টি।"
+            }
+
+            withContext(Dispatchers.Main) {
+                addChat(ChatMessage(isUser = false, text = finishMsg, time = getCurrentTimeString()))
+                aiResponseText.value = finishMsg
+                appState.value = AppState.SPEAKING
+                speakMultilingual(finishMsg, "JASICA_TIMER_DONE")
+            }
+        }
+        activeTimerJobs[dev.id] = job
+    }
+
+    private fun handleBlinkExecution(blink: SpecialCommandResult.Blink, spokenText: String) {
+        val dev = blink.device
+        val confirmMsg = "ঠিক আছে বৃষ্টি বস! ${dev.name} ${blink.count} বার ব্লিঙ্ক করাচ্ছি!"
+
+        sendLogToVercel(spokenText, confirmMsg, true)
+
+        runOnUiThread {
+            aiResponseText.value = confirmMsg
+            appState.value = AppState.SPEAKING
+            speakMultilingual(confirmMsg, "JASICA_LOCAL")
+        }
+
+        activeBlinkJob?.cancel()
+        activeBlinkJob = lifecycleScope.launch(Dispatchers.IO) {
+            val blinkCount = blink.count.coerceIn(1, 30)
+            for (i in 1..blinkCount) {
+                processCommandAndSync(dev.pinOn)
+                delay(400)
+                processCommandAndSync(dev.pinOff)
+                if (i < blinkCount) delay(400)
+            }
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -800,6 +1084,9 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     override fun onDestroy() {
         super.onDestroy()
+        activeBlinkJob?.cancel()
+        activeTimerJobs.values.forEach { it.cancel() }
+        activeTimerJobs.clear()
         stopEverything()
         if (::tts.isInitialized) tts.shutdown()
         if (::speechRecognizer.isInitialized) speechRecognizer.destroy()
@@ -1233,9 +1520,9 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                         raw.replace(wakeWordRegex, "").trim().ifEmpty { raw }
                     }.filter { it.isNotEmpty() }
 
-                    // Prefer whichever candidate hits a known local command; else fallback to first
+                    // Prefer whichever candidate hits a known timer/blink or local command; else fallback to first
                     val bestCandidate = candidates.firstOrNull { candidate ->
-                        matchLocalCommand(candidate) != null
+                        matchTimerOrBlinkCommand(candidate) != null || matchLocalCommand(candidate) != null
                     } ?: candidates.first()
 
                     routeVoiceCommand(bestCandidate)
@@ -1391,6 +1678,16 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
         runOnUiThread {
             addChat(ChatMessage(isUser = true, text = spokenText, time = getCurrentTimeString()))
+        }
+
+        // 1. Check for Timer or Blink Special Commands
+        val specialMatch = matchTimerOrBlinkCommand(spokenText)
+        if (specialMatch != null) {
+            when (specialMatch) {
+                is SpecialCommandResult.Timer -> handleTimerExecution(specialMatch, spokenText)
+                is SpecialCommandResult.Blink -> handleBlinkExecution(specialMatch, spokenText)
+            }
+            return
         }
 
         val localMatch = matchLocalCommand(spokenText)
@@ -1782,8 +2079,52 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         var speech = rawReply
 
         if (match != null) {
-            processCommandAndSync(match.groupValues[1])
+            val cmdPayload = match.groupValues[1].trim()
             speech = rawReply.replace(regex, "").trim()
+
+            if (cmdPayload.startsWith("TIMER:")) {
+                // Format: TIMER:pinOn:pinOff:durationStr:devName
+                val parts = cmdPayload.split(":")
+                if (parts.size >= 5) {
+                    val pinOn = parts[1]
+                    val pinOff = parts[2]
+                    val durStr = parts[3].lowercase(Locale.getDefault())
+                    val devName = parts[4]
+                    val durationMs = when {
+                        durStr.endsWith("s") -> (durStr.dropLast(1).toLongOrNull() ?: 10L) * 1000L
+                        durStr.endsWith("m") -> (durStr.dropLast(1).toLongOrNull() ?: 1L) * 60 * 1000L
+                        durStr.endsWith("h") -> (durStr.dropLast(1).toLongOrNull() ?: 1L) * 3600 * 1000L
+                        else -> 60000L
+                    }
+                    activeTimerJobs[devName]?.cancel()
+                    processCommandAndSync(pinOn)
+                    val job = lifecycleScope.launch(Dispatchers.IO) {
+                        delay(durationMs)
+                        processCommandAndSync(pinOff)
+                        activeTimerJobs.remove(devName)
+                    }
+                    activeTimerJobs[devName] = job
+                }
+            } else if (cmdPayload.startsWith("BLINK:")) {
+                // Format: BLINK:pinOn:pinOff:count:devName
+                val parts = cmdPayload.split(":")
+                if (parts.size >= 5) {
+                    val pinOn = parts[1]
+                    val pinOff = parts[2]
+                    val count = parts[3].toIntOrNull() ?: 5
+                    activeBlinkJob?.cancel()
+                    activeBlinkJob = lifecycleScope.launch(Dispatchers.IO) {
+                        for (i in 1..count.coerceIn(1, 30)) {
+                            processCommandAndSync(pinOn)
+                            delay(400)
+                            processCommandAndSync(pinOff)
+                            if (i < count) delay(400)
+                        }
+                    }
+                }
+            } else {
+                processCommandAndSync(cmdPayload)
+            }
         }
 
         runOnUiThread {
@@ -4856,7 +5197,7 @@ fun ArduinoCodeScreen(onDismiss: () -> Unit) {
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(
-                    imageVector = if (copied) Icons.Rounded.Check else androidx.compose.material.icons.outlined.Info,
+                    imageVector = Icons.Rounded.Check,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
                     tint = Color.White
