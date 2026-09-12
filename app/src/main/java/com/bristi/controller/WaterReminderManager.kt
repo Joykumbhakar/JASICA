@@ -11,7 +11,7 @@ object WaterReminderManager {
 
     private const val ALARM_REQUEST_CODE = 1002
 
-    fun scheduleNextAlarm(context: Context) {
+    fun scheduleAlarm(context: Context, intervalMinutes: Int = 30) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         
         val intent = Intent(context, WaterAlarmReceiver::class.java)
@@ -23,8 +23,7 @@ object WaterReminderManager {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         
-        // 30 minutes from now
-        val triggerAtMillis = System.currentTimeMillis() + 30 * 60 * 1000
+        val triggerAtMillis = System.currentTimeMillis() + intervalMinutes * 60 * 1000L
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -35,7 +34,6 @@ object WaterReminderManager {
                         pendingIntent
                     )
                 } else {
-                    // Fallback if exact alarms are not permitted
                     alarmManager.setAndAllowWhileIdle(
                         AlarmManager.RTC_WAKEUP,
                         triggerAtMillis,
@@ -55,10 +53,16 @@ object WaterReminderManager {
                     pendingIntent
                 )
             }
-            Log.d("WaterReminderManager", "Scheduled water alarm in 30 minutes")
+            Log.d("WaterReminderManager", "Scheduled water alarm in $intervalMinutes minutes")
         } catch (e: Exception) {
             Log.e("WaterReminderManager", "Failed to schedule alarm", e)
         }
+    }
+
+    fun scheduleNextAlarm(context: Context) {
+        val prefs = context.getSharedPreferences("JasicaSettings", Context.MODE_PRIVATE)
+        val interval = prefs.getInt("WATER_REMINDER_INTERVAL", 30)
+        scheduleAlarm(context, interval)
     }
 
     fun stopAlarm(context: Context) {

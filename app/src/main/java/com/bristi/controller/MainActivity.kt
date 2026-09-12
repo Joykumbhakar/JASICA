@@ -2916,6 +2916,7 @@ fun JasicaScreen(
         ) {
             ManualControlsScreen(
                 deviceStates = deviceStates,
+                sharedPrefs = sharedPrefs,
                 onDismiss = onDismissManual,
                 onSendCommand = onSendRawCommand
             )
@@ -2991,21 +2992,40 @@ fun JasicaScreen(
 data class ManualDevice(val id: String, val name: String, val cmdOn: String, val cmdOff: String)
 
 @Composable
-fun ManualControlsScreen(deviceStates: Map<String, Boolean>, onDismiss: () -> Unit, onSendCommand: (String) -> Unit) {
-    val devices = listOf(
-        ManualDevice("dev1", "1st LED", "a", "A"),
-        ManualDevice("dev2", "2nd LED", "b", "B"),
-        ManualDevice("dev3", "3rd LED", "c", "C"),
-        ManualDevice("dev4", "4th LED", "d", "D"),
-        ManualDevice("dev5", "5th LED", "e", "E"),
-        ManualDevice("dev6", "6th LED", "f", "F")
-    )
+fun ManualControlsScreen(
+    deviceStates: Map<String, Boolean>,
+    sharedPrefs: SharedPreferences,
+    onDismiss: () -> Unit,
+    onSendCommand: (String) -> Unit
+) {
+    val isDark = sharedPrefs.getBoolean("DARK_MODE", false)
+    val bgColor = if (isDark) Color(0xFF000000) else Color(0xFFF2F2F7)
+    val textPrimary = if (isDark) Color(0xFFFFFFFF) else Color(0xFF000000)
+    val textSecondary = if (isDark) Color.White.copy(alpha = 0.5f) else Color(0xFF8E8E93)
+
+    // Dynamic list of devices with user-configured names and pins
+    val devices = remember(sharedPrefs) {
+        DEFAULT_DEVICES.map { dev ->
+            val name = sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName
+            val onCmd = sharedPrefs.getString("DEV_${dev.id}_ON_CMD", dev.defaultOnCmd) ?: dev.defaultOnCmd
+            val offCmd = sharedPrefs.getString("DEV_${dev.id}_OFF_CMD", dev.defaultOffCmd) ?: dev.defaultOffCmd
+            ManualDevice(dev.id, name, onCmd, offCmd)
+        }
+    }
+
+    // Optimistic state map for 0ms lag
+    val optimisticStates = remember { mutableStateMapOf<String, Boolean>() }
+    LaunchedEffect(deviceStates) {
+        deviceStates.forEach { (k, v) -> optimisticStates[k] = v }
+    }
+
+    val haptic = LocalHapticFeedback.current
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .clickable(enabled = false) {}
-            .background(Color.Black)
+            .background(bgColor)
     ) {
         Column(
             modifier = Modifier
@@ -3019,36 +3039,104 @@ fun ManualControlsScreen(deviceStates: Map<String, Boolean>, onDismiss: () -> Un
             ) {
                 Text(
                     text = "Control Center",
-                    color = Color.White,
+                    color = textPrimary,
                     fontSize = 34.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = InterFontFamily
                 )
                 TextButton(onClick = onDismiss) {
-                    Text("Done", color = Color(0xFF0A84FF), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Done", color = Color(0xFF007AFF), fontSize = 17.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily)
                 }
             }
 
             Text(
-                text = "Tap to toggle hardware manually.",
-                color = Color.White.copy(alpha = 0.5f),
+                text = "Tap to toggle hardware manually with instant response.",
+                color = textSecondary,
                 fontSize = 14.sp,
                 fontFamily = InterFontFamily,
-                modifier = Modifier.padding(bottom = 24.dp)
+                modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                items(devices.chunked(2)) { rowItems ->
+            // Master Routine Action Bar (Optimistic Batch Actions)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // All ON Button
+                Button(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        devices.forEach { dev ->
+                            optimisticStates[dev.id] = true
+                            try {
+                                onSendCommand(dev.cmdOn)
+                            } catch (e: Exception) {
+                                Log.e("ControlCenter", "Failed to send command: ${e.message}")
+                            }
+                        }
+                    },
+                    modifier = Modifier.weight(1f).height(46.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34C759))
+                ) {
+                    LucideZap(tint = Color.White, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("All ON", color = Color.White, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily, fontSize = 15.sp)
+                }
+
+                // All OFF Button
+                Button(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        devices.forEach { dev ->
+                            optimisticStates[dev.id] = false
+                            try {
+                                onSendCommand(dev.cmdOff)
+                            } catch (e: Exception) {
+                                Log.e("ControlCenter", "Failed to send command: ${e.message}")
+                            }
+                        }
+                    },
+                    modifier = Modifier.weight(1f).height(46.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = if (isDark) Color(0xFF2C2C2E) else Color(0xFF8E8E93))
+                ) {
+                    LucideRotateCcw(tint = Color.White, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("All OFF", color = Color.White, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily, fontSize = 15.sp)
+                }
+            }
+
+            // Lazy loaded device cards
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                items(devices.chunked(2), key = { row -> row.joinToString { it.id } }) { rowItems ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         for (device in rowItems) {
+                            val isChecked = optimisticStates[device.id] == true
                             DeviceControlCard(
                                 modifier = Modifier.weight(1f),
                                 device = device,
-                                isChecked = deviceStates[device.id] == true,
-                                onSendCommand = onSendCommand
+                                isChecked = isChecked,
+                                isDark = isDark,
+                                onToggle = {
+                                    val targetState = !isChecked
+                                    optimisticStates[device.id] = targetState
+                                    try {
+                                        onSendCommand(if (targetState) device.cmdOn else device.cmdOff)
+                                    } catch (e: Exception) {
+                                        Log.e("ControlCenter", "Command failed: ${e.message}")
+                                        // rollback on failure
+                                        optimisticStates[device.id] = isChecked
+                                    }
+                                }
                             )
                         }
                         if (rowItems.size == 1) {
@@ -3066,34 +3154,51 @@ fun DeviceControlCard(
     modifier: Modifier = Modifier,
     device: ManualDevice,
     isChecked: Boolean,
-    onSendCommand: (String) -> Unit
+    isDark: Boolean = false,
+    onToggle: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
+    
     val cardScale by animateFloatAsState(
-        targetValue = if (isChecked) 1f else 0.98f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        targetValue = if (isChecked) 1.0f else 0.98f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
         label = "scale"
     )
 
-    val deviceIcon = when (device.id) {
-        "a" -> "💻"
-        "b" -> "🌈"
-        "c" -> "💡"
-        "d" -> "🔌"
-        "e" -> "🌀"
-        "f" -> "❄️"
-        else -> "⚙️"
+    val cardBg = when {
+        isChecked -> Color(0xFF007AFF)
+        isDark -> Color(0xFF1C1C1E)
+        else -> Color(0xFFFFFFFF)
+    }
+
+    val cardBorder = when {
+        isChecked -> Color(0xFF007AFF)
+        isDark -> Color(0xFF2C2C2E)
+        else -> Color(0xFFE5E5EA)
+    }
+
+    val textColor = when {
+        isChecked -> Color.White
+        isDark -> Color.White
+        else -> Color.Black
+    }
+
+    val subTextColor = when {
+        isChecked -> Color.White.copy(alpha = 0.8f)
+        isDark -> Color.White.copy(alpha = 0.5f)
+        else -> Color(0xFF8E8E93)
     }
 
     Box(
         modifier = modifier
             .scale(cardScale)
             .aspectRatio(1f)
-            .clip(RoundedCornerShape(24.dp))
-            .background(if (isChecked) Color.White else Color(0xFF1C1C1E))
+            .clip(RoundedCornerShape(20.dp))
+            .background(cardBg)
+            .border(1.dp, cardBorder, RoundedCornerShape(20.dp))
             .clickable {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onSendCommand(if (!isChecked) device.cmdOn else device.cmdOff)
+                onToggle()
             }
     ) {
         Column(
@@ -3107,31 +3212,47 @@ fun DeviceControlCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(42.dp)
                         .clip(CircleShape)
-                        .background(if (isChecked) Color(0xFF0A84FF) else Color.White.copy(alpha = 0.1f)),
+                        .background(if (isChecked) Color.White.copy(alpha = 0.25f) else (if (isDark) Color.White.copy(alpha = 0.1f) else Color(0xFFF2F2F7))),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = deviceIcon, fontSize = 20.sp)
+                    LucideCpu(
+                        tint = if (isChecked) Color.White else (if (isDark) Color.White else Color(0xFF007AFF)),
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
                 
-                if (isChecked) {
-                    Text("ON", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isChecked) Color.White.copy(alpha = 0.25f) else (if (isDark) Color.White.copy(alpha = 0.08f) else Color(0xFFF2F2F7)))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = if (isChecked) "ON" else "OFF",
+                        color = if (isChecked) Color.White else subTextColor,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = InterFontFamily
+                    )
                 }
             }
 
             Column {
                 Text(
                     text = device.name,
-                    color = if (isChecked) Color.Black else Color.White,
+                    color = textColor,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = InterFontFamily,
                     fontSize = 15.sp,
-                    lineHeight = 18.sp
+                    lineHeight = 18.sp,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
                 Text(
-                    text = if (isChecked) "Running" else "Off",
-                    color = if (isChecked) Color.Black.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.4f),
+                    text = if (isChecked) "Running [${device.cmdOn}]" else "Standby [${device.cmdOff}]",
+                    color = subTextColor,
                     fontFamily = InterFontFamily,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(top = 2.dp)
@@ -3288,6 +3409,11 @@ data class ChatMessage(val isUser: Boolean, val text: String, val time: String)
 @Composable
 fun ChatHistoryScreen(history: List<ChatMessage>, onDismiss: () -> Unit) {
     val listState = rememberLazyListState()
+    val context = LocalContext.current
+    val isDark = context.getSharedPreferences("JasicaSettings", Context.MODE_PRIVATE).getBoolean("DARK_MODE", false)
+    val bgColor = if (isDark) Color(0xFF000000) else Color(0xFFF2F2F7)
+    val titleColor = if (isDark) Color(0xFFFFFFFF) else Color(0xFF000000)
+    val emptyTextColor = if (isDark) Color.White.copy(alpha = 0.5f) else Color(0xFF8E8E93)
 
     LaunchedEffect(history.size) {
         if (history.isNotEmpty()) {
@@ -3298,7 +3424,7 @@ fun ChatHistoryScreen(history: List<ChatMessage>, onDismiss: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(bgColor)
             .clickable(enabled = false) {}
     ) {
         Column(
@@ -3313,13 +3439,13 @@ fun ChatHistoryScreen(history: List<ChatMessage>, onDismiss: () -> Unit) {
             ) {
                 Text(
                     text = "Recents",
-                    color = Color.White,
+                    color = titleColor,
                     fontSize = 34.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = InterFontFamily
                 )
                 TextButton(onClick = onDismiss) {
-                    Text("Done", color = Color(0xFF0A84FF), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Done", color = Color(0xFF007AFF), fontSize = 17.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily)
                 }
             }
 
@@ -3329,7 +3455,7 @@ fun ChatHistoryScreen(history: List<ChatMessage>, onDismiss: () -> Unit) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
                         text = "No recent interactions.",
-                        color = Color.White.copy(alpha = 0.5f),
+                        color = emptyTextColor,
                         fontFamily = InterFontFamily,
                         fontSize = 14.sp
                     )
@@ -3338,11 +3464,11 @@ fun ChatHistoryScreen(history: List<ChatMessage>, onDismiss: () -> Unit) {
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
                     items(history) { message ->
-                        ChatBubble(message)
+                        ChatBubble(message, isDark = isDark)
                     }
                 }
             }
@@ -3351,11 +3477,13 @@ fun ChatHistoryScreen(history: List<ChatMessage>, onDismiss: () -> Unit) {
 }
 
 @Composable
-fun ChatBubble(message: ChatMessage) {
+fun ChatBubble(message: ChatMessage, isDark: Boolean = false) {
     val isUser = message.isUser
     val alignment = if (isUser) Alignment.End else Alignment.Start
-    val bubbleColor = if (isUser) Color(0xFF0A84FF) else Color(0xFF2C2C2E)
-    val textColor = Color.White
+    val bubbleColor = if (isUser) Color(0xFF007AFF) else (if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF))
+    val bubbleBorder = if (isUser) Color(0xFF007AFF) else (if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
+    val textColor = if (isUser) Color.White else (if (isDark) Color.White else Color.Black)
+    val timeColor = if (isDark) Color.White.copy(alpha = 0.4f) else Color(0xFF8E8E93)
 
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -3365,12 +3493,18 @@ fun ChatBubble(message: ChatMessage) {
             modifier = Modifier
                 .widthIn(max = 280.dp)
                 .clip(RoundedCornerShape(
-                    topStart = 20.dp,
-                    topEnd = 20.dp,
-                    bottomStart = if (isUser) 20.dp else 4.dp,
-                    bottomEnd = if (isUser) 4.dp else 20.dp
+                    topStart = 18.dp,
+                    topEnd = 18.dp,
+                    bottomStart = if (isUser) 18.dp else 4.dp,
+                    bottomEnd = if (isUser) 4.dp else 18.dp
                 ))
                 .background(bubbleColor)
+                .border(1.dp, bubbleBorder, RoundedCornerShape(
+                    topStart = 18.dp,
+                    topEnd = 18.dp,
+                    bottomStart = if (isUser) 18.dp else 4.dp,
+                    bottomEnd = if (isUser) 4.dp else 18.dp
+                ))
                 .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
             MessageFormattedText(message.text, textColor)
@@ -3378,7 +3512,7 @@ fun ChatBubble(message: ChatMessage) {
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = message.time,
-            color = Color.White.copy(alpha = 0.3f),
+            color = timeColor,
             fontSize = 10.sp,
             fontFamily = InterFontFamily,
             modifier = Modifier.padding(horizontal = 4.dp)
@@ -4110,17 +4244,155 @@ fun LucideTrash(modifier: Modifier = Modifier.size(16.dp), tint: Color = Color.W
 //  Apple Design System Group & Rows with Lucide Icons
 // ─────────────────────────────────────────────────────────────────────────────
 
+fun restartApp(context: Context) {
+    try {
+        val packageManager = context.packageManager
+        val intent = packageManager.getLaunchIntentForPackage(context.packageName)
+        val componentName = intent?.component
+        val mainIntent = Intent.makeRestartActivityTask(componentName)
+        context.startActivity(mainIntent)
+        Runtime.getRuntime().exit(0)
+    } catch (e: Exception) {
+        (context as? Activity)?.recreate()
+    }
+}
+
+@Composable
+fun AppleRestartDialog(
+    onDismiss: () -> Unit,
+    onRestart: () -> Unit
+) {
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.45f))
+                .clickable(
+                    interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                    indication = null
+                ) { onDismiss() },
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier
+                    .width(300.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Color(0xFFFFFFFF))
+                    .border(0.5.dp, Color(0xFFE5E5EA), RoundedCornerShape(18.dp))
+                    .clickable(
+                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                        indication = null
+                    ) {},
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(Modifier.height(20.dp))
+                
+                // Icon Header
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF007AFF).copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    LucideRotateCcw(tint = Color(0xFF007AFF), modifier = Modifier.size(22.dp))
+                }
+                
+                Spacer(Modifier.height(12.dp))
+
+                Text(
+                    text = "Settings Saved",
+                    color = Color.Black,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = InterFontFamily,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+                
+                Spacer(Modifier.height(6.dp))
+
+                Text(
+                    text = "Your new settings have been saved. An app restart is recommended to apply all configurations and initialize services.",
+                    color = Color(0xFF3C3C43).copy(alpha = 0.75f),
+                    fontSize = 13.sp,
+                    fontFamily = InterFontFamily,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    lineHeight = 17.sp,
+                    modifier = Modifier.padding(horizontal = 18.dp)
+                )
+
+                Spacer(Modifier.height(18.dp))
+
+                androidx.compose.material3.HorizontalDivider(color = Color(0xFFE5E5EA), thickness = 0.6.dp)
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clickable { onDismiss() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Later",
+                            color = Color(0xFF8E8E93),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = InterFontFamily
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .width(0.6.dp)
+                            .fillMaxHeight()
+                            .background(Color(0xFFE5E5EA))
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clickable { onRestart() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Restart Now",
+                            color = Color(0xFF007AFF),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = InterFontFamily
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun AppleSettingsGroup(
     title: String? = null,
     footer: String? = null,
+    isDark: Boolean = false,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val cardBg = if (isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF)
+    val cardBorder = if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)
+    val headerColor = if (isDark) Color.White.copy(alpha = 0.5f) else Color(0xFF8E8E93)
+
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
         if (title != null) {
             Text(
                 title.uppercase(java.util.Locale.ROOT),
-                color = Color.White.copy(alpha = 0.5f),
+                color = headerColor,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
                 fontFamily = InterFontFamily,
@@ -4131,14 +4403,15 @@ fun AppleSettingsGroup(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF1C1C1E))
+                .background(cardBg)
+                .border(1.dp, cardBorder, RoundedCornerShape(16.dp))
         ) {
             content()
         }
         if (footer != null) {
             Text(
                 footer,
-                color = Color.White.copy(alpha = 0.5f),
+                color = headerColor,
                 fontSize = 13.sp,
                 fontFamily = InterFontFamily,
                 modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)
@@ -4154,9 +4427,14 @@ fun AppleSettingsRow(
     icon: (@Composable () -> Unit)? = null,
     iconBgColor: Color = Color.Transparent,
     showDivider: Boolean = true,
+    isDark: Boolean = false,
     onClick: (() -> Unit)? = null,
     control: (@Composable () -> Unit)? = null
 ) {
+    val titleColor = if (isDark) Color.White else Color.Black
+    val subColor = if (isDark) Color.White.copy(alpha = 0.5f) else Color(0xFF8E8E93)
+    val dividerColor = if (isDark) Color(0xFF38383A) else Color(0xFFE5E5EA)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -4174,10 +4452,10 @@ fun AppleSettingsRow(
         Column(modifier = Modifier.weight(1f).padding(vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(end = 16.dp)) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium, fontFamily = InterFontFamily)
+                    Text(title, color = titleColor, fontSize = 16.sp, fontWeight = FontWeight.Medium, fontFamily = InterFontFamily)
                     if (subtitle != null) {
                         Spacer(Modifier.height(2.dp))
-                        Text(subtitle, color = Color.White.copy(alpha = 0.5f), fontSize = 13.sp, fontFamily = InterFontFamily)
+                        Text(subtitle, color = subColor, fontSize = 13.sp, fontFamily = InterFontFamily)
                     }
                 }
                 if (control != null) {
@@ -4186,15 +4464,11 @@ fun AppleSettingsRow(
                 }
             }
             if (showDivider) {
-                androidx.compose.material3.Divider(modifier = Modifier.padding(top = 12.dp), color = Color(0xFF38383A), thickness = 0.5.dp)
+                androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(top = 12.dp), color = dividerColor, thickness = 0.5.dp)
             }
         }
     }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  Full Settings Screen
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 fun SettingsScreen(
@@ -4208,6 +4482,7 @@ fun SettingsScreen(
     onDismiss: () -> Unit,
     onSave: (String, String, Boolean) -> Unit
 ) {
+    var darkModeInput by remember { mutableStateOf(sharedPrefs.getBoolean("DARK_MODE", false)) }
     var apiKeyInput by remember { mutableStateOf(currentApiKey) }
     var selectedModel by remember { mutableStateOf(currentModel) }
     var wakeWordInput by remember { mutableStateOf(isWakeWordMode) }
@@ -4229,11 +4504,19 @@ fun SettingsScreen(
     var passwordError by remember { mutableStateOf(false) }
 
     var showResetConfirmDialog by remember { mutableStateOf(false) }
+    var showRestartDialog by remember { mutableStateOf(false) }
+
+    val bgColor = if (darkModeInput) Color(0xFF000000) else Color(0xFFF2F2F7)
+    val textPrimary = if (darkModeInput) Color(0xFFFFFFFF) else Color(0xFF000000)
+    val textSecondary = if (darkModeInput) Color.White.copy(alpha = 0.5f) else Color(0xFF8E8E93)
+    val cardBg = if (darkModeInput) Color(0xFF1C1C1E) else Color(0xFFFFFFFF)
+    val cardBorder = if (darkModeInput) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)
+    val fieldBg = if (darkModeInput) Color(0xFF2C2C2E) else Color(0xFFF2F2F7)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(bgColor)
             .clickable(enabled = false) {}
     ) {
         Column(
@@ -4249,421 +4532,491 @@ fun SettingsScreen(
             ) {
                 Text(
                     "Settings",
-                    color = Color.White,
+                    color = textPrimary,
                     fontSize = 34.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = InterFontFamily
                 )
-                TextButton(onClick = { onSave(apiKeyInput, selectedModel, wakeWordInput) }) {
-                    Text("Done", color = Color(0xFF0A84FF), fontSize = 17.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily)
+                TextButton(onClick = { 
+                    // Save and show restart prompt
+                    sharedPrefs.edit()
+                        .putBoolean("DARK_MODE", darkModeInput)
+                        .putBoolean("HISTORY_LOGGING", historyLoggingInput)
+                        .putBoolean("WATER_REMINDER", waterReminderInput)
+                        .putInt("WATER_REMINDER_INTERVAL", waterInterval)
+                        .putBoolean("ONLINE_MODE_ENABLED", onlineModeInput)
+                        .putBoolean("USE_ADMIN_PANEL_KEY", adminKeyInput)
+                        .putString("GEMINI_API_KEY", geminiKeyInput.trim())
+                        .apply()
+                    onSave(apiKeyInput, selectedModel, wakeWordInput)
+                    showRestartDialog = true
+                }) {
+                    Text("Done", color = Color(0xFF007AFF), fontSize = 17.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily)
                 }
             }
             
-            // Unified Scrolling Content
-            Column(
+            // Unified Scrolling Content (Lazy Column for smoothness)
+            LazyColumn(
                 modifier = Modifier
                     .weight(1f)
-                    .verticalScroll(rememberScrollState()),
+                    .fillMaxWidth(),
             ) {
                 // Core System Group
-                AppleSettingsGroup(title = "Core System") {
-                    AppleSettingsRow(
-                        title = "Hands-Free Wake Word",
-                        subtitle = "Say 'Hey Jasica' to activate",
-                        icon = { LucideMic(tint = Color.White) },
-                        iconBgColor = Color(0xFF007AFF),
-                        showDivider = true,
-                        control = {
-                            Switch(
-                                checked = wakeWordInput,
-                                onCheckedChange = { wakeWordInput = it },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
-                            )
-                        }
-                    )
-                    
-                    AppleSettingsRow(
-                        title = "Save History",
-                        subtitle = "Log conversations locally",
-                        icon = { LucideClock(tint = Color.White) },
-                        iconBgColor = Color(0xFF5856D6),
-                        showDivider = true,
-                        control = {
-                            Switch(
-                                checked = historyLoggingInput,
-                                onCheckedChange = { 
-                                    historyLoggingInput = it
-                                    sharedPrefs.edit().putBoolean("HISTORY_LOGGING", it).apply()
-                                },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
-                            )
-                        }
-                    )
-                    
-                    AppleSettingsRow(
-                        title = "Water Reminder",
-                        subtitle = "Notify every ${waterInterval} minutes",
-                        icon = { LucideDroplet(tint = Color.White) },
-                        iconBgColor = Color(0xFF5AC8FA),
-                        showDivider = waterReminderInput,
-                        onClick = {
-                            if (waterReminderInput) showPasswordDialog = true
-                            else {
-                                waterReminderInput = true
-                                sharedPrefs.edit().putBoolean("WATER_REMINDER", true).apply()
-                                WaterReminderManager.scheduleNextAlarm(context)
+                item {
+                    AppleSettingsGroup(title = "Appearance & Core System", isDark = darkModeInput) {
+                        AppleSettingsRow(
+                            title = "Dark Mode",
+                            subtitle = "Switch between Apple Light and Dark theme",
+                            icon = { LucideSliders(tint = Color.White) },
+                            iconBgColor = Color(0xFF5856D6),
+                            showDivider = true,
+                            isDark = darkModeInput,
+                            control = {
+                                Switch(
+                                    checked = darkModeInput,
+                                    onCheckedChange = { 
+                                        darkModeInput = it
+                                        sharedPrefs.edit().putBoolean("DARK_MODE", it).apply()
+                                    },
+                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
+                                )
                             }
-                        },
-                        control = {
-                            Switch(
-                                checked = waterReminderInput,
-                                onCheckedChange = null,
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
-                            )
-                        }
-                    )
+                        )
 
-                    if (waterReminderInput) {
-                        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp)) {
-                            Text("Reminder Interval", color = Color.White.copy(0.6f), fontSize = 12.sp, fontFamily = InterFontFamily)
-                            Spacer(Modifier.height(8.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                listOf(15, 30, 45, 60).forEach { mins ->
-                                    val isSel = waterInterval == mins
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(if (isSel) Color(0xFF0A84FF) else Color.White.copy(0.08f))
-                                            .clickable {
-                                                waterInterval = mins
-                                                sharedPrefs.edit().putInt("WATER_REMINDER_INTERVAL", mins).apply()
-                                                WaterReminderManager.scheduleNextAlarm(context)
-                                            }
-                                            .padding(vertical = 8.dp),
-                                        contentAlignment = Alignment.Center
+                        AppleSettingsRow(
+                            title = "Hands-Free Wake Word",
+                            subtitle = "Say 'Hey Jasica' to activate",
+                            icon = { LucideMic(tint = Color.White) },
+                            iconBgColor = Color(0xFF007AFF),
+                            showDivider = true,
+                            isDark = darkModeInput,
+                            control = {
+                                Switch(
+                                    checked = wakeWordInput,
+                                    onCheckedChange = { wakeWordInput = it },
+                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
+                                )
+                            }
+                        )
+                        
+                        AppleSettingsRow(
+                            title = "Save History",
+                            subtitle = "Log conversations locally",
+                            icon = { LucideClock(tint = Color.White) },
+                            iconBgColor = Color(0xFF30B0C7),
+                            showDivider = true,
+                            isDark = darkModeInput,
+                            control = {
+                                Switch(
+                                    checked = historyLoggingInput,
+                                    onCheckedChange = { 
+                                        historyLoggingInput = it
+                                        sharedPrefs.edit().putBoolean("HISTORY_LOGGING", it).apply()
+                                    },
+                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
+                                )
+                            }
+                        )
+
+                        AppleSettingsRow(
+                            title = "Instant Offline Actions",
+                            subtitle = "Execute hardware commands locally without AI delay",
+                            icon = { LucideZap(tint = Color.White) },
+                            iconBgColor = Color(0xFFFF9500),
+                            showDivider = false,
+                            isDark = darkModeInput,
+                            control = {
+                                Switch(
+                                    checked = !onlineModeInput,
+                                    onCheckedChange = { 
+                                        onlineModeInput = !it
+                                        sharedPrefs.edit().putBoolean("ONLINE_MODE_ENABLED", !it).apply()
+                                    },
+                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
+                                )
+                            }
+                        )
+                    }
+                }
+
+                // AI Intelligence Group
+                item {
+                    AppleSettingsGroup(title = "AI Intelligence", isDark = darkModeInput) {
+                        AppleSettingsRow(
+                            title = "AI Model Engine",
+                            subtitle = "Current: $selectedModel",
+                            icon = { LucideCpu(tint = Color.White) },
+                            iconBgColor = Color(0xFF34C759),
+                            showDivider = true,
+                            isDark = darkModeInput,
+                            control = {
+                                var expandedModelMenu by remember { mutableStateOf(false) }
+                                val models = listOf("gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-pro-exp-02-05")
+                                
+                                Box {
+                                    TextButton(onClick = { expandedModelMenu = true }) {
+                                        Text(selectedModel.replace("gemini-", ""), color = Color(0xFF007AFF), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                    }
+                                    DropdownMenu(
+                                        expanded = expandedModelMenu,
+                                        onDismissRequest = { expandedModelMenu = false },
+                                        modifier = Modifier.background(cardBg)
                                     ) {
-                                        Text("${mins}m", color = Color.White, fontSize = 13.sp, fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal, fontFamily = InterFontFamily)
+                                        models.forEach { modelName ->
+                                            DropdownMenuItem(
+                                                text = { Text(modelName, color = textPrimary, fontFamily = InterFontFamily) },
+                                                onClick = {
+                                                    selectedModel = modelName
+                                                    sharedPrefs.edit().putString("SELECTED_AI_MODEL", modelName).apply()
+                                                    expandedModelMenu = false
+                                                }
+                                            )
+                                        }
                                     }
                                 }
+                            }
+                        )
+
+                        AppleSettingsRow(
+                            title = "Use Portfolio API Key",
+                            subtitle = "Automatically load dynamic API keys from cloud",
+                            icon = { LucideKey(tint = Color.White) },
+                            iconBgColor = Color(0xFFAF52DE),
+                            showDivider = !adminKeyInput,
+                            isDark = darkModeInput,
+                            control = {
+                                Switch(
+                                    checked = adminKeyInput,
+                                    onCheckedChange = { 
+                                        adminKeyInput = it
+                                        sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", it).apply()
+                                    },
+                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
+                                )
+                            }
+                        )
+
+                        if (!adminKeyInput) {
+                            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                                Text("Custom Gemini API Key", color = textSecondary, fontSize = 13.sp, fontFamily = InterFontFamily)
+                                Spacer(Modifier.height(6.dp))
+                                androidx.compose.material3.OutlinedTextField(
+                                    value = geminiKeyInput,
+                                    onValueChange = { 
+                                        geminiKeyInput = it
+                                        apiKeyInput = it
+                                        sharedPrefs.edit().putString("GEMINI_API_KEY", it.trim()).apply()
+                                    },
+                                    placeholder = { Text("AIzaSy...", color = textSecondary.copy(0.5f)) },
+                                    visualTransformation = if (showApiKey) androidx.compose.ui.text.input.VisualTransformation.None else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                    trailingIcon = {
+                                        TextButton(onClick = { showApiKey = !showApiKey }) {
+                                            Text(if (showApiKey) "Hide" else "Show", color = Color(0xFF007AFF), fontSize = 12.sp)
+                                        }
+                                    },
+                                    textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontSize = 14.sp, fontFamily = InterFontFamily),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = Color(0xFF007AFF),
+                                        unfocusedBorderColor = cardBorder,
+                                        focusedContainerColor = fieldBg,
+                                        unfocusedContainerColor = fieldBg
+                                    )
+                                )
                             }
                         }
                     }
                 }
 
-                // AI Mode Group
-                AppleSettingsGroup(
-                    title = "JASICA ONLINE & AI", 
-                    footer = if (!onlineModeInput) "Offline mode is 100% free with no internet needed." else "Jasica Online uses Gemini AI to handle complex tasks."
-                ) {
-                    AppleSettingsRow(
-                        title = "Enable Jasica Online",
-                        icon = { LucideZap(tint = Color.White) },
-                        iconBgColor = Color(0xFFFF9500),
-                        showDivider = onlineModeInput,
-                        control = {
-                            Switch(
-                                checked = onlineModeInput,
-                                onCheckedChange = { checked ->
-                                    onlineModeInput = checked
-                                    sharedPrefs.edit().putBoolean("ONLINE_MODE_ENABLED", checked).putBoolean("ADVANCED_AI_MODE", checked).apply()
-                                },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
-                            )
-                        }
-                    )
-                    
-                    if (onlineModeInput) {
+                // Voice & Wellness Group
+                item {
+                    AppleSettingsGroup(title = "Wellness & Voice Engine", isDark = darkModeInput) {
                         AppleSettingsRow(
-                            title = "Admin Panel Key",
-                            subtitle = "Auto-fetched from Portfolio",
-                            icon = { LucideKey(tint = Color.White) },
-                            iconBgColor = Color(0xFF34C759),
-                            showDivider = true,
-                            onClick = {
-                                adminKeyInput = true
-                                sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", true).apply()
-                            },
+                            title = "Smart Water Reminder",
+                            subtitle = "Periodic spoken hydration alerts",
+                            icon = { LucideDroplet(tint = Color.White) },
+                            iconBgColor = Color(0xFF007AFF),
+                            showDivider = waterReminderInput,
+                            isDark = darkModeInput,
                             control = {
-                                if (adminKeyInput) {
-                                    Icon(Icons.Rounded.Check, contentDescription = null, tint = Color(0xFF0A84FF))
-                                }
-                            }
-                        )
-                        AppleSettingsRow(
-                            title = "My Own Key",
-                            subtitle = "Use your personal API key",
-                            icon = { LucideKey(tint = Color.White) },
-                            iconBgColor = Color(0xFFFF2D55),
-                            showDivider = true,
-                            onClick = {
-                                adminKeyInput = false
-                                sharedPrefs.edit().putBoolean("USE_ADMIN_PANEL_KEY", false).apply()
-                            },
-                            control = {
-                                if (!adminKeyInput) {
-                                    Icon(Icons.Rounded.Check, contentDescription = null, tint = Color(0xFF0A84FF))
-                                }
-                            }
-                        )
-                        
-                        if (!adminKeyInput) {
-                            Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp)) {
-                                androidx.compose.material3.OutlinedTextField(
-                                    value = geminiKeyInput,
-                                    onValueChange = {
-                                        geminiKeyInput = it
-                                        sharedPrefs.edit().putString("GEMINI_API_KEY", it.trim()).apply()
-                                    },
-                                    placeholder = { Text("AIza...", color = Color.White.copy(alpha = 0.2f)) },
-                                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 15.sp, fontFamily = InterFontFamily),
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(10.dp),
-                                    singleLine = true,
-                                    visualTransformation = if (showApiKey) androidx.compose.ui.text.input.VisualTransformation.None else androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                                    trailingIcon = {
-                                        IconButton(onClick = { showApiKey = !showApiKey }) {
-                                            Text(if (showApiKey) "👁" else "🔒", fontSize = 16.sp)
+                                Switch(
+                                    checked = waterReminderInput,
+                                    onCheckedChange = { isChecked ->
+                                        if (!isChecked) {
+                                            showPasswordDialog = true
+                                        } else {
+                                            waterReminderInput = true
+                                            sharedPrefs.edit().putBoolean("WATER_REMINDER", true).apply()
+                                            WaterReminderManager.scheduleAlarm(context, waterInterval)
+                                            android.widget.Toast.makeText(context, "Water Reminder Active ($waterInterval min)", android.widget.Toast.LENGTH_SHORT).show()
                                         }
                                     },
-                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = Color(0xFF0A84FF),
-                                        unfocusedBorderColor = Color(0xFF38383A)
-                                    )
+                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759))
                                 )
                             }
-                        }
+                        )
 
-                        // AI Model Selection Chips
-                        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                LucideIconBox(backgroundColor = Color(0xFFAF52DE)) {
-                                    LucideLayers(tint = Color.White)
+                        if (waterReminderInput) {
+                            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Reminder Interval", color = textPrimary, fontSize = 14.sp, fontFamily = InterFontFamily)
+                                    Text("$waterInterval min", color = Color(0xFF007AFF), fontSize = 14.sp, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily)
                                 }
-                                Spacer(Modifier.width(12.dp))
-                                Text("AI Model Selection", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Medium, fontFamily = InterFontFamily)
-                            }
-                            Spacer(Modifier.height(12.dp))
-                            
-                            val models = listOf(
-                                "gemini-2.5-flash" to "2.5 Flash (Fastest)",
-                                "gemini-2.0-flash" to "2.0 Flash",
-                                "gemini-1.5-flash" to "1.5 Flash",
-                                "gemini-1.5-pro"   to "1.5 Pro"
-                            )
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                models.forEach { (modelId, label) ->
-                                    val isSelected = selectedModel == modelId
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(if (isSelected) Color(0xFF0A84FF).copy(alpha = 0.15f) else Color.White.copy(0.04f))
-                                            .border(1.dp, if (isSelected) Color(0xFF0A84FF) else Color.Transparent, RoundedCornerShape(10.dp))
-                                            .clickable {
-                                                selectedModel = modelId
-                                                sharedPrefs.edit().putString("AI_MODEL", modelId).apply()
-                                            }
-                                            .padding(horizontal = 14.dp, vertical = 10.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(label, color = if (isSelected) Color.White else Color.White.copy(0.7f), fontSize = 14.sp, fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal, fontFamily = InterFontFamily)
-                                        if (isSelected) {
-                                            Icon(Icons.Rounded.Check, contentDescription = null, tint = Color(0xFF0A84FF), modifier = Modifier.size(18.dp))
+                                androidx.compose.material3.Slider(
+                                    value = waterInterval.toFloat(),
+                                    onValueChange = { 
+                                        waterInterval = it.toInt()
+                                        sharedPrefs.edit().putInt("WATER_REMINDER_INTERVAL", waterInterval).apply()
+                                        if (waterReminderInput) {
+                                            WaterReminderManager.scheduleAlarm(context, waterInterval)
                                         }
-                                    }
-                                }
+                                    },
+                                    valueRange = 10f..120f,
+                                    steps = 10,
+                                    colors = androidx.compose.material3.SliderDefaults.colors(
+                                        thumbColor = Color(0xFF007AFF),
+                                        activeTrackColor = Color(0xFF007AFF)
+                                    )
+                                )
                             }
                         }
                     }
                 }
                 
                 // Hardware & Device Configuration Group
-                AppleSettingsGroup(
-                    title = "Hardware Config & Device Names", 
-                    footer = "Tap any device to customize its display name, voice commands, and hardware pins."
-                ) {
-                    DEFAULT_DEVICES.forEachIndexed { index, dev ->
-                        var name by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName) }
-                        var onCmd by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_ON_CMD", dev.defaultOnCmd) ?: dev.defaultOnCmd) }
-                        var offCmd by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_OFF_CMD", dev.defaultOffCmd) ?: dev.defaultOffCmd) }
-                        var pinOn by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_PIN_ON", dev.defaultPinOn) ?: dev.defaultPinOn) }
-                        var pinOff by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_PIN_OFF", dev.defaultPinOff) ?: dev.defaultPinOff) }
+                item {
+                    AppleSettingsGroup(
+                        title = "Hardware Config & Device Names", 
+                        footer = "Tap any device to customize its display name, voice commands, and hardware pins.",
+                        isDark = darkModeInput
+                    ) {
+                        DEFAULT_DEVICES.forEachIndexed { index, dev ->
+                            var name by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName) }
+                            var onCmd by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_ON_CMD", dev.defaultOnCmd) ?: dev.defaultOnCmd) }
+                            var offCmd by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_OFF_CMD", dev.defaultOffCmd) ?: dev.defaultOffCmd) }
+                            var pinOn by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_PIN_ON", dev.defaultPinOn) ?: dev.defaultPinOn) }
+                            var pinOff by remember { mutableStateOf(sharedPrefs.getString("DEV_${dev.id}_PIN_OFF", dev.defaultPinOff) ?: dev.defaultPinOff) }
 
-                        val isExpanded = expandedDevId == dev.id
+                            val isExpanded = expandedDevId == dev.id
 
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { expandedDevId = if (isExpanded) null else dev.id }
-                                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                    LucideIconBox(backgroundColor = Color(0xFF636366)) {
-                                        LucideCpu(tint = Color.White)
-                                    }
-                                    Spacer(Modifier.width(14.dp))
-                                    Column {
-                                        Text(name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily)
-                                        Spacer(Modifier.height(2.dp))
-                                        Text("Pin [$pinOn/$pinOff] • \"$onCmd\"", color = Color.White.copy(0.5f), fontSize = 12.sp, fontFamily = InterFontFamily)
-                                    }
-                                }
-                                if (isExpanded) {
-                                    LucideChevronUp(tint = Color(0xFF0A84FF))
-                                } else {
-                                    LucideChevronDown(tint = Color.White.copy(0.4f))
-                                }
-                            }
-
-                            // Expanded Form Editor
-                            if (isExpanded) {
-                                Column(
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .background(Color(0xFF2C2C2E))
-                                        .padding(16.dp)
+                                        .clickable { expandedDevId = if (isExpanded) null else dev.id }
+                                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    // 1. Device Name
-                                    Text("Device Display Name", color = Color.White.copy(0.6f), fontSize = 12.sp, fontFamily = InterFontFamily)
-                                    Spacer(Modifier.height(4.dp))
-                                    androidx.compose.material3.OutlinedTextField(
-                                        value = name,
-                                        onValueChange = {
-                                            name = it
-                                            sharedPrefs.edit().putString("DEV_${dev.id}_NAME", it.trim()).apply()
-                                        },
-                                        placeholder = { Text(dev.defaultName, color = Color.White.copy(0.2f)) },
-                                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 14.sp, fontFamily = InterFontFamily),
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(8.dp),
-                                        singleLine = true,
-                                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = Color(0xFF0A84FF),
-                                            unfocusedBorderColor = Color(0xFF38383A)
-                                        )
-                                    )
-
-                                    Spacer(Modifier.height(12.dp))
-
-                                    // 2. Voice Turn ON Command
-                                    Text("Voice ON Trigger Phrase", color = Color.White.copy(0.6f), fontSize = 12.sp, fontFamily = InterFontFamily)
-                                    Spacer(Modifier.height(4.dp))
-                                    androidx.compose.material3.OutlinedTextField(
-                                        value = onCmd,
-                                        onValueChange = {
-                                            onCmd = it
-                                            sharedPrefs.edit().putString("DEV_${dev.id}_ON_CMD", it.trim().lowercase(java.util.Locale.ROOT)).apply()
-                                        },
-                                        placeholder = { Text(dev.defaultOnCmd, color = Color.White.copy(0.2f)) },
-                                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 14.sp, fontFamily = InterFontFamily),
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(8.dp),
-                                        singleLine = true,
-                                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = Color(0xFF0A84FF),
-                                            unfocusedBorderColor = Color(0xFF38383A)
-                                        )
-                                    )
-
-                                    Spacer(Modifier.height(12.dp))
-
-                                    // 3. Voice Turn OFF Command
-                                    Text("Voice OFF Trigger Phrase", color = Color.White.copy(0.6f), fontSize = 12.sp, fontFamily = InterFontFamily)
-                                    Spacer(Modifier.height(4.dp))
-                                    androidx.compose.material3.OutlinedTextField(
-                                        value = offCmd,
-                                        onValueChange = {
-                                            offCmd = it
-                                            sharedPrefs.edit().putString("DEV_${dev.id}_OFF_CMD", it.trim().lowercase(java.util.Locale.ROOT)).apply()
-                                        },
-                                        placeholder = { Text(dev.defaultOffCmd, color = Color.White.copy(0.2f)) },
-                                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 14.sp, fontFamily = InterFontFamily),
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(8.dp),
-                                        singleLine = true,
-                                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = Color(0xFF0A84FF),
-                                            unfocusedBorderColor = Color(0xFF38383A)
-                                        )
-                                    )
-
-                                    Spacer(Modifier.height(12.dp))
-
-                                    // 4. Hardware Character Pins
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text("Pin ON Char", color = Color.White.copy(0.6f), fontSize = 12.sp, fontFamily = InterFontFamily)
-                                            Spacer(Modifier.height(4.dp))
-                                            androidx.compose.material3.OutlinedTextField(
-                                                value = pinOn,
-                                                onValueChange = {
-                                                    pinOn = it.take(5)
-                                                    sharedPrefs.edit().putString("DEV_${dev.id}_PIN_ON", it).apply()
-                                                },
-                                                textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 14.sp, fontFamily = InterFontFamily),
-                                                modifier = Modifier.fillMaxWidth(),
-                                                shape = RoundedCornerShape(8.dp),
-                                                singleLine = true,
-                                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF0A84FF), unfocusedBorderColor = Color(0xFF38383A))
-                                            )
+                                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                        LucideIconBox(backgroundColor = Color(0xFF636366)) {
+                                            LucideCpu(tint = Color.White)
                                         }
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text("Pin OFF Char", color = Color.White.copy(0.6f), fontSize = 12.sp, fontFamily = InterFontFamily)
-                                            Spacer(Modifier.height(4.dp))
-                                            androidx.compose.material3.OutlinedTextField(
-                                                value = pinOff,
-                                                onValueChange = {
-                                                    pinOff = it.take(5)
-                                                    sharedPrefs.edit().putString("DEV_${dev.id}_PIN_OFF", it).apply()
-                                                },
-                                                textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 14.sp, fontFamily = InterFontFamily),
-                                                modifier = Modifier.fillMaxWidth(),
-                                                shape = RoundedCornerShape(8.dp),
-                                                singleLine = true,
-                                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF0A84FF), unfocusedBorderColor = Color(0xFF38383A))
+                                        Spacer(Modifier.width(14.dp))
+                                        Column {
+                                            Text(name, color = textPrimary, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily)
+                                            Spacer(Modifier.height(2.dp))
+                                            Text("Pin [$pinOn/$pinOff] • \"$onCmd\"", color = textSecondary, fontSize = 12.sp, fontFamily = InterFontFamily)
+                                        }
+                                    }
+                                    if (isExpanded) {
+                                        LucideChevronUp(tint = Color(0xFF007AFF))
+                                    } else {
+                                        LucideChevronDown(tint = textSecondary)
+                                    }
+                                }
+
+                                // Expanded Form Editor
+                                AnimatedVisibility(
+                                    visible = isExpanded,
+                                    enter = fadeIn() + expandVertically(),
+                                    exit = fadeOut() + shrinkVertically()
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(fieldBg)
+                                            .padding(16.dp)
+                                    ) {
+                                        // 1. Device Name
+                                        Text("Device Display Name", color = textSecondary, fontSize = 12.sp, fontFamily = InterFontFamily)
+                                        Spacer(Modifier.height(4.dp))
+                                        androidx.compose.material3.OutlinedTextField(
+                                            value = name,
+                                            onValueChange = {
+                                                name = it
+                                                sharedPrefs.edit().putString("DEV_${dev.id}_NAME", it.trim()).apply()
+                                            },
+                                            placeholder = { Text(dev.defaultName, color = textSecondary.copy(0.4f)) },
+                                            textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontSize = 14.sp, fontFamily = InterFontFamily),
+                                            modifier = Modifier.fillMaxWidth(),
+                                            shape = RoundedCornerShape(8.dp),
+                                            singleLine = true,
+                                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                                focusedBorderColor = Color(0xFF007AFF),
+                                                unfocusedBorderColor = cardBorder,
+                                                focusedContainerColor = cardBg,
+                                                unfocusedContainerColor = cardBg
                                             )
+                                        )
+
+                                        Spacer(Modifier.height(12.dp))
+
+                                        // 2. Custom Voice Triggers
+                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text("Voice ON Command", color = textSecondary, fontSize = 12.sp, fontFamily = InterFontFamily)
+                                                Spacer(Modifier.height(4.dp))
+                                                androidx.compose.material3.OutlinedTextField(
+                                                    value = onCmd,
+                                                    onValueChange = {
+                                                        onCmd = it
+                                                        sharedPrefs.edit().putString("DEV_${dev.id}_ON_CMD", it.trim().lowercase(java.util.Locale.ROOT)).apply()
+                                                    },
+                                                    placeholder = { Text(dev.defaultOnCmd, color = textSecondary.copy(0.4f)) },
+                                                    textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontSize = 14.sp, fontFamily = InterFontFamily),
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    singleLine = true,
+                                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                                        focusedBorderColor = Color(0xFF007AFF),
+                                                        unfocusedBorderColor = cardBorder,
+                                                        focusedContainerColor = cardBg,
+                                                        unfocusedContainerColor = cardBg
+                                                    )
+                                                )
+                                            }
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text("Voice OFF Command", color = textSecondary, fontSize = 12.sp, fontFamily = InterFontFamily)
+                                                Spacer(Modifier.height(4.dp))
+                                                androidx.compose.material3.OutlinedTextField(
+                                                    value = offCmd,
+                                                    onValueChange = {
+                                                        offCmd = it
+                                                        sharedPrefs.edit().putString("DEV_${dev.id}_OFF_CMD", it.trim().lowercase(java.util.Locale.ROOT)).apply()
+                                                    },
+                                                    placeholder = { Text(dev.defaultOffCmd, color = textSecondary.copy(0.4f)) },
+                                                    textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontSize = 14.sp, fontFamily = InterFontFamily),
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    singleLine = true,
+                                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                                        focusedBorderColor = Color(0xFF007AFF),
+                                                        unfocusedBorderColor = cardBorder,
+                                                        focusedContainerColor = cardBg,
+                                                        unfocusedContainerColor = cardBg
+                                                    )
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(Modifier.height(12.dp))
+
+                                        // 3. Hardware Pin Codes
+                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text("Pin ON Char", color = textSecondary, fontSize = 12.sp, fontFamily = InterFontFamily)
+                                                Spacer(Modifier.height(4.dp))
+                                                androidx.compose.material3.OutlinedTextField(
+                                                    value = pinOn,
+                                                    onValueChange = {
+                                                        pinOn = it.take(5)
+                                                        sharedPrefs.edit().putString("DEV_${dev.id}_PIN_ON", it).apply()
+                                                    },
+                                                    textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontSize = 14.sp, fontFamily = InterFontFamily),
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    singleLine = true,
+                                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                                        focusedBorderColor = Color(0xFF007AFF),
+                                                        unfocusedBorderColor = cardBorder,
+                                                        focusedContainerColor = cardBg,
+                                                        unfocusedContainerColor = cardBg
+                                                    )
+                                                )
+                                            }
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text("Pin OFF Char", color = textSecondary, fontSize = 12.sp, fontFamily = InterFontFamily)
+                                                Spacer(Modifier.height(4.dp))
+                                                androidx.compose.material3.OutlinedTextField(
+                                                    value = pinOff,
+                                                    onValueChange = {
+                                                        pinOff = it.take(5)
+                                                        sharedPrefs.edit().putString("DEV_${dev.id}_PIN_OFF", it).apply()
+                                                    },
+                                                    textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontSize = 14.sp, fontFamily = InterFontFamily),
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    singleLine = true,
+                                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                                        focusedBorderColor = Color(0xFF007AFF),
+                                                        unfocusedBorderColor = cardBorder,
+                                                        focusedContainerColor = cardBg,
+                                                        unfocusedContainerColor = cardBg
+                                                    )
+                                                )
+                                            }
                                         }
                                     }
                                 }
-                            }
 
-                            if (index != DEFAULT_DEVICES.size - 1) {
-                                androidx.compose.material3.Divider(modifier = Modifier.padding(start = 60.dp), color = Color(0xFF38383A), thickness = 0.5.dp)
+                                if (index != DEFAULT_DEVICES.size - 1) {
+                                    androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(start = 60.dp), color = cardBorder, thickness = 0.5.dp)
+                                }
                             }
                         }
                     }
                 }
 
                 // Danger & Reset Group
-                AppleSettingsGroup(title = "Reset & Maintenance") {
-                    AppleSettingsRow(
-                        title = "Reset Devices to Default",
-                        subtitle = "Restore 1st LED to 6th LED",
-                        icon = { LucideRotateCcw(tint = Color.White) },
-                        iconBgColor = Color(0xFFFF9500),
-                        showDivider = true,
-                        onClick = {
-                            showResetConfirmDialog = true
-                        }
-                    )
+                item {
+                    AppleSettingsGroup(title = "Reset & Maintenance", isDark = darkModeInput) {
+                        AppleSettingsRow(
+                            title = "Reset Devices to Default",
+                            subtitle = "Restore 1st LED to 6th LED",
+                            icon = { LucideRotateCcw(tint = Color.White) },
+                            iconBgColor = Color(0xFFFF9500),
+                            showDivider = false,
+                            isDark = darkModeInput,
+                            onClick = {
+                                showResetConfirmDialog = true
+                            }
+                        )
+                    }
                 }
 
-                Spacer(Modifier.height(40.dp))
+                item {
+                    Spacer(Modifier.height(40.dp))
+                }
             }
+        }
+
+        // Apple Style Restart Dialog
+        if (showRestartDialog) {
+            AppleRestartDialog(
+                onDismiss = {
+                    showRestartDialog = false
+                    onDismiss()
+                },
+                onRestart = {
+                    showRestartDialog = false
+                    restartApp(context)
+                }
+            )
         }
 
         // Reset Confirmation Dialog
         if (showResetConfirmDialog) {
             AlertDialog(
                 onDismissRequest = { showResetConfirmDialog = false },
-                title = { Text("Reset Hardware Config?", color = Color.White, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily) },
-                text = { Text("All device names, commands, and pins will be reset to default values (1st LED – 6th LED).", color = Color.White.copy(0.7f), fontSize = 14.sp, fontFamily = InterFontFamily) },
-                containerColor = Color(0xFF1E1E2E),
+                title = { Text("Reset Hardware Config?", color = textPrimary, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily) },
+                text = { Text("All device names, commands, and pins will be reset to default values (1st LED – 6th LED).", color = textSecondary, fontSize = 14.sp, fontFamily = InterFontFamily) },
+                containerColor = cardBg,
                 shape = RoundedCornerShape(20.dp),
                 confirmButton = {
                     Button(
@@ -4680,7 +5033,7 @@ fun SettingsScreen(
                             showResetConfirmDialog = false
                             android.widget.Toast.makeText(context, "Devices Reset to Defaults", android.widget.Toast.LENGTH_SHORT).show()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF453A)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3B30)),
                         shape = RoundedCornerShape(10.dp)
                     ) {
                         Text("Reset", color = Color.White, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily)
@@ -4688,7 +5041,7 @@ fun SettingsScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { showResetConfirmDialog = false }) {
-                        Text("Cancel", color = Color.White.copy(0.6f), fontFamily = InterFontFamily)
+                        Text("Cancel", color = textSecondary, fontFamily = InterFontFamily)
                     }
                 }
             )
@@ -4702,26 +5055,31 @@ fun SettingsScreen(
                     passwordError = false
                     passwordInput = ""
                 },
-                title = { Text("Enter Admin Password", color = Color.White, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily) },
+                title = { Text("Enter Admin Password", color = textPrimary, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily) },
                 text = {
                     Column {
-                        Text("A password is required to turn off the water reminder.", color = Color.White.copy(0.7f), fontSize = 14.sp, fontFamily = InterFontFamily)
+                        Text("A password is required to turn off the water reminder.", color = textSecondary, fontSize = 14.sp, fontFamily = InterFontFamily)
                         Spacer(modifier = Modifier.height(16.dp))
                         androidx.compose.material3.OutlinedTextField(
                             value = passwordInput,
                             onValueChange = { passwordInput = it; passwordError = false },
-                            label = { Text("Password", color = Color.White.copy(0.5f), fontFamily = InterFontFamily) },
+                            label = { Text("Password", color = textSecondary, fontFamily = InterFontFamily) },
                             isError = passwordError,
-                            textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontFamily = InterFontFamily),
+                            textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontFamily = InterFontFamily),
                             shape = RoundedCornerShape(12.dp),
-                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFFFF9800), unfocusedBorderColor = Color.White.copy(alpha = 0.15f))
+                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFFFF9500),
+                                unfocusedBorderColor = cardBorder,
+                                focusedContainerColor = fieldBg,
+                                unfocusedContainerColor = fieldBg
+                            )
                         )
                         if (passwordError) {
-                            Text("Incorrect password", color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp), fontFamily = InterFontFamily)
+                            Text("Incorrect password", color = Color(0xFFFF3B30), fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp), fontFamily = InterFontFamily)
                         }
                     }
                 },
-                containerColor = Color(0xFF1E1E2E),
+                containerColor = cardBg,
                 shape = RoundedCornerShape(24.dp),
                 confirmButton = {
                     Button(
@@ -4739,7 +5097,7 @@ fun SettingsScreen(
                                 passwordError = true
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9500)),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("Confirm", color = Color.White, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily)
@@ -4751,7 +5109,7 @@ fun SettingsScreen(
                         passwordError = false
                         passwordInput = ""
                     }) {
-                        Text("Cancel", color = Color.White.copy(0.5f), fontFamily = InterFontFamily)
+                        Text("Cancel", color = textSecondary, fontFamily = InterFontFamily)
                     }
                 }
             )
