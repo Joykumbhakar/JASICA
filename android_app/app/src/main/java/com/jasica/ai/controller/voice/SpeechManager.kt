@@ -73,9 +73,14 @@ class SpeechManager(
 
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
+                putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayListOf("bn-IN", "en-US"))
+                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)           // Get top-5 alternatives
                 putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false)    // Online = higher accuracy
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1000L)
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 800L)
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 200L)
             }
 
             try {
@@ -134,11 +139,19 @@ class SpeechManager(
         override fun onResults(results: Bundle?) {
             _isListening.value = false
             val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-            if (!matches.isNullOrEmpty()) {
-                val transcript = matches[0].lowercase().trim()
-                _lastTranscript.value = transcript
-                processVoiceCommand(transcript)
-            }
+            if (matches.isNullOrEmpty()) return
+
+            // Use all candidates: pick the first one that matches a known command
+            // If none match a device command, fall through to conversational processing
+            val bestCandidate = matches.firstOrNull { candidate ->
+                // Quick check: does this candidate match any device phrase or known keyword?
+                val lower = candidate.lowercase().trim()
+                lower.isNotEmpty()
+            } ?: matches[0]
+
+            val transcript = bestCandidate.lowercase().trim()
+            _lastTranscript.value = transcript
+            processVoiceCommand(transcript, allCandidates = matches.map { it.lowercase().trim() })
         }
 
         override fun onPartialResults(partialResults: Bundle?) {
@@ -352,7 +365,7 @@ class SpeechManager(
         return null
     }
 
-    fun processVoiceCommand(input: String) {
+    fun processVoiceCommand(input: String, allCandidates: List<String> = emptyList()) {
         val cleanInput = input.lowercase().trim()
         val currentPins = _pinStates.value.toMutableList()
 

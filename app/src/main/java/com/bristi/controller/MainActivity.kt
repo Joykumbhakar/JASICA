@@ -1197,13 +1197,19 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             override fun onResults(results: Bundle?) {
                 isRecognizerListening = false
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                val originalText = matches?.firstOrNull() ?: ""
-                val lowerText = originalText.lowercase(Locale.getDefault())
-                val wakeWordRegex = Regex("h[ei]y?\\s+(jasica|jessica|jessika|jasika|jesica|jazica)")
+                if (matches.isNullOrEmpty()) {
+                    appState.value = AppState.IDLE
+                    triggerWakeWordLoopIfEnabled()
+                    return
+                }
+
+                val wakeWordRegex = Regex("(?i)h[ei]y?\\s+(jasica|jessica|jessika|jasika|jesica|jazica)")
 
                 if (appState.value == AppState.WAKE_LISTENING) {
-                    if (wakeWordRegex.containsMatchIn(lowerText)) {
-                        val cmd = originalText.replace(Regex("(?i)h[ei]y?\\s+(jasica|jessica|jessika|jasika|jesica|jazica)"), "").trim()
+                    // Check ALL alternative transcripts for the wake word
+                    val wakeMatch = matches.firstOrNull { wakeWordRegex.containsMatchIn(it) }
+                    if (wakeMatch != null) {
+                        val cmd = wakeMatch.replace(wakeWordRegex, "").trim()
                         if (cmd.isNotEmpty()) {
                             routeVoiceCommand(cmd)
                         } else {
@@ -1214,15 +1220,17 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                         restartWakeWordLoop()
                     }
                 } else {
-                    // Regular listening mode — strip wake word prefix if user said it
-                    val cleaned = originalText.replace(Regex("(?i)h[ei]y?\\s+(jasica|jessica|jessika|jasika|jesica|jazica)"), "").trim()
-                    val finalText = if (cleaned.isNotEmpty()) cleaned else originalText
-                    if (finalText.isNotEmpty()) {
-                        routeVoiceCommand(finalText)
-                    } else {
-                        appState.value = AppState.IDLE
-                        triggerWakeWordLoopIfEnabled()
-                    }
+                    // In command mode: strip wake word from all candidates, then pick best match
+                    val candidates = matches.map { raw ->
+                        raw.replace(wakeWordRegex, "").trim().ifEmpty { raw }
+                    }.filter { it.isNotEmpty() }
+
+                    // Prefer whichever candidate hits a known local command; else fallback to first
+                    val bestCandidate = candidates.firstOrNull { candidate ->
+                        matchLocalCommand(candidate) != null
+                    } ?: candidates.first()
+
+                    routeVoiceCommand(bestCandidate)
                 }
             }
             override fun onPartialResults(partialResults: Bundle?) {
@@ -1297,8 +1305,13 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
-            putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayListOf("bn-IN"))
-            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayListOf("bn-IN", "en-US"))
+            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)           // Collect 5 alternatives → best-match picker
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)     // Show live partial text in UI
+            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false)     // Online = higher accuracy
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1000L)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 800L)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 200L)
         }
         try {
             speechRecognizer.startListening(intent)
