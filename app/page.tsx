@@ -898,7 +898,7 @@ export default function HomePage() {
 
     <section id="promo-video" className="relative z-20 bg-[#f5f5f7] pt-24 md:pt-32 px-4 md:px-12 mt-[100vh] md:mt-[110vh]">
           <div className="max-w-5xl mx-auto">
-              <div className="rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl shadow-black/10 border border-zinc-200/80 bg-black aspect-video relative transform transition-transform hover:scale-[1.01] duration-500">
+              <div className="rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl shadow-black/10 border border-zinc-200/80 bg-black aspect-video relative">
                   <video 
                     autoPlay 
                     loop 
