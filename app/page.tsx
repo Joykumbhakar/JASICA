@@ -643,7 +643,7 @@ export default function HomePage() {
     let baseScale = 1.35;
     let basePosY = -3.95;
     let basePosX = -0.25;      // Desktop: Optical center
-    let baseRotY = (-Math.PI / 18); // Desktop: 45° angled view
+    let baseRotY = Math.PI / 4; // Desktop: 45° angled view
 
     let lastWidth = window.innerWidth;
     let lastHeight = window.innerHeight;
@@ -678,22 +678,22 @@ export default function HomePage() {
         baseScale = 0.92;
         basePosY = -2.5;
         basePosX = -0.15;        // Optical center on mobile screens
-        baseRotY = (-Math.PI / 18); // 45° angle
+        baseRotY = Math.PI / 4; // 45° angle
       } else if (width < 768) {
         baseScale = 1.05;
         basePosY = -3.0;
         basePosX = -0.10;        // Optical center on small tablet / large phone
-        baseRotY = (-Math.PI / 18); // 45° angle
+        baseRotY = Math.PI / 4; // 45° angle
       } else if (width < 1024) {
         baseScale = 1.25;
         basePosY = -3.4;
         basePosX = -0.15;        // Optical center for tablets
-        baseRotY = (-Math.PI / 18); // 45° angle
+        baseRotY = Math.PI / 4; // 45° angle
       } else {
         baseScale = 1.35;
         basePosY = -3.95;
         basePosX = -0.25;        // Optical center for desktop
-        baseRotY = (-Math.PI / 18); // 45° angle
+        baseRotY = Math.PI / 4; // 45° angle
       }
       updateScrollState();
     }
@@ -1390,6 +1390,7 @@ export default function HomePage() {
     </div>
   );
 }
+
 
 
 
