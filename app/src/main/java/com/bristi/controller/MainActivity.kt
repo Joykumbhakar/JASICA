@@ -5563,11 +5563,10 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Quick Access Widget",
                             subtitle = "Floating icon for instant device control anywhere",
-                            icon = null,
-                            customIcon = R.drawable.ic_ai_waves,
+                            icon = { androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(id = R.drawable.ic_ai_waves), contentDescription = null, modifier = Modifier.size(24.dp)) },
                             showDivider = false,
                             isDark = darkModeInput,
-                            rightContent = {
+                            control = {
                                 Switch(
                                     checked = quickAccessEnabled,
                                     onCheckedChange = { isChecked ->

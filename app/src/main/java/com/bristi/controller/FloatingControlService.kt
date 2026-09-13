@@ -95,8 +95,8 @@ class FloatingControlService : Service() {
         lifecycleOwner.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
         lifecycleOwner.handleLifecycleEvent(Lifecycle.Event.ON_START)
         lifecycleOwner.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
-        ViewTreeLifecycleOwner.set(composeView, lifecycleOwner)
-        ViewTreeViewModelStoreOwner.set(composeView, object : ViewModelStoreOwner {
+        composeView.setViewTreeLifecycleOwner(lifecycleOwner)
+        composeView.setViewTreeViewModelStoreOwner(object : ViewModelStoreOwner {
             override val viewModelStore = ViewModelStore()
         })
         composeView.setViewTreeSavedStateRegistryOwner(lifecycleOwner)
