@@ -170,6 +170,15 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Accelerometer listener for double-tap back gesture to toggle IoT device" />
         </service>
+
+        <service
+            android:name=".ShakeService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Accelerometer listener for shake gesture to toggle IoT device" />
+        </service>
         
         <activity
             android:name=".WaterAlarmActivity"
