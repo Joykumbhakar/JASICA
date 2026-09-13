@@ -957,11 +957,12 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             addAction("com.bristi.controller.SEND_QUICK_COMMAND")
             addAction("com.bristi.controller.START_MIC")
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(quickAccessReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(quickAccessReceiver, filter)
-        }
+        androidx.core.content.ContextCompat.registerReceiver(
+            this,
+            quickAccessReceiver,
+            filter,
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+        )
         val buildKeys = BuildConfig.GEMINI_API_KEYS
         if (buildKeys.isNotBlank()) {
             availableApiKeys.clear()
