@@ -5028,13 +5028,15 @@ fun SettingsScreen(
             }
             
             // Unified Scrolling Content (Lazy Column for smoothness)
-            LazyColumn(
+            val scrollState = rememberScrollState()
+            Column(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState),
             ) {
                 // Core System Group
-                item {
+                Box {
                     AppleSettingsGroup(title = "Appearance & Core System", isDark = darkModeInput) {
                         AppleSettingsRow(
                             title = "Dark Mode",
@@ -5108,7 +5110,7 @@ fun SettingsScreen(
                 }
 
                 // AI Intelligence Group
-                item {
+                Box {
                     AppleSettingsGroup(title = "AI Intelligence", isDark = darkModeInput) {
                         AppleSettingsRow(
                             title = "AI Model Engine",
@@ -5209,7 +5211,7 @@ fun SettingsScreen(
                 }
 
                 // Voice & Wellness Group
-                item {
+                Box {
                     AppleSettingsGroup(title = "Wellness & Voice Engine", isDark = darkModeInput) {
                         AppleSettingsRow(
                             title = "Smart Water Reminder",
@@ -5273,7 +5275,7 @@ fun SettingsScreen(
                 }
                 
                 // Hardware & Device Configuration Group
-                item {
+                Box {
                     AppleSettingsGroup(
                         title = "Hardware Config & Device Names", 
                         footer = "Tap any device to customize its display name, voice commands, and hardware pins.",
@@ -5456,7 +5458,7 @@ fun SettingsScreen(
                 }
 
                 // Danger & Reset Group
-                item {
+                Box {
                     AppleSettingsGroup(title = "Reset & Maintenance", isDark = darkModeInput) {
                         AppleSettingsRow(
                             title = "Reset Devices to Default",
@@ -5472,7 +5474,7 @@ fun SettingsScreen(
                     }
                 }
 
-                item {
+                Box {
                     Spacer(Modifier.height(30.dp))
                     Column(
                         modifier = Modifier.fillMaxWidth(),
