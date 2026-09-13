@@ -6322,16 +6322,7 @@ fun OnboardingScreen(hazeState: dev.chrisbanes.haze.HazeState? = null, onDismiss
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .then(
-                if (hazeState != null) Modifier.hazeEffect(
-                    state = hazeState,
-                    style = dev.chrisbanes.haze.HazeStyle(
-                        blurRadius = 40.dp,
-                        tint = dev.chrisbanes.haze.HazeTint(Color.Black.copy(alpha = 0.4f))
-                    )
-                ) else Modifier
-            )
-            .background(if (hazeState != null) Color.Black.copy(alpha = 0.5f) else Color(0xFF0F0F14).copy(alpha = 0.98f))
+            .background(Color(0xFF0A0A0C))
             .clickable(enabled = false) {}
     ) {
         Column(
@@ -6359,7 +6350,8 @@ fun OnboardingScreen(hazeState: dev.chrisbanes.haze.HazeState? = null, onDismiss
                             Image(
                                 painterResource(info.image),
                                 contentDescription = null,
-                                modifier = Modifier.size(160.dp).clip(CircleShape).shadow(12.dp, CircleShape)
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                modifier = Modifier.size(220.dp).shadow(24.dp, RoundedCornerShape(40.dp)).clip(RoundedCornerShape(40.dp))
                             )
                         } else if (info.iconRes != null) {
                             Box(
