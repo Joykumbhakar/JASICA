@@ -301,7 +301,7 @@ export default function HomePage() {
       wallpaperLoaded = true;
       renderScreenComposite();
     };
-    wallpaperImg.src = 'https://hgbpavdzzdnwhvzdvybh.supabase.co/storage/v1/object/sign/hire_files/1788991331724_k7ro1m.jpg?token=eyJraWQiOiIwOGJjNTQ2MC1mMzU0LTQyMDMtOTg4YS0yMGMzYThkMGU1YTIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJoaXJlX2ZpbGVzLzE3ODg5OTEzMzE3MjRfazdybzFtLmpwZyIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODg5OTE5MjQsImV4cCI6MTgyMDUyNzkyNH0.JCmeQXCOj17rU0AbjkVYfh59bxLj-zcpwNixgtSIisY';
+    wallpaperImg.src = '/wallpaper.jpg';
 
     function renderScreenComposite() {
       sCtx.clearRect(0, 0, screenCanvas.width, screenCanvas.height);
