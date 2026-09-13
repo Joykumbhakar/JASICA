@@ -4677,18 +4677,48 @@ fun restartApp(context: Context) {
 }
 
 @Composable
-fun AppleRestartDialog(
+fun AppleDialog(
+    title: String,
+    message: String,
+    primaryButtonText: String,
+    onPrimaryClick: () -> Unit,
+    primaryIsDestructive: Boolean = false,
+    secondaryButtonText: String? = null,
+    onSecondaryClick: (() -> Unit)? = null,
+    layout: String = "horizontal",
     onDismiss: () -> Unit,
-    onRestart: () -> Unit
+    customContent: @Composable (() -> Unit)? = null
 ) {
+    val isSystemInDarkTheme = androidx.compose.foundation.isSystemInDarkTheme()
+    
+    var show by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { show = true }
+    
+    val scale by animateFloatAsState(
+        targetValue = if (show) 1f else 1.1f,
+        animationSpec = androidx.compose.animation.core.tween(250, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        label = "dialogScale"
+    )
+    val alpha by animateFloatAsState(
+        targetValue = if (show) 1f else 0f,
+        animationSpec = androidx.compose.animation.core.tween(250, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
+        label = "dialogAlpha"
+    )
+
+    val dialogBg = if (isSystemInDarkTheme) Color(0xEB2C2C2E) else Color(0xEBFFFFFF)
+    val titleColor = if (isSystemInDarkTheme) Color.White else Color.Black
+    val dividerColor = if (isSystemInDarkTheme) Color(0x40545458) else Color(0x203C3C43)
+    val blueColor = if (isSystemInDarkTheme) Color(0xFF0A84FF) else Color(0xFF007AFF)
+    val redColor = if (isSystemInDarkTheme) Color(0xFFFF453A) else Color(0xFFFF3B30)
+
     androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismiss,
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.45f))
+                .background(Color.Black.copy(alpha = 0.4f * alpha))
                 .clickable(
                     interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
                     indication = null
@@ -4697,104 +4727,118 @@ fun AppleRestartDialog(
         ) {
             Column(
                 modifier = Modifier
-                    .width(300.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(Color(0xFFFFFFFF))
-                    .border(0.5.dp, Color(0xFFE5E5EA), RoundedCornerShape(18.dp))
+                    .width(270.dp)
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        this.alpha = alpha
+                    }
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(dialogBg)
                     .clickable(
                         interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
                         indication = null
                     ) {},
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(Modifier.height(20.dp))
-                
-                // Icon Header
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF007AFF).copy(alpha = 0.12f)),
-                    contentAlignment = Alignment.Center
+                Column(
+                    modifier = Modifier.padding(top = 18.dp, bottom = 16.dp, start = 16.dp, end = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(22.dp), tint = Color(0xFF007AFF))
-                }
-                
-                Spacer(Modifier.height(12.dp))
-
-                Text(
-                    text = "Settings Saved",
-                    color = Color.Black,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = InterFontFamily,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-                
-                Spacer(Modifier.height(6.dp))
-
-                Text(
-                    text = "Your new settings have been saved. An app restart is recommended to apply all configurations and initialize services.",
-                    color = Color(0xFF3C3C43).copy(alpha = 0.75f),
-                    fontSize = 13.sp,
-                    fontFamily = InterFontFamily,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    lineHeight = 17.sp,
-                    modifier = Modifier.padding(horizontal = 18.dp)
-                )
-
-                Spacer(Modifier.height(18.dp))
-
-                androidx.compose.material3.HorizontalDivider(color = Color(0xFFE5E5EA), thickness = 0.6.dp)
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clickable { onDismiss() },
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Text(
+                        text = title,
+                        color = titleColor,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = InterFontFamily,
+                        textAlign = TextAlign.Center,
+                        letterSpacing = (-0.4).sp,
+                        lineHeight = 22.sp
+                    )
+                    if (message.isNotBlank()) {
+                        Spacer(Modifier.height(4.dp))
                         Text(
-                            text = "Later",
-                            color = Color(0xFF8E8E93),
-                            fontSize = 16.sp,
+                            text = message,
+                            color = titleColor,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Normal,
-                            fontFamily = InterFontFamily
+                            fontFamily = InterFontFamily,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 18.sp
                         )
                     }
+                    if (customContent != null) {
+                        Spacer(Modifier.height(12.dp))
+                        customContent()
+                    }
+                }
 
-                    Box(
-                        modifier = Modifier
-                            .width(0.6.dp)
-                            .fillMaxHeight()
-                            .background(Color(0xFFE5E5EA))
-                    )
+                androidx.compose.material3.HorizontalDivider(color = dividerColor, thickness = 0.5.dp)
 
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clickable { onRestart() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Restart Now",
-                            color = Color(0xFF007AFF),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            fontFamily = InterFontFamily
-                        )
+                if (layout == "horizontal" && secondaryButtonText != null) {
+                    Row(modifier = Modifier.fillMaxWidth().height(44.dp)) {
+                        Box(
+                            modifier = Modifier.weight(1f).fillMaxHeight().clickable { onSecondaryClick?.invoke() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = secondaryButtonText,
+                                color = blueColor,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = InterFontFamily
+                            )
+                        }
+                        androidx.compose.material3.VerticalDivider(color = dividerColor, thickness = 0.5.dp)
+                        Box(
+                            modifier = Modifier.weight(1f).fillMaxHeight().clickable { onPrimaryClick() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = primaryButtonText,
+                                color = if (primaryIsDestructive) redColor else blueColor,
+                                fontSize = 17.sp,
+                                fontWeight = if (primaryIsDestructive) FontWeight.Normal else FontWeight.SemiBold,
+                                fontFamily = InterFontFamily
+                            )
+                        }
+                    }
+                } else {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(44.dp).clickable { onPrimaryClick() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = primaryButtonText,
+                                color = if (primaryIsDestructive) redColor else blueColor,
+                                fontSize = 17.sp,
+                                fontWeight = if (primaryIsDestructive) FontWeight.Normal else FontWeight.SemiBold,
+                                fontFamily = InterFontFamily
+                            )
+                        }
+                        if (secondaryButtonText != null) {
+                            androidx.compose.material3.HorizontalDivider(color = dividerColor, thickness = 0.5.dp)
+                            Box(
+                                modifier = Modifier.fillMaxWidth().height(44.dp).clickable { onSecondaryClick?.invoke() },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = secondaryButtonText,
+                                    color = blueColor,
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontFamily = InterFontFamily
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun AppleSettingsGroup(
@@ -5450,104 +5494,80 @@ fun SettingsScreen(
 
         // Reset Confirmation Dialog
         if (showResetConfirmDialog) {
-            AlertDialog(
-                onDismissRequest = { showResetConfirmDialog = false },
-                title = { Text("Reset Hardware Config?", color = textPrimary, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily) },
-                text = { Text("All device names, commands, and pins will be reset to default values (1st LED – 6th LED).", color = textSecondary, fontSize = 14.sp, fontFamily = InterFontFamily) },
-                containerColor = cardBg,
-                shape = RoundedCornerShape(20.dp),
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            DEFAULT_DEVICES.forEach { dev ->
-                                sharedPrefs.edit()
-                                    .remove("DEV_${dev.id}_NAME")
-                                    .remove("DEV_${dev.id}_ON_CMD")
-                                    .remove("DEV_${dev.id}_OFF_CMD")
-                                    .remove("DEV_${dev.id}_PIN_ON")
-                                    .remove("DEV_${dev.id}_PIN_OFF")
-                                    .apply()
-                            }
-                            showResetConfirmDialog = false
-                            android.widget.Toast.makeText(context, "Devices Reset to Defaults", android.widget.Toast.LENGTH_SHORT).show()
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3B30)),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text("Reset", color = Color.White, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily)
+            AppleDialog(
+                title = "Reset Hardware Config?",
+                message = "All device names, commands, and pins will be reset to default values. This action cannot be undone.",
+                primaryButtonText = "Reset",
+                primaryIsDestructive = true,
+                onPrimaryClick = {
+                    DEFAULT_DEVICES.forEach { dev ->
+                        sharedPrefs.edit()
+                            .remove("DEV_${dev.id}_NAME")
+                            .remove("DEV_${dev.id}_ON_CMD")
+                            .remove("DEV_${dev.id}_OFF_CMD")
+                            .remove("DEV_${dev.id}_PIN_ON")
+                            .remove("DEV_${dev.id}_PIN_OFF")
+                            .apply()
                     }
+                    showResetConfirmDialog = false
+                    android.widget.Toast.makeText(context, "Devices Reset to Defaults", android.widget.Toast.LENGTH_SHORT).show()
                 },
-                dismissButton = {
-                    TextButton(onClick = { showResetConfirmDialog = false }) {
-                        Text("Cancel", color = textSecondary, fontFamily = InterFontFamily)
-                    }
-                }
+                secondaryButtonText = "Cancel",
+                onSecondaryClick = { showResetConfirmDialog = false },
+                layout = "vertical",
+                onDismiss = { showResetConfirmDialog = false }
             )
         }
 
         // Water reminder password dialog
         if (showPasswordDialog) {
-            AlertDialog(
-                onDismissRequest = { 
+            AppleDialog(
+                title = "Enter Admin Password",
+                message = "A password is required to turn off the water reminder.",
+                primaryButtonText = "Submit",
+                onPrimaryClick = {
+                    val correctPassword = sharedPrefs.getString("WATER_REMINDER_PASSWORD", "0000") ?: "0000"
+                    if (passwordInput == correctPassword) {
+                        showPasswordDialog = false
+                        passwordError = false
+                        passwordInput = ""
+                        sharedPrefs.edit().putBoolean("WATER_REMINDER_ENABLED", false).apply()
+                    } else {
+                        passwordError = true
+                    }
+                },
+                secondaryButtonText = "Cancel",
+                onSecondaryClick = { 
                     showPasswordDialog = false
                     passwordError = false
                     passwordInput = ""
                 },
-                title = { Text("Enter Admin Password", color = textPrimary, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily) },
-                text = {
-                    Column {
-                        Text("A password is required to turn off the water reminder.", color = textSecondary, fontSize = 14.sp, fontFamily = InterFontFamily)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        androidx.compose.material3.OutlinedTextField(
-                            value = passwordInput,
-                            onValueChange = { passwordInput = it; passwordError = false },
-                            label = { Text("Password", color = textSecondary, fontFamily = InterFontFamily) },
-                            isError = passwordError,
-                            textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontFamily = InterFontFamily),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFFF9500),
-                                unfocusedBorderColor = cardBorder,
-                                focusedContainerColor = fieldBg,
-                                unfocusedContainerColor = fieldBg
-                            )
-                        )
-                        if (passwordError) {
-                            Text("Incorrect password", color = Color(0xFFFF3B30), fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp), fontFamily = InterFontFamily)
-                        }
-                    }
+                layout = "horizontal",
+                onDismiss = { 
+                    showPasswordDialog = false
+                    passwordError = false
+                    passwordInput = ""
                 },
-                containerColor = cardBg,
-                shape = RoundedCornerShape(24.dp),
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            val correctPassword = sharedPrefs.getString("WATER_REMINDER_PASSWORD", "0000") ?: "0000"
-                            if (passwordInput == correctPassword) {
-                                waterReminderInput = false
-                                sharedPrefs.edit().putBoolean("WATER_REMINDER", false).apply()
-                                WaterReminderManager.stopAlarm(context)
-                                android.widget.Toast.makeText(context, "Water Reminder Disabled", android.widget.Toast.LENGTH_SHORT).show()
-                                showPasswordDialog = false
-                                passwordError = false
-                                passwordInput = ""
-                            } else {
-                                passwordError = true
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9500)),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("Confirm", color = Color.White, fontWeight = FontWeight.Bold, fontFamily = InterFontFamily)
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { 
-                        showPasswordDialog = false
-                        passwordError = false
-                        passwordInput = ""
-                    }) {
-                        Text("Cancel", color = textSecondary, fontFamily = InterFontFamily)
+                customContent = {
+                    androidx.compose.material3.OutlinedTextField(
+                        value = passwordInput,
+                        onValueChange = { passwordInput = it; passwordError = false },
+                        placeholder = { Text("Password", color = textSecondary.copy(alpha=0.5f), fontFamily = InterFontFamily) },
+                        isError = passwordError,
+                        textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontFamily = InterFontFamily),
+                        shape = RoundedCornerShape(8.dp),
+                        singleLine = true,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password),
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF007AFF),
+                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        ),
+                        modifier = Modifier.fillMaxWidth().height(50.dp)
+                    )
+                    if (passwordError) {
+                        Text("Incorrect password", color = Color(0xFFFF3B30), fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp), fontFamily = InterFontFamily)
                     }
                 }
             )
