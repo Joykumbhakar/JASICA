@@ -5329,7 +5329,7 @@ fun SettingsScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                        LucideIconBox(backgroundColor = Color(0xFF636366)) { androidx.compose.foundation.Image(painter = androidx.compose.ui.res.painterResource(id = R.drawable.robot), contentDescription = null, modifier = Modifier.size(24.dp)) }
+                                        LucideIconBox(backgroundColor = Color(0xFF007AFF)) { androidx.compose.foundation.Image(painter = androidx.compose.ui.res.painterResource(id = R.drawable.robot), contentDescription = null, modifier = Modifier.size(24.dp)) }
                                         Spacer(Modifier.width(14.dp))
                                         Column {
                                             Text(name, color = textPrimary, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily)
