@@ -24,6 +24,17 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
+import com.bristi.controller.JasicaBluetoothManager.classicSocket
+import com.bristi.controller.JasicaBluetoothManager.classicOutStream
+import com.bristi.controller.JasicaBluetoothManager.classicInStream
+import com.bristi.controller.JasicaBluetoothManager.isClassicConnected
+import com.bristi.controller.JasicaBluetoothManager.bluetoothGatt
+import com.bristi.controller.JasicaBluetoothManager.bleWriteChar
+import com.bristi.controller.JasicaBluetoothManager.isBleConnected
+import com.bristi.controller.JasicaBluetoothManager.isBtConnected
+import com.bristi.controller.JasicaBluetoothManager.connectedDeviceName
+import com.bristi.controller.JasicaBluetoothManager.connectedDeviceAddress
+import com.bristi.controller.JasicaBluetoothManager.deviceStates
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -229,31 +240,18 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     }
     private var pendingDevice: BluetoothDevice? = null
 
-    // Classic Connection State
-    private var classicSocket: BluetoothSocket? = null
-    private var classicOutStream: OutputStream? = null
-    private var classicInStream: InputStream? = null
-    private var isClassicConnected = false
-
-    // BLE Connection State
-    private var bluetoothGatt: BluetoothGatt? = null
-    private var bleWriteChar: BluetoothGattCharacteristic? = null
-    private var isBleConnected = false
-
+    
+    
     // ── UI State ──────────────────────────────────────────────────────────────
     private val appState         = mutableStateOf(AppState.IDLE)
-    private val isBtConnected    = mutableStateOf(false)
-    private val connectedDeviceName = mutableStateOf<String?>(null)
-    private val connectedDeviceAddress = mutableStateOf<String?>(null)
-    private val aiResponseText   = mutableStateOf("")
+                private val aiResponseText   = mutableStateOf("")
     private val pairedDevices    = mutableStateListOf<BluetoothDevice>()
     private val availableDevices = mutableStateListOf<BluetoothDevice>()
     private val deviceAddresses  = HashSet<String>()
     private val isScanning       = mutableStateOf(false)
 
     // Device States Memory Map
-    private val deviceStates     = mutableStateMapOf<String, Boolean>()
-
+    
     // Dialog visibility states
     private val showDeviceDialog   = mutableStateOf(false)
     private val showSettingsDialog = mutableStateOf(false)
@@ -1198,7 +1196,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         stopEverything()
         if (::tts.isInitialized) tts.shutdown()
         if (::speechRecognizer.isInitialized) speechRecognizer.destroy()
-        disconnectAll()
+        // disconnectAll() // Removed to allow background Bluetooth persistence
         discoveryReceiver?.let { try { unregisterReceiver(it) } catch (e: Exception) {} }
         try { stopScans() } catch (e: Exception) {}
         mainHandler.removeCallbacksAndMessages(null)
