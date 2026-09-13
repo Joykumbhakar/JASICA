@@ -250,7 +250,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private val isAdvancedAiMode  = mutableStateOf(false) // kept for compat
     // Online mode — master switch + key-source selector
     private val isOnlineModeEnabled = mutableStateOf(false)
-    private val useAdminPanelKey    = mutableStateOf(true)  // true=portfolio key, false=user's own key
+    private val useAdminPanelKey    = mutableStateOf(false)  // true=portfolio key, false=user's own key
 
     // ── Conversation Memory ───────────────────────────────────────────────────
     private val conversationHistory = mutableListOf<org.json.JSONObject>()
@@ -937,7 +937,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             sharedPrefs.edit().putBoolean("ONLINE_MODE_ENABLED", legacyValue).apply()
         }
         isOnlineModeEnabled.value = sharedPrefs.getBoolean("ONLINE_MODE_ENABLED", false)
-        useAdminPanelKey.value    = sharedPrefs.getBoolean("USE_ADMIN_PANEL_KEY", true)
+        useAdminPanelKey.value    = sharedPrefs.getBoolean("USE_ADMIN_PANEL_KEY", false)
 
         // Load device states into memory map
         DEFAULT_DEVICES.forEach { dev ->
@@ -1064,7 +1064,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                         isWakeWordMode.value = wakeMode
                         // Sync runtime state from SharedPrefs (the UI writes prefs directly)
                         isOnlineModeEnabled.value = sharedPrefs.getBoolean("ONLINE_MODE_ENABLED", false)
-                        useAdminPanelKey.value    = sharedPrefs.getBoolean("USE_ADMIN_PANEL_KEY", true)
+                        useAdminPanelKey.value    = sharedPrefs.getBoolean("USE_ADMIN_PANEL_KEY", false)
                         isAdvancedAiMode.value    = isOnlineModeEnabled.value // keep compat
                         sharedPrefs.edit()
                             .putBoolean("WAKE_WORD", wakeMode)
@@ -4865,9 +4865,9 @@ fun AppleSettingsGroup(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(24.dp))
                 .background(cardBg)
-                .border(1.dp, cardBorder, RoundedCornerShape(16.dp))
+                .border(1.dp, cardBorder, RoundedCornerShape(24.dp))
         ) {
             content()
         }
@@ -5473,6 +5473,45 @@ fun SettingsScreen(
                 }
 
                 item {
+                    Spacer(Modifier.height(30.dp))
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "JASICA Flash-2.5 v1.2.13.09.2026 (beta)",
+                            color = textSecondary,
+                            fontSize = 12.sp,
+                            fontFamily = InterFontFamily,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Privacy Policy",
+                                color = Color(0xFF007AFF),
+                                fontSize = 12.sp,
+                                fontFamily = InterFontFamily,
+                                modifier = Modifier.clickable {
+                                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://jasicaai.vercel.app/privacy-policy"))
+                                    context.startActivity(intent)
+                                }.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                            Text("|", color = textSecondary, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp))
+                            Text(
+                                text = "Terms & Conditions",
+                                color = Color(0xFF007AFF),
+                                fontSize = 12.sp,
+                                fontFamily = InterFontFamily,
+                                modifier = Modifier.clickable {
+                                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://jasicaai.vercel.app/terms-conditions"))
+                                    context.startActivity(intent)
+                                }.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
                     Spacer(Modifier.height(40.dp))
                 }
             }
@@ -5516,7 +5555,11 @@ fun SettingsScreen(
                             .apply()
                     }
                     showResetConfirmDialog = false
-                    android.widget.Toast.makeText(context, "Devices Reset to Defaults", android.widget.Toast.LENGTH_SHORT).show()
+                    android.widget.Toast.makeText(context, "Devices Reset. Restarting app...", android.widget.Toast.LENGTH_SHORT).show()
+                    context.startActivity(android.content.Intent(context, MainActivity::class.java).apply {
+                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    })
+                    Runtime.getRuntime().exit(0)
                 },
                 secondaryButtonText = "Cancel",
                 onSecondaryClick = { showResetConfirmDialog = false },
