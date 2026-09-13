@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miss Bristi Kumbhakar | Electrician Portfolio</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'San Francisco', 'Helvetica Neue', 'sans-serif'],
+                    },
+                    colors: {
+                        apple: {
+                            bg: '#f5f5f7', 
+                            card: 'rgba(255, 255, 255, 0.75)', 
+                            cardHover: 'rgba(255, 255, 255, 0.95)',
+                            textPrimary: '#1d1d1f', 
+                            textSecondary: '#86868b',
+                            blue: '#0071e3', 
+                            blueHover: '#0077ED',
+                            dark: '#1d1d1f',
+                            darkCard: 'rgba(29, 29, 31, 0.95)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Core Glassmorphism Panel - Flat Interactions Only */
+        .glass-panel {
+            background: var(--tw-bg-opacity, rgba(255, 255, 255, 0.75));
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 32px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-panel:hover {
+            background: rgba(255, 255, 255, 0.98);
+            border-color: #ffffff;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            /* Strictly NO transform/translate */
+        }
+
+        /* Dark High-Contrast Panel */
+        .dark-panel {
+            background: rgba(29, 29, 31, 0.95);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f5f5f7;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            border-radius: 32px;
+            transition: background-color 0.4s ease, border-color 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dark-panel:hover {
+            background: #000000;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Apple-style Skill Pills */
+        .skill-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 113, 227, 0.08);
+            border-radius: 999px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: #0071e3;
+            transition: background-color 0.3s ease;
+        }
+        
+        .glass-panel:hover .skill-pill {
+            background: rgba(0, 113, 227, 0.12);
+        }
+
+        /* Custom SVG Path Drawing Animations */
+        .svg-anim-draw {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: drawPath 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+        }
+        
+        .svg-anim-draw-fast {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: drawPath 2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+        }
+        
+        .svg-anim-draw-delayed {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: drawPath 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+            animation-delay: 1.2s;
+        }
+
+        @keyframes drawPath {
+            0% { stroke-dashoffset: 100; }
+            15% { stroke-dashoffset: 100; }
+            85% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: 0; }
+        }
+
+        /* Scroll Reveal Animation */
+        .reveal-element {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        
+        .reveal-element.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Inner card layout fixes */
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative pb-10 selection:bg-apple-blue selection:text-white">
+
+    <nav class="fixed top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-6xl z-50 reveal-element is-visible">
+        <div class="glass-panel !rounded-full px-6 py-3 flex items-center justify-between border-white/60">
+            <div class="flex items-center gap-3 font-semibold text-apple-textPrimary tracking-tight">
+                <div class="w-8 h-8 rounded-full bg-apple-dark flex items-center justify-center text-white relative">
+                    <!-- Custom SVG Lightning Bolt -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-white">
+                        <path pathLength="100" class="svg-anim-draw" d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                    </svg>
+                </div>
+                <span class="text-[1.05rem]">Bristi K.</span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <span class="text-xs font-medium text-apple-textSecondary hidden sm:inline-block">Durgapur, WB</span>
+                <div class="w-px h-4 bg-gray-300 hidden sm:block"></div>
+                <button id="audio-toggle" class="w-9 h-9 rounded-full bg-apple-bg hover:bg-gray-200 transition-colors flex items-center justify-center text-apple-textSecondary hover:text-apple-dark focus:outline-none" aria-label="Toggle Interface Sounds">
+                    <i data-lucide="volume-x" id="audio-icon" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 z-10 relative">
+        <div class="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-6 gap-4 md:gap-5 auto-rows-[minmax(200px,auto)]">
+            
+            <div class="glass-panel col-span-1 md:col-span-6 lg:col-span-4 row-span-2 p-8 lg:p-10 reveal-element sound-card">
+                <div class="card-content">
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-apple-blue/10 text-apple-blue text-xs font-semibold tracking-wide mb-6">
+                            <i data-lucide="briefcase" class="w-3.5 h-3.5"></i> Professional Portfolio
+                        </div>
+                        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-apple-textPrimary leading-[1.05] mb-4">
+                            Miss Bristi<br/>Kumbhakar.
+                        </h1>
+                        <p class="text-xl md:text-2xl text-apple-textSecondary font-medium flex items-center gap-2 mb-6 tracking-tight">
+                            Certified Industrial Electrician
+                        </p>
+                    </div>
+                    <div class="pt-6 border-t border-gray-200/60 max-w-xl">
+                        <p class="text-apple-textPrimary leading-relaxed text-[1.1rem] font-normal">
+                            Dedicated technical professional specializing in complex industrial electrical systems. 
+                            Passionate about implementing rigorous safety protocols, precise circuitry layout, and maintaining robust facility infrastructure.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dark-panel col-span-1 md:col-span-3 lg:col-span-2 row-span-1 p-8 reveal-element sound-card group relative">
+                <!-- Abstract glowing orb effect -->
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-apple-blue rounded-full blur-[50px] opacity-20 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none"></div>
+                
+                <div class="card-content relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                            <i data-lucide="building-2" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <span class="text-xs font-semibold uppercase tracking-widest text-apple-blue px-2 py-1 bg-apple-blue/10 rounded-md">Present</span>
+                    </div>
+                    <div>
+                        <p class="text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">Current Role</p>
+                        <h3 class="text-2xl font-bold tracking-tight text-white mb-1">GE Pvt. Ltd.</h3>
+                        <p class="text-apple-blue font-medium text-sm">Apprentice / Intern</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel col-span-1 md:col-span-3 lg:col-span-2 row-span-1 p-8 reveal-element sound-card flex items-center justify-center text-center">
+                <div>
+                    <div class="w-12 h-12 mx-auto rounded-full bg-apple-blue/10 flex items-center justify-center text-apple-blue mb-3">
+                        <!-- Custom SVG Electrical Gauge/Meter -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-apple-blue">
+                            <path pathLength="100" class="svg-anim-draw" d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10" />
+                            <path pathLength="100" class="svg-anim-draw-fast" d="M12 12l4-4" />
+                            <circle cx="12" cy="12" r="2" fill="currentColor" />
+                        </svg>
+                    </div>
+                    <h3 class="text-3xl font-bold text-apple-textPrimary tracking-tight">500+</h3>
+                    <p class="text-sm font-medium text-apple-textSecondary mt-1">Hours of Practical Fieldwork</p>
+                </div>
+            </div>
+
+            <div class="glass-panel col-span-1 md:col-span-6 lg:col-span-4 row-span-2 p-2 reveal-element sound-card group">
+                <div class="w-full h-full rounded-[28px] overflow-hidden relative bg-black">
+                    <!-- Referencing the exact image requested -->
+                    <img src="image_bb0d69.jpg" alt="Electrical Work Showcase" class="w-full h-full object-cover transition-all duration-700 opacity-90 group-hover:opacity-100 group-hover:scale-[1.02]" onerror="this.src='https://placehold.co/1200x800/1d1d1f/ffffff?text=Industrial+Project+Showcase'">
+                    
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+                    
+                    <div class="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+                        <div class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20 shadow-lg">
+                            <h4 class="text-white font-semibold tracking-wide flex items-center gap-2">
+                                <i data-lucide="zap" class="w-4 h-4 text-apple-blue"></i> On-Site Operations
+                            </h4>
+                            <p class="text-white/80 text-xs mt-0.5">Applying theoretical logic to physical systems.</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20 text-white">
+                            <i data-lucide="expand" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel col-span-1 md:col-span-3 lg:col-span-2 row-span-1 p-8 reveal-element sound-card">
+                <div class="card-content">
+                    <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-apple-textPrimary mb-4">
+                        <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <p class="text-[0.65rem] text-apple-textSecondary font-bold uppercase tracking-widest mb-1">Education</p>
+                        <h3 class="font-bold text-xl text-apple-textPrimary tracking-tight">ITI Electrician</h3>
+                        <p class="text-sm text-apple-textSecondary mt-1">Durgapur Govt. ITI</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel col-span-1 md:col-span-3 lg:col-span-2 row-span-1 p-6 lg:p-8 reveal-element sound-card">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="font-semibold text-lg text-apple-textPrimary flex items-center gap-2">
+                        <i data-lucide="cpu" class="w-5 h-5 text-apple-blue"></i> Core Skills
+                    </h3>
+                    <!-- Custom SVG Circuit Node -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-gray-400">
+                        <rect pathLength="100" class="svg-anim-draw" x="4" y="4" width="16" height="16" rx="2" ry="2" />
+                        <path pathLength="100" class="svg-anim-draw-fast" d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3" />
+                    </svg>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <span class="skill-pill"><i data-lucide="cable" class="w-3.5 h-3.5"></i> Wiring Layouts</span>
+                    <span class="skill-pill"><i data-lucide="hard-hat" class="w-3.5 h-3.5"></i> Safety Standards</span>
+                    <span class="skill-pill"><i data-lucide="activity" class="w-3.5 h-3.5"></i> Diagnostics</span>
+                    <span class="skill-pill"><i data-lucide="plug-zap" class="w-3.5 h-3.5"></i> Installations</span>
+                </div>
+            </div>
+
+            <div class="glass-panel col-span-1 md:col-span-6 lg:col-span-6 row-span-1 p-8 reveal-element sound-card mt-2">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 shrink-0 rounded-full bg-apple-blue/10 flex items-center justify-center text-apple-blue">
+                            <!-- Custom SVG Wrench/Tools -->
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-apple-blue">
+                                <path pathLength="100" class="svg-anim-draw" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-apple-textPrimary mb-1">Maintenance</h4>
+                            <p class="text-sm text-apple-textSecondary leading-relaxed">Routine inspection and preventative maintenance of large-scale industrial electrical motors and panels.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 shrink-0 rounded-full bg-apple-blue/10 flex items-center justify-center text-apple-blue">
+                            <!-- Custom SVG Safety Shield -->
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-apple-blue">
+                                <path pathLength="100" class="svg-anim-draw" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                <path pathLength="100" class="svg-anim-draw-delayed" d="M9 12l2 2 4-4" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-apple-textPrimary mb-1">Compliance</h4>
+                            <p class="text-sm text-apple-textSecondary leading-relaxed">Ensuring all on-site installations strictly adhere to national safety codes and GE internal protocols.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 shrink-0 rounded-full bg-apple-blue/10 flex items-center justify-center text-apple-blue">
+                            <!-- Custom SVG Multimeter/Oscilloscope -->
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-apple-blue">
+                                <rect pathLength="100" class="svg-anim-draw" x="2" y="4" width="20" height="16" rx="2" />
+                                <path pathLength="100" class="svg-anim-draw-fast" d="M2 12h4l2-4 4 8 2-4h8" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-apple-textPrimary mb-1">Troubleshooting</h4>
+                            <p class="text-sm text-apple-textSecondary leading-relaxed">Systematic fault-finding using multimeters, insulation testers, and schematic diagram analysis.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 mb-12 relative z-10 reveal-element">
+        <div class="glass-panel p-8 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left sound-card">
+            <div>
+                <h3 class="font-bold text-xl text-apple-textPrimary tracking-tight mb-1">Ready to power the future.</h3>
+                <p class="text-sm text-apple-textSecondary">Available for opportunities in industrial and commercial electrical sectors.</p>
+            </div>
+            <a href="mailto:#" class="shrink-0 px-6 py-3 rounded-full bg-apple-dark text-white font-medium hover:bg-black transition-colors flex items-center gap-2 shadow-sm border border-transparent hover:border-gray-700">
+                <i data-lucide="mail" class="w-4 h-4"></i> Get in Touch
+            </a>
+        </div>
+        <div class="mt-8 text-center text-xs font-medium text-gray-400 flex items-center justify-center gap-2">
+            <i data-lucide="zap" class="w-3 h-3"></i> Miss Bristi Kumbhakar &copy; 2026. Designed with precision.
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Initialize Icons
+            lucide.createIcons();
+
+            // 2. Intersection Observer for Apple-style Smooth Staggered Reveals
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px 0px -30px 0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        // Stagger the animation slightly based on entry index
+                        setTimeout(() => {
+                            entry.target.classList.add('is-visible');
+                        }, index * 100); 
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.reveal-element').forEach((el) => {
+                // Header is visible by default
+                if(el.tagName !== 'NAV') {
+                    observer.observe(el);
+                }
+            });
+
+            // 3. Tone.js Interface Sounds
+            let audioEnabled = false;
+            let synth;
+
+            const audioToggle = document.getElementById('audio-toggle');
+            const audioIcon = document.getElementById('audio-icon');
+            const soundCards = document.querySelectorAll('.sound-card');
+
+            // Initialize a very soft, premium FM Synth for glassy UI ticks
+            function initSynth() {
+                if (!synth) {
+                    synth = new Tone.FMSynth({
+                        harmonicity: 3,
+                        modulationIndex: 10,
+                        detune: 0,
+                        oscillator: { type: "sine" },
+                        envelope: { attack: 0.005, decay: 0.05, sustain: 0, release: 0.05 },
+                        modulation: { type: "square" },
+                        modulationEnvelope: { attack: 0.005, decay: 0.02, sustain: 0, release: 0.02 }
+                    }).toDestination();
+                    synth.volume.value = -28; // Very subtle volume
+                }
+            }
+
+            // Play sound strictly on hover (mouse interaction only, ignored on touch typically)
+            function playHoverSound() {
+                if (audioEnabled && synth && Tone.context.state === 'running') {
+                    // Randomize pitch slightly for organic feel (C6 to E6 range)
+                    const notes = ["C6", "D6", "E6"];
+                    const randomNote = notes[Math.floor(Math.random() * notes.length)];
+                    synth.triggerAttackRelease(randomNote, "64n");
+                }
+            }
+
+            // Toggle logic
+            audioToggle.addEventListener('click', async () => {
+                if (!audioEnabled) {
+                    await Tone.start();
+                    initSynth();
+                    audioEnabled = true;
+                    
+                    // UI Update
+                    audioIcon.setAttribute('data-lucide', 'volume-2');
+                    lucide.createIcons();
+                    audioToggle.classList.add('text-apple-blue');
+                    audioToggle.classList.remove('text-apple-textSecondary');
+                    
+                    // Chime (Apple-like activation tone)
+                    const chordSynth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 0.05, decay: 0.3, sustain: 0, release: 0.5 }
+                    }).toDestination();
+                    chordSynth.volume.value = -20;
+                    chordSynth.triggerAttackRelease(["C5", "G5"], "16n");
+                    
+                } else {
+                    audioEnabled = false;
+                    
+                    // UI Update
+                    audioIcon.setAttribute('data-lucide', 'volume-x');
+                    lucide.createIcons();
+                    audioToggle.classList.remove('text-apple-blue');
+                    audioToggle.classList.add('text-apple-textSecondary');
+                }
+            });
+
+            // Bind sound to cards
+            soundCards.forEach(card => {
+                card.addEventListener('mouseenter', playHoverSound);
+            });
+        });
+    </script>
+</body>
+</html>
