@@ -5041,7 +5041,7 @@ fun AppleJellySlider(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(28.dp)
+                    .height(4.dp)
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(50))
                     .background(inactiveColor)
             ) {
