@@ -3904,7 +3904,7 @@ fun BottomMicButton(appState: AppState, onClick: () -> Unit) {
                     }
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.mic), // Assumes existing drawable
+                    painter = painterResource(id = R.drawable.fluentui_system_icons_mic), // Assumes existing drawable
                     contentDescription = "Microphone",
                     modifier = Modifier.size(34.dp),
                     contentScale = ContentScale.Fit
@@ -6217,7 +6217,7 @@ fun VoiceCalibrationScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.mic),
+                            painter = painterResource(id = R.drawable.fluentui_system_icons_mic),
                             contentDescription = "Microphone",
                             tint = if (isListening) Color.White else Color(0xFFF2F2F7),
                             modifier = Modifier.size(30.dp)
