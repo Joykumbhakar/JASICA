@@ -3310,11 +3310,11 @@ fun DeviceControlCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Lightbulb,
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(id = R.drawable.robot),
                     contentDescription = null,
-                    tint = if (isChecked) activeAccent else subTextColor,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(24.dp),
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(if (isChecked) activeAccent else subTextColor)
                 )
             }
 
@@ -4996,7 +4996,7 @@ fun SettingsScreen(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     androidx.compose.foundation.Image(
-                        painter = androidx.compose.ui.res.painterResource(id = R.drawable.settings_header),
+                        painter = androidx.compose.ui.res.painterResource(id = R.drawable.settings_icon),
                         contentDescription = "Settings Icon",
                         modifier = Modifier.size(36.dp).padding(end = 8.dp)
                     )
@@ -7064,6 +7064,24 @@ fun DashboardStatPill(text: String) {
     }
 }
 
+
+@Composable
+fun DashboardRoutineButtonRes(modifier: Modifier = Modifier, title: String, iconRes: Int, onClick: () -> Unit) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(24.dp))
+            .background(Brush.linearGradient(listOf(Color(0xFF4A00E0).copy(alpha = 0.4f), Color(0xFF1E32AA).copy(alpha = 0.4f))))
+            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(24.dp))
+            .clickable { onClick() }
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        androidx.compose.foundation.Image(painter = androidx.compose.ui.res.painterResource(id = iconRes), contentDescription = null, modifier = Modifier.size(24.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(text = title, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, fontFamily = InterFontFamily)
+    }
+}
+
 @Composable
 fun DashboardRoutineButton(modifier: Modifier = Modifier, title: String, icon: ImageVector, onClick: () -> Unit) {
     Column(
@@ -7188,6 +7206,7 @@ data class UpdateNotification(
 )
 
 @Composable
+@Composable
 fun AppleMenuItemImage(
     painter: androidx.compose.ui.graphics.painter.Painter,
     text: String,
@@ -7198,7 +7217,7 @@ fun AppleMenuItemImage(
         modifier = Modifier
             .fillMaxWidth()
             .pointerInput(Unit) {
-                androidx.compose.foundation.gestures.detectTapGestures(
+                detectTapGestures(
                     onPress = {
                         isPressed = true
                         tryAwaitRelease()
@@ -7217,6 +7236,7 @@ fun AppleMenuItemImage(
     }
 }
 
+@Composable
 fun AppleMenuItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     text: String,

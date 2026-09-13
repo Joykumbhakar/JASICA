@@ -26,36 +26,19 @@ object WaterReminderManager {
         val triggerAtMillis = System.currentTimeMillis() + intervalMinutes * 60 * 1000L
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (alarmManager.canScheduleExactAlarms()) {
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        triggerAtMillis,
-                        pendingIntent
-                    )
-                } else {
-                    alarmManager.setAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        triggerAtMillis,
-                        pendingIntent
-                    )
-                }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerAtMillis,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerAtMillis,
-                    pendingIntent
-                )
-            }
+            // Using setAlarmClock ensures it fires accurately even in Doze mode
+            // without requiring SCHEDULE_EXACT_ALARM permissions in Android 14
+            val info = AlarmManager.AlarmClockInfo(triggerAtMillis, pendingIntent)
+            alarmManager.setAlarmClock(info, pendingIntent)
+            
             Log.d("WaterReminderManager", "Scheduled water alarm in $intervalMinutes minutes")
         } catch (e: Exception) {
-            Log.e("WaterReminderManager", "Failed to schedule alarm", e)
+            Log.e("WaterReminderManager", "Failed to schedule alarm using setAlarmClock, falling back...", e)
+            try {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+            } catch (ex: Exception) {
+                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+            }
         }
     }
 
