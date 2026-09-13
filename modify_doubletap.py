@@ -1,4 +1,6 @@
-package com.bristi.controller
+path = r"E:\Controller\app\src\main\java\com\bristi\controller\DoubleTapService.kt"
+
+new_code = """package com.bristi.controller
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -199,3 +201,9 @@ class DoubleTapService : Service(), SensorEventListener {
         Log.d(TAG, "DoubleTapService destroyed")
     }
 }
+"""
+
+with open(path, "w", encoding="utf-8") as f:
+    f.write(new_code)
+
+print("DoubleTapService updated")

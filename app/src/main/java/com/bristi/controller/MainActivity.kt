@@ -5633,7 +5633,7 @@ fun SettingsScreen(
 
                         AppleSettingsRow(
                             title = "Double Tap Back",
-                            subtitle = "Tap the back of your phone twice to toggle a device",
+                            subtitle = "Double tap to turn ON, Triple tap to turn OFF",
                             icon = { Icon(Icons.Rounded.TouchApp, contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White) },
                             iconBgColor = Color(0xFF5856D6),
                             showDivider = doubleTapEnabled,
