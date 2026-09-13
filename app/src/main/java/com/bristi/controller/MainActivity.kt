@@ -3065,7 +3065,7 @@ fun JasicaScreen(
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            OnboardingScreen(onDismiss = onDismissOnboarding)
+            OnboardingScreen(hazeState = hazeState, onDismiss = onDismissOnboarding)
         }
     }
 }
@@ -6308,7 +6308,7 @@ fun VoiceCalibrationScreen(
 data class OnboardingPageInfo(val title: String, val subtitle: String, val iconRes: Int?, val image: Int?)
 
 @Composable
-fun OnboardingScreen(onDismiss: () -> Unit) {
+fun OnboardingScreen(hazeState: dev.chrisbanes.haze.HazeState? = null, onDismiss: () -> Unit) {
     val pages = listOf(
         OnboardingPageInfo("Welcome to Jasica", "Your intelligent voice assistant for complete digital and hardware control.", null, R.drawable.jasica),
         OnboardingPageInfo("Voice Commands", "Say a command or tap the mic to control your lights, PC, AC, and more natively.", R.drawable.fluentui_system_icons_mic, null),
@@ -6316,54 +6316,93 @@ fun OnboardingScreen(onDismiss: () -> Unit) {
         OnboardingPageInfo("Stay Connected", "Pair your Bluetooth smart hub via the top right icon to get started.", R.drawable.fluentui_system_icons_phone_laptop, null)
     )
 
-    var currentPage by remember { mutableIntStateOf(0) }
+    val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { pages.size })
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0F0F14).copy(alpha = 0.98f)) // Deep premium dark background
-            .clickable(enabled = false) {} // Catch background clicks
+            .then(
+                if (hazeState != null) Modifier.hazeEffect(
+                    state = hazeState,
+                    style = dev.chrisbanes.haze.HazeStyle(
+                        blurRadius = 40.dp,
+                        tint = dev.chrisbanes.haze.HazeTint(Color.Black.copy(alpha = 0.4f))
+                    )
+                ) else Modifier
+            )
+            .background(if (hazeState != null) Color.Black.copy(alpha = 0.5f) else Color(0xFF0F0F14).copy(alpha = 0.98f))
+            .clickable(enabled = false) {}
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(24.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 48.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.weight(1f))
 
-            Crossfade(targetState = currentPage, label = "onboarding_fade", animationSpec = tween(500)) { page ->
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    val info = pages[page]
-                    if (info.image != null) {
-                        Image(
-                            painterResource(info.image),
-                            contentDescription = null,
-                            modifier = Modifier.size(140.dp).clip(CircleShape)
-                        )
-                    } else if (info.iconRes != null) {
-                        Box(
-                            modifier = Modifier.size(140.dp).background(JasicaCardBg, CircleShape).border(1.dp, JasicaWhite.copy(0.1f), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(painterResource(info.iconRes), contentDescription = null, modifier = Modifier.size(60.dp), tint = Color(0xFF0A84FF))
+            androidx.compose.foundation.pager.HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxWidth().height(360.dp)
+            ) { page ->
+                val info = pages[page]
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    val isCurrentPage = pagerState.currentPage == page
+                    val scale by animateFloatAsState(if (isCurrentPage) 1f else 0.8f, tween(400, easing = FastOutSlowInEasing))
+                    val alpha by animateFloatAsState(if (isCurrentPage) 1f else 0f, tween(400))
+
+                    Box(modifier = Modifier.graphicsLayer { this.scaleX = scale; this.scaleY = scale; this.alpha = alpha }) {
+                        if (info.image != null) {
+                            Image(
+                                painterResource(info.image),
+                                contentDescription = null,
+                                modifier = Modifier.size(160.dp).clip(CircleShape).shadow(12.dp, CircleShape)
+                            )
+                        } else if (info.iconRes != null) {
+                            Box(
+                                modifier = Modifier
+                                    .size(160.dp)
+                                    .shadow(elevation = 16.dp, shape = CircleShape, ambientColor = Color.Black.copy(alpha = 0.3f), spotColor = Color.Black.copy(alpha = 0.3f))
+                                    .background(
+                                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                            listOf(Color(0xFF44A6FF), Color(0xFF007AFF))
+                                        ),
+                                        shape = CircleShape
+                                    )
+                                    .border(1.dp, Color.White.copy(0.3f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painterResource(info.iconRes), 
+                                    contentDescription = null, 
+                                    modifier = Modifier.size(72.dp).graphicsLayer { shadowElevation = 4f }, 
+                                    tint = Color.White
+                                )
+                            }
                         }
                     }
 
-                    Spacer(Modifier.height(40.dp))
+                    Spacer(Modifier.height(48.dp))
                     Text(
                         text = info.title,
                         color = Color.White,
-                        fontSize = 28.sp,
+                        fontSize = 32.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        fontFamily = InterFontFamily
+                        fontFamily = InterFontFamily,
+                        textAlign = TextAlign.Center
                     )
                     Spacer(Modifier.height(16.dp))
                     Text(
                         text = info.subtitle,
-                        color = Color.White.copy(alpha=0.7f),
-                        fontSize = 16.sp,
+                        color = Color.White.copy(alpha=0.75f),
+                        fontSize = 17.sp,
                         textAlign = TextAlign.Center,
                         fontFamily = InterFontFamily,
-                        modifier = Modifier.padding(horizontal = 20.dp)
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        lineHeight = 24.sp
                     )
                 }
             }
@@ -6371,45 +6410,55 @@ fun OnboardingScreen(onDismiss: () -> Unit) {
             Spacer(Modifier.weight(1f))
 
             // Progress Dots
-            Row(horizontalArrangement = Arrangement.Center) {
+            Row(
+                modifier = Modifier.padding(bottom = 32.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
                 pages.indices.forEach { index ->
-                    val isSelected = index == currentPage
-                    val color = if (isSelected) Color.White else Color.White.copy(alpha = 0.3f)
-                    val width = animateFloatAsState(if (isSelected) 24f else 8f, label = "dot")
+                    val isSelected = pagerState.currentPage == index
+                    val color by animateColorAsState(if (isSelected) Color.White else Color.White.copy(alpha = 0.2f), tween(300))
+                    val width by animateFloatAsState(if (isSelected) 24f else 8f, tween(300))
                     Box(
                         modifier = Modifier
-                            .padding(4.dp)
+                            .padding(horizontal = 4.dp)
                             .height(8.dp)
-                            .width(width.value.dp)
+                            .width(width.dp)
                             .clip(CircleShape)
                             .background(color)
                     )
                 }
             }
 
-            Spacer(Modifier.height(40.dp))
-
             // Action Buttons
             Button(
                 onClick = {
-                    if (currentPage < pages.size - 1) currentPage++ else onDismiss()
+                    if (pagerState.currentPage < pages.size - 1) {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                        }
+                    } else {
+                        onDismiss()
+                    }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0A84FF)),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
-                    text = if (currentPage < pages.size - 1) "NEXT" else "GET STARTED",
-                    color = Color.White,
+                    text = if (pagerState.currentPage < pages.size - 1) "Continue" else "Get Started",
+                    color = Color.Black,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = InterFontFamily,
-                    letterSpacing = 1.sp
+                    fontSize = 17.sp,
+                    fontFamily = InterFontFamily
                 )
             }
-            Spacer(Modifier.height(8.dp))
-            if (currentPage < pages.size - 1) {
-                TextButton(onClick = onDismiss) {
-                    Text("SKIP", color = Color.White.copy(alpha = 0.7f), fontFamily = InterFontFamily, fontWeight = FontWeight.Medium)
+            Spacer(Modifier.height(16.dp))
+            if (pagerState.currentPage < pages.size - 1) {
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.height(48.dp)
+                ) {
+                    Text("Skip Tour", color = Color.White.copy(alpha = 0.6f), fontSize = 16.sp, fontFamily = InterFontFamily, fontWeight = FontWeight.Medium)
                 }
             } else {
                 Spacer(Modifier.height(48.dp))
@@ -6417,95 +6466,6 @@ fun OnboardingScreen(onDismiss: () -> Unit) {
         }
     }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  App Previews (For Android Studio)
-// ─────────────────────────────────────────────────────────────────────────────
-
-@Preview(showBackground = true, name = "Jasica Screen - Idle", showSystemUi = true)
-@Composable
-fun JasicaScreenIdlePreview() {
-    JasicaTheme {
-        JasicaScreen(
-            sharedPrefs = LocalContext.current.getSharedPreferences("JasicaSettings", Context.MODE_PRIVATE),
-            appState = AppState.IDLE,
-            isBtConnected = false,
-            connectedDeviceName = null,
-            connectedDeviceAddress = null,
-            responseText = "",
-            pairedDevices = emptyList(),
-            availableDevices = emptyList(),
-            isScanning = false,
-            deviceStates = emptyMap(),
-            chatHistory = emptyList(),
-            showDialog = false,
-            showSettings = false,
-            showManualControls = false,
-            showHistory = false,
-            showOnboarding = false,
-            showVoiceCalibration = false,
-            calibrationIndex = 0,
-            calibrationRecognizedText = "",
-            showArduinoCode = false,
-            micError = null,
-            onDismissMicError = {},
-            currentApiKey = "",
-            currentModel = AiModelsList[0],
-            isWakeWordMode = false,
-            isAdvancedAiMode = false,
-            isOnlineModeEnabled = false,
-            useAdminPanelKey = true,
-            onMicTap = {},
-            onInterrupt = {},
-            onBtIconTap = {},
-            onSettingsTap = {},
-            onManualControlsTap = {},
-            onHistoryTap = {},
-            onDeviceSelect = {},
-            onScanTap = {},
-            onDismissDialog = {},
-            onDismissSettings = {},
-            onDismissManual = {},
-            onDismissHistory = {},
-            onArduinoCodeTap = {},
-            onDismissArduinoCode = {},
-            onDismissOnboarding = {},
-            onDismissCalibration = {},
-            onSaveSettings = { _, _, _ -> },
-            onActionCardTap = {},
-            onSendRawCommand = {}
-        )
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  Arduino Code Screen
-// ─────────────────────────────────────────────────────────────────────────────
-
-private val ARDUINO_UNO_CODE = """
-// ═══════════════════════════════════════════════════════════════
-//  JASICA Controller — Arduino UNO + HC-05 Bluetooth Module
-//  Board  : Arduino UNO (Clone)
-//  Module : HC-05 (connected to Software Serial pins 2 & 3)
-//  Devices: Pins 8–13 (relays / MOSFETs / LEDs)
-//  Author : Joy Kumbhakar (Bristi's System)
-// ═══════════════════════════════════════════════════════════════
-
-#include <SoftwareSerial.h>
-
-// HC-05 RX → Arduino pin 2 | HC-05 TX → Arduino pin 3
-SoftwareSerial BT(2, 3);
-
-// ── Device Pin Map ────────────────────────────────────────────
-const int PIN_PC    = 8;   // a/A — PC / Computer
-const int PIN_RGB   = 9;   // b/B — RGB Lights
-const int PIN_LIGHT = 10;  // c/C — Room Light
-const int PIN_PLUG  = 11;  // d/D — Smart Plug
-const int PIN_FAN   = 12;  // e/E — Ceiling Fan
-const int PIN_AC    = 13;  // f/F — Air Conditioner
-
-int allPins[] = { PIN_PC, PIN_RGB, PIN_LIGHT, PIN_PLUG, PIN_FAN, PIN_AC };
-const int TOTAL = 6;
 
 void setup() {
   Serial.begin(9600);
