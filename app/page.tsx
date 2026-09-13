@@ -947,7 +947,7 @@ export default function HomePage() {
 
     <section id="promo-video" className="relative z-20 bg-[#f5f5f7] pt-24 md:pt-32 px-4 md:px-12 mt-[100vh] md:mt-[110vh]">
           <div className="max-w-6xl mx-auto">
-              <div className="bg-white rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 shadow-sm border border-zinc-200 flex flex-col lg:flex-row gap-10 lg:gap-16 items-center">
+              <div className="py-12 md:py-16 border-t border-b border-zinc-200/80 flex flex-col lg:flex-row gap-12 lg:gap-16 items-center">
                   
                   {/* Video Side */}
                   <div className="w-full lg:w-1/2">
