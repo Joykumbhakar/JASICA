@@ -113,18 +113,21 @@ class DoubleTapService : Service(), SensorEventListener {
 
         val now = System.currentTimeMillis()
 
+        // Debounce: ignore spikes that happen within 60ms of the last tap
+        if (now - lastTapTime < 60) return
+
         if (now - lastTapTime > TAP_WINDOW_MS) {
             tapCount = 1
             lastTapTime = now
             
             handler.removeCallbacksAndMessages(null)
-            handler.postDelayed({ finalizeTaps() }, TAP_WINDOW_MS + 150)
+            handler.postDelayed({ finalizeTaps() }, TAP_WINDOW_MS + 100)
         } else {
             tapCount++
             lastTapTime = now
             
             handler.removeCallbacksAndMessages(null)
-            handler.postDelayed({ finalizeTaps() }, TAP_WINDOW_MS + 150)
+            handler.postDelayed({ finalizeTaps() }, TAP_WINDOW_MS + 100)
         }
     }
 
