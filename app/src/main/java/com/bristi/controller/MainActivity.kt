@@ -129,6 +129,8 @@ import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -5017,7 +5019,7 @@ fun AppleSettingsGroup(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@androidx.compose.runtime.Composable
+@Composable
 fun AppleJellySlider(
     value: Float,
     onValueChange: (Float) -> Unit,
@@ -5026,11 +5028,25 @@ fun AppleJellySlider(
     activeColor: Color = Color(0xFF007AFF),
     inactiveColor: Color = Color(0xFFE5E5EA)
 ) {
+    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val isDragged by interactionSource.collectIsDraggedAsState()
+    val isActive = isPressed || isDragged
+
+    val scale by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (isActive) 1.25f else 1.0f,
+        animationSpec = androidx.compose.animation.core.spring(
+            dampingRatio = 0.4f, // bouncy jelly effect
+            stiffness = 500f
+        )
+    )
+
     androidx.compose.material3.Slider(
         value = value,
         onValueChange = onValueChange,
         onValueChangeFinished = onValueChangeFinished,
         valueRange = valueRange,
+        interactionSource = interactionSource,
         colors = androidx.compose.material3.SliderDefaults.colors(
             activeTrackColor = Color.Transparent,
             inactiveTrackColor = Color.Transparent,
@@ -5053,40 +5069,25 @@ fun AppleJellySlider(
                 )
             }
         },
-        thumb = { sliderState ->
+        thumb = {
             val thumbWidth = 24.dp
             val thumbHeight = 18.dp
             
             Box(
                 modifier = Modifier
                     .size(width = thumbWidth, height = thumbHeight)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(50))
-                    .background(Color.White)
-                    .background(
-                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                            0.0f to Color.White.copy(alpha = 0.95f),
-                            0.45f to Color.White.copy(alpha = 0.1f),
-                            0.5f to Color.Transparent,
-                            1.0f to Color.Transparent
-                        )
+                    .scale(scale)
+                    .shadow(
+                        elevation = 4.dp,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
+                        spotColor = Color.Black.copy(alpha = 0.3f),
+                        ambientColor = Color.Black.copy(alpha = 0.1f)
                     )
-                    .background(
-                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                            0.0f to Color.Transparent,
-                            0.5f to Color.Transparent,
-                            0.6f to Color.White.copy(alpha = 0f),
-                            1.0f to Color.White.copy(alpha = 0.85f)
-                        )
-                    )
+                    .background(Color.White, shape = androidx.compose.foundation.shape.RoundedCornerShape(50))
                     .border(
                         width = 0.5.dp, 
-                        color = Color.Black.copy(alpha = 0.1f), 
+                        color = Color.Black.copy(alpha = 0.15f), 
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(50)
-                    )
-                    .shadow(
-                        elevation = 3.dp,
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
-                        spotColor = Color.Black.copy(alpha = 0.2f)
                     )
             )
         }
