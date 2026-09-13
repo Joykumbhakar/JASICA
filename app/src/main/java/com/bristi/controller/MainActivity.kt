@@ -4927,6 +4927,7 @@ fun AppleSettingsRow(
     subtitle: String? = null,
     icon: (@Composable () -> Unit)? = null,
     iconBgColor: Color = Color.Transparent,
+    iconSize: androidx.compose.ui.unit.Dp = 28.dp,
     showDivider: Boolean = true,
     isDark: Boolean = false,
     onClick: (() -> Unit)? = null,
@@ -5195,10 +5196,11 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Use Portfolio API Key",
                             subtitle = "Automatically load dynamic API keys from cloud",
-                            icon = { Image(painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_maclaps), contentDescription = null, modifier = Modifier.size(28.dp)) },
+                            icon = { Image(painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_maclaps), contentDescription = null, modifier = Modifier.size(30.dp)) },
                             iconBgColor = Color.Transparent,
                             showDivider = !adminKeyInput,
                             isDark = darkModeInput,
+                            iconSize = 30.dp,
                             control = {
                                 AppleSwitch(
                                       checked = adminKeyInput,
@@ -6436,9 +6438,9 @@ data class OnboardingPageInfo(val title: String, val subtitle: String, val iconR
 fun OnboardingScreen(hazeState: dev.chrisbanes.haze.HazeState? = null, onDismiss: () -> Unit) {
     val pages = listOf(
         OnboardingPageInfo("Welcome to Jasica", "Your intelligent voice assistant for complete digital and hardware control.", null, R.drawable.jasica),
-        OnboardingPageInfo("Voice Commands", "Say a command or tap the mic to control your LEDs and devices natively.", null, R.drawable.tour_voice),
-        OnboardingPageInfo("Manual Override", "Access the quick-switch panel from the top right home icon to toggle hardware without speaking.", null, R.drawable.tour_manual),
-        OnboardingPageInfo("Stay Connected", "Pair your Bluetooth smart hub via the top right icon to get started.", null, R.drawable.tour_connect)
+        OnboardingPageInfo("Voice Commands", "Say a command or tap the mic to control your LEDs and devices natively.", null, R.drawable.hey_jasica),
+        OnboardingPageInfo("Manual Override", "Access the quick-switch panel from the top right home icon to toggle hardware without speaking.", null, R.drawable.manual_control),
+        OnboardingPageInfo("Stay Connected", "Pair your Bluetooth smart hub via the top right icon to get started.", null, R.drawable.stay_connected)
     )
 
     val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { pages.size })

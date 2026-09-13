@@ -3,8 +3,15 @@ with open(file_path, "r", encoding="utf-8") as f:
     content = f.read()
 
 content = content.replace(
-    "iconSize = 30.dp,\n                            iconSize = 30.dp,",
-    "iconSize = 30.dp,"
+    """if (icon != null) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)""",
+    """if (icon != null) {
+            Box(
+                modifier = Modifier
+                    .size(iconSize)"""
 )
+
 with open(file_path, "w", encoding="utf-8") as f:
     f.write(content)
