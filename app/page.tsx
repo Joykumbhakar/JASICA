@@ -986,10 +986,11 @@ export default function HomePage() {
                             <span className="text-zinc-500 font-medium text-xs sm:text-sm">36.6 MB &bull; Latest Release</span>
                         </div>
                     </div>
-                    <div>
-                        <a href="/apks/JASICA%20Flash-2.5.apk" download="JASICA Flash-2.5.apk" onClick={handleDownload} className="bg-zinc-900 hover:bg-black text-white text-xs sm:text-sm font-medium px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-sm transition-transform active:scale-95 whitespace-nowrap">
+                    <div className="relative flex items-center justify-center">
+                        <a href="/apks/JASICA%20Flash-2.5.apk" download="JASICA Flash-2.5.apk" onClick={handleDownload} className="relative z-10 bg-zinc-900 hover:bg-black text-white text-xs sm:text-sm font-medium px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-sm transition-transform active:scale-95 whitespace-nowrap">
                             Download
                         </a>
+                        <span className="absolute -top-2.5 -right-3 z-20 bg-[#FF3B30] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[4px] shadow-sm rotate-[30deg] pointer-events-none tracking-widest border border-white/20">NEW</span>
                     </div>
                 </div>
 
