@@ -2767,7 +2767,7 @@ fun JasicaScreen(
                     // Bluetooth Icon
                     IconButton(onClick = onBtIconTap) {
                         Icon(
-                            imageVector = Icons.Outlined.Bluetooth,
+                            painter = painterResource(id = R.drawable.bluetooth_icon),
                             contentDescription = if (isBtConnected) "Bluetooth Connected" else "Bluetooth Disconnected",
                             tint = if (isBtConnected) JasicaWhite else JasicaWhite.copy(alpha = 0.4f)
                         )
@@ -2776,7 +2776,7 @@ fun JasicaScreen(
                     Box {
                         IconButton(onClick = { showMenu = true }) {
                             Icon(
-                                painter = painterResource(id = android.R.drawable.ic_menu_more),
+                                imageVector = Icons.Rounded.MoreVert,
                                 contentDescription = "More Options",
                                 tint = JasicaWhite
                             )
@@ -3047,17 +3047,7 @@ fun JasicaScreen(
                 modifier = Modifier
                     .width(220.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .then(
-                        if (hazeState != null) Modifier.hazeEffect(
-                            state = hazeState,
-                            style = dev.chrisbanes.haze.HazeStyle(
-                                blurRadius = 24.dp,
-                                tint = dev.chrisbanes.haze.HazeTint(Color.White.copy(alpha=0.25f))
-                            )
-                        ) else Modifier
-                    )
-                    .background(Color.White.copy(alpha = if (hazeState != null) 0.65f else 0.95f))
-                    .border(0.5.dp, Color.White.copy(alpha=0.6f), RoundedCornerShape(16.dp))
+                    .background(Color.White)
             ) {
                 Column {
                     AppleMenuItem(icon = Icons.Rounded.Home, text = "Manual Controls", onClick = { showMenu = false; onManualControlsTap() })
