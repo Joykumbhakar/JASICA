@@ -131,52 +131,15 @@ export default function HomePage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
-  const videoRef1 = useRef<HTMLVideoElement>(null);
-  const [isVideoPlaying1, setIsVideoPlaying1] = useState(false);
-  const videoRef2 = useRef<HTMLVideoElement>(null);
-  const [isVideoPlaying2, setIsVideoPlaying2] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
-  const toggleVideoPlay1 = () => {
-    if (videoRef1.current) {
-      if (isVideoPlaying1) {
-        videoRef1.current.pause();
+  const toggleVideoPlay = () => {
+    if (videoRef.current) {
+      if (isVideoPlaying) {
+        videoRef.current.pause();
       } else {
-        videoRef1.current.play();
-      }
-    }
-  };
-
-  const toggleVideoPlay2 = () => {
-    if (videoRef2.current) {
-      if (isVideoPlaying2) {
-        videoRef2.current.pause();
-      } else {
-        videoRef2.current.play();
-      }
-    }
-  };
-
-  const videoRef3 = useRef<HTMLVideoElement>(null);
-  const [isVideoPlaying3, setIsVideoPlaying3] = useState(false);
-  const videoRef4 = useRef<HTMLVideoElement>(null);
-  const [isVideoPlaying4, setIsVideoPlaying4] = useState(false);
-
-  const toggleVideoPlay3 = () => {
-    if (videoRef3.current) {
-      if (isVideoPlaying3) {
-        videoRef3.current.pause();
-      } else {
-        videoRef3.current.play();
-      }
-    }
-  };
-
-  const toggleVideoPlay4 = () => {
-    if (videoRef4.current) {
-      if (isVideoPlaying4) {
-        videoRef4.current.pause();
-      } else {
-        videoRef4.current.play();
+        videoRef.current.play();
       }
     }
   };
@@ -948,54 +911,26 @@ export default function HomePage() {
 
     <section id="promo-video" className="relative z-20 bg-[#f5f5f7] pt-24 md:pt-32 px-4 md:px-12 mt-[100vh] md:mt-[110vh]">
           <div className="max-w-6xl mx-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 shadow-sm border border-zinc-200 flex flex-col lg:flex-row gap-10 lg:gap-16 items-center">
                   
-                  {/* Motion Graphics Intro Video */}
-                  <div className="flex flex-col">
-                      <h3 className="text-2xl font-semibold text-zinc-900 mb-4 px-2">The Neural Core</h3>
-                      <div className="rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-video relative group">
+                  {/* Video Side */}
+                  <div className="w-full lg:w-1/2">
+                      <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-2xl shadow-black/10 border border-zinc-200/80 bg-black aspect-[4/3] md:aspect-video relative group">
                           <video 
-                            ref={videoRef1}
+                            ref={videoRef}
                             playsInline 
-                            controls={isVideoPlaying1}
+                            controls={isVideoPlaying}
                             className="w-full h-full object-cover cursor-pointer"
-                            onPlay={() => setIsVideoPlaying1(true)}
-                            onPause={() => setIsVideoPlaying1(false)}
-                            onClick={toggleVideoPlay1}
-                          >
-                              <source src="/A_highly_stylized_premium_mot.mp4" type="video/mp4" />
-                          </video>
-                          
-                          <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying1 ? 'opacity-0' : 'opacity-100'}`}>
-                              <button 
-                                onClick={toggleVideoPlay1}
-                                className="pointer-events-auto w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300"
-                              >
-                                 <div className="w-0 h-0 border-y-[10px] border-y-transparent border-l-[16px] border-l-white ml-1.5 rounded-sm drop-shadow-md"></div>
-                              </button>
-                          </div>
-                      </div>
-                  </div>
-
-                  {/* Cinematic Feature Promo Video */}
-                  <div className="flex flex-col">
-                      <h3 className="text-2xl font-semibold text-zinc-900 mb-4 px-2">Smart Gestures</h3>
-                      <div className="rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-video relative group">
-                          <video 
-                            ref={videoRef2}
-                            playsInline 
-                            controls={isVideoPlaying2}
-                            className="w-full h-full object-cover cursor-pointer"
-                            onPlay={() => setIsVideoPlaying2(true)}
-                            onPause={() => setIsVideoPlaying2(false)}
-                            onClick={toggleVideoPlay2}
+                            onPlay={() => setIsVideoPlaying(true)}
+                            onPause={() => setIsVideoPlaying(false)}
+                            onClick={toggleVideoPlay}
                           >
                               <source src="/A_fast_paced_cinematic_tech_p.mp4" type="video/mp4" />
                           </video>
                           
-                          <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying2 ? 'opacity-0' : 'opacity-100'}`}>
+                          <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying ? 'opacity-0' : 'opacity-100'}`}>
                               <button 
-                                onClick={toggleVideoPlay2}
+                                onClick={toggleVideoPlay}
                                 className="pointer-events-auto w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300"
                               >
                                  <div className="w-0 h-0 border-y-[10px] border-y-transparent border-l-[16px] border-l-white ml-1.5 rounded-sm drop-shadow-md"></div>
@@ -1004,52 +939,42 @@ export default function HomePage() {
                       </div>
                   </div>
 
-                  {/* Video 3 */}
-                  <div className="flex flex-col mt-4 md:mt-8 lg:mt-0">
-                      <h3 className="text-2xl font-semibold text-zinc-900 mb-4 px-2">Real-World Magic</h3>
-                      <div className="rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-video relative group">
-                          <video 
-                            ref={videoRef3}
-                            playsInline 
-                            controls={isVideoPlaying3}
-                            className="w-full h-full object-cover cursor-pointer"
-                            onPlay={() => setIsVideoPlaying3(true)}
-                            onPause={() => setIsVideoPlaying3(false)}
-                            onClick={toggleVideoPlay3}
-                          >
-                              <source src="/A_cinematic_fast_paced_sec.mp4" type="video/mp4" />
-                          </video>
-                          <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying3 ? 'opacity-0' : 'opacity-100'}`}>
-                              <button onClick={toggleVideoPlay3} className="pointer-events-auto w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300">
-                                 <div className="w-0 h-0 border-y-[10px] border-y-transparent border-l-[16px] border-l-white ml-1.5 rounded-sm drop-shadow-md"></div>
-                              </button>
-                          </div>
-                      </div>
+                  {/* Details List Side */}
+                  <div className="w-full lg:w-1/2 flex flex-col justify-center">
+                      <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-zinc-900 mb-4">Smart Gesture Controls</h2>
+                      <p className="text-lg text-zinc-500 mb-8">Control your physical environment without even unlocking your phone. Designed for absolute seamless convenience.</p>
+                      
+                      <ul className="space-y-6">
+                          <li className="flex items-start gap-4">
+                              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 mt-1">
+                                  <SmartphoneCharging className="w-5 h-5" />
+                              </div>
+                              <div>
+                                  <h4 className="text-lg font-semibold text-zinc-900">Background Persistence</h4>
+                                  <p className="text-zinc-600">Maintains a persistent Bluetooth connection even when the app is completely closed or locked.</p>
+                              </div>
+                          </li>
+                          <li className="flex items-start gap-4">
+                              <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 shrink-0 mt-1">
+                                  <Layers className="w-5 h-5" />
+                              </div>
+                              <div>
+                                  <h4 className="text-lg font-semibold text-zinc-900">Double Tap & Shake</h4>
+                                  <p className="text-zinc-600">Double tap the back of your phone, or physically shake it, to instantly trigger mapped smart devices.</p>
+                              </div>
+                          </li>
+                          <li className="flex items-start gap-4">
+                              <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 shrink-0 mt-1">
+                                  <BrainCircuit className="w-5 h-5" />
+                              </div>
+                              <div>
+                                  <h4 className="text-lg font-semibold text-zinc-900">Directional Tilt</h4>
+                                  <p className="text-zinc-600">Tilt your phone left, right, forward, or backward to toggle up to 4 different appliances instantly.</p>
+                              </div>
+                          </li>
+                      </ul>
                   </div>
 
-                  {/* Video 4 */}
-                  <div className="flex flex-col mt-4 md:mt-8 lg:mt-0">
-                      <h3 className="text-2xl font-semibold text-zinc-900 mb-4 px-2">Hyper-Realistic AI</h3>
-                      <div className="rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-video relative group">
-                          <video 
-                            ref={videoRef4}
-                            playsInline 
-                            controls={isVideoPlaying4}
-                            className="w-full h-full object-cover cursor-pointer"
-                            onPlay={() => setIsVideoPlaying4(true)}
-                            onPause={() => setIsVideoPlaying4(false)}
-                            onClick={toggleVideoPlay4}
-                          >
-                              <source src="/A_high_budget_cinematic_tech.mp4" type="video/mp4" />
-                          </video>
-                          <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying4 ? 'opacity-0' : 'opacity-100'}`}>
-                              <button onClick={toggleVideoPlay4} className="pointer-events-auto w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300">
-                                 <div className="w-0 h-0 border-y-[10px] border-y-transparent border-l-[16px] border-l-white ml-1.5 rounded-sm drop-shadow-md"></div>
-                              </button>
-                          </div>
-                      </div>
-                  </div>
-                  
               </div>
           </div>
       </section>
