@@ -7,10 +7,13 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
+import android.media.MediaPlayer
 import android.os.Build
 import android.os.IBinder
 import android.view.Gravity
 import android.view.WindowManager
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -18,12 +21,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ComposeView
@@ -36,6 +42,7 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import kotlinx.coroutines.delay
 
 class FloatingControlService : Service() {
 
@@ -43,6 +50,7 @@ class FloatingControlService : Service() {
     private lateinit var composeView: ComposeView
     private lateinit var params: WindowManager.LayoutParams
     private var isViewAttached = false
+    private var mediaPlayer: MediaPlayer? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -66,6 +74,7 @@ class FloatingControlService : Service() {
                 .setSmallIcon(R.drawable.ic_ai_waves)
                 .build()
         } else {
+            @Suppress("DEPRECATION")
             Notification.Builder(this)
                 .setContentTitle("Jasica Quick Access Active")
                 .setContentText("Tap the floating icon to control devices.")
@@ -84,12 +93,15 @@ class FloatingControlService : Service() {
             setContent {
                 FloatingWidgetContent(
                     onClose = { stopSelf() },
-                    onDeviceTap = { cmd -> sendCommandBroadcast(cmd) },
-                    onMicTap = { sendMicBroadcast() }
+                    onDeviceTap = { idx -> sendCommandBroadcast(idx) },
+                    onMicTap = {
+                        playStartSound()
+                        sendMicBroadcast()
+                    }
                 )
             }
         }
-        
+
         val lifecycleOwner = MyLifecycleOwner()
         lifecycleOwner.performRestore(null)
         lifecycleOwner.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
@@ -104,12 +116,15 @@ class FloatingControlService : Service() {
         params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY else WindowManager.LayoutParams.TYPE_PHONE,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else
+                @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = 100
+            x = 80
             y = 300
         }
 
@@ -117,12 +132,23 @@ class FloatingControlService : Service() {
         isViewAttached = true
     }
 
+    private fun playStartSound() {
+        try {
+            mediaPlayer?.release()
+            mediaPlayer = MediaPlayer.create(this, R.raw.start)
+            mediaPlayer?.setOnCompletionListener { it.release(); mediaPlayer = null }
+            mediaPlayer?.start()
+        } catch (e: Exception) {
+            android.util.Log.e("FloatingService", "Could not play sound: ${e.message}")
+        }
+    }
+
     private fun sendCommandBroadcast(deviceIndex: Int) {
         val intent = Intent("com.bristi.controller.SEND_QUICK_COMMAND")
         intent.putExtra("device_index", deviceIndex)
         sendBroadcast(intent)
     }
-    
+
     private fun sendMicBroadcast() {
         val intent = Intent("com.bristi.controller.START_MIC")
         sendBroadcast(intent)
@@ -130,40 +156,146 @@ class FloatingControlService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        mediaPlayer?.release()
+        mediaPlayer = null
         if (isViewAttached) {
             windowManager.removeView(composeView)
             isViewAttached = false
         }
     }
-    
+
     @Composable
-    fun FloatingWidgetContent(onClose: () -> Unit, onDeviceTap: (Int) -> Unit, onMicTap: () -> Unit) {
+    fun FloatingWidgetContent(
+        onClose: () -> Unit,
+        onDeviceTap: (Int) -> Unit,
+        onMicTap: () -> Unit
+    ) {
         var expanded by remember { mutableStateOf(false) }
-        
-        val prefs = androidx.compose.ui.platform.LocalContext.current.getSharedPreferences("JasicaSettings", Context.MODE_PRIVATE)
+        var micActive by remember { mutableStateOf(false) }
+
+        val prefs = androidx.compose.ui.platform.LocalContext.current
+            .getSharedPreferences("JasicaSettings", Context.MODE_PRIVATE)
         val dev1 = prefs.getString("DEV_1_NAME", "Device 1") ?: "Device 1"
         val dev2 = prefs.getString("DEV_2_NAME", "Device 2") ?: "Device 2"
         val dev3 = prefs.getString("DEV_3_NAME", "Device 3") ?: "Device 3"
         val dev4 = prefs.getString("DEV_4_NAME", "Device 4") ?: "Device 4"
 
+        // Pulse animation for the main orb
+        val infiniteTransition = rememberInfiniteTransition(label = "orbPulse")
+        val orbScale by infiniteTransition.animateFloat(
+            initialValue = 1f, targetValue = 1.08f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(900, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Reverse
+            ), label = "orbScale"
+        )
+
+        // Mic orb animations
+        val orbRing1 by infiniteTransition.animateFloat(
+            initialValue = 0.7f, targetValue = 1.4f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1000, easing = LinearOutSlowInEasing),
+                repeatMode = RepeatMode.Restart
+            ), label = "ring1"
+        )
+        val orbRing2 by infiniteTransition.animateFloat(
+            initialValue = 0.7f, targetValue = 1.4f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1000, delayMillis = 333, easing = LinearOutSlowInEasing),
+                repeatMode = RepeatMode.Restart
+            ), label = "ring2"
+        )
+        val orbRing3 by infiniteTransition.animateFloat(
+            initialValue = 0.7f, targetValue = 1.4f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1000, delayMillis = 666, easing = LinearOutSlowInEasing),
+                repeatMode = RepeatMode.Restart
+            ), label = "ring3"
+        )
+
+        // Auto-dismiss mic orb after 4s
+        LaunchedEffect(micActive) {
+            if (micActive) {
+                delay(4000)
+                micActive = false
+            }
+        }
+
         Box(
-            modifier = Modifier
-                .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-                        params.x = (params.x + dragAmount.x).toInt()
-                        params.y = (params.y + dragAmount.y).toInt()
-                        windowManager.updateViewLayout(composeView, params)
-                    }
+            modifier = Modifier.pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    change.consume()
+                    params.x = (params.x + dragAmount.x).toInt()
+                    params.y = (params.y + dragAmount.y).toInt()
+                    windowManager.updateViewLayout(composeView, params)
                 }
+            }
         ) {
-            Row(verticalAlignment = Alignment.Top) {
-                // Jasica Icon (Main Toggle)
+            // ── Gradient mic orb overlay ──────────────────────────────────────
+            AnimatedVisibility(
+                visible = micActive,
+                enter = fadeIn(tween(300)) + scaleIn(tween(300, easing = FastOutSlowInEasing)),
+                exit  = fadeOut(tween(400)) + scaleOut(tween(400))
+            ) {
                 Box(
                     modifier = Modifier
+                        .size(160.dp)
+                        .align(Alignment.Center),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Ripple rings
+                    listOf(orbRing1, orbRing2, orbRing3).forEach { scale ->
+                        Box(
+                            modifier = Modifier
+                                .size(140.dp)
+                                .scale(scale)
+                                .background(
+                                    brush = Brush.radialGradient(
+                                        listOf(
+                                            Color(0xFF007AFF).copy(alpha = (1.4f - scale).coerceIn(0f, 0.4f)),
+                                            Color(0xFF5E5CE6).copy(alpha = 0f)
+                                        )
+                                    ),
+                                    shape = CircleShape
+                                )
+                        )
+                    }
+                    // Central mic orb
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .background(
+                                brush = Brush.radialGradient(
+                                    listOf(Color(0xFF5E5CE6), Color(0xFF007AFF))
+                                ),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Rounded.Mic,
+                            contentDescription = "Listening",
+                            tint = Color.White,
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
+                }
+            }
+
+            // ── Main widget row ───────────────────────────────────────────────
+            Row(verticalAlignment = Alignment.Top) {
+
+                // Main Jasica orb button
+                Box(
+                    modifier = Modifier
+                        .scale(if (expanded) 1f else orbScale)
                         .size(56.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF007AFF))
+                        .background(
+                            brush = Brush.radialGradient(
+                                listOf(Color(0xFF338FFF), Color(0xFF007AFF))
+                            )
+                        )
                         .clickable { expanded = !expanded },
                     contentAlignment = Alignment.Center
                 ) {
@@ -174,33 +306,91 @@ class FloatingControlService : Service() {
                         modifier = Modifier.size(32.dp)
                     )
                 }
-                
-                if (expanded) {
+
+                // Expandable menu
+                AnimatedVisibility(
+                    visible = expanded,
+                    enter = fadeIn(tween(200)) + slideInHorizontally(
+                        initialOffsetX = { -it / 2 },
+                        animationSpec = tween(250, easing = FastOutSlowInEasing)
+                    ),
+                    exit = fadeOut(tween(150)) + slideOutHorizontally(
+                        targetOffsetX = { -it / 2 },
+                        animationSpec = tween(200)
+                    )
+                ) {
                     Spacer(modifier = Modifier.width(8.dp))
-                    // Menu Box
                     Column(
                         modifier = Modifier
-                            .background(Color.White, RoundedCornerShape(16.dp))
-                            .padding(8.dp)
-                            .width(140.dp)
+                            .background(Color.White, RoundedCornerShape(18.dp))
+                            .padding(horizontal = 8.dp, vertical = 10.dp)
+                            .width(152.dp)
                     ) {
-                        Text("Quick Controls", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.Black, modifier = Modifier.padding(bottom = 8.dp))
-                        
-                        QuickAccessButton(dev1) { onDeviceTap(1) }
-                        QuickAccessButton(dev2) { onDeviceTap(2) }
-                        QuickAccessButton(dev3) { onDeviceTap(3) }
-                        QuickAccessButton(dev4) { onDeviceTap(4) }
-                        
-                        Spacer(modifier = Modifier.height(4.dp))
-                        HorizontalDivider(color = Color.LightGray.copy(alpha=0.5f))
-                        Spacer(modifier = Modifier.height(4.dp))
-                        
-                        // Mic Button
+                        // Header row: title + close button
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                "Quick Controls",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                color = Color.Black
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(22.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFE5E5EA))
+                                    .clickable { onClose() },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Rounded.Close,
+                                    contentDescription = "Exit",
+                                    tint = Color(0xFF636366),
+                                    modifier = Modifier.size(13.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.height(8.dp))
+
+                        QuickAccessButton(dev1) { onDeviceTap(1); expanded = false }
+                        QuickAccessButton(dev2) { onDeviceTap(2); expanded = false }
+                        QuickAccessButton(dev3) { onDeviceTap(3); expanded = false }
+                        QuickAccessButton(dev4) { onDeviceTap(4); expanded = false }
+
+                        Spacer(Modifier.height(4.dp))
+                        HorizontalDivider(color = Color(0xFFE5E5EA))
+                        Spacer(Modifier.height(4.dp))
+
+                        // Voice Command row
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).clickable { onMicTap(); expanded = false }.padding(6.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(
+                                    if (micActive)
+                                        Brush.horizontalGradient(listOf(Color(0xFF007AFF).copy(0.15f), Color(0xFF5E5CE6).copy(0.15f)))
+                                    else
+                                        Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent))
+                                )
+                                .clickable {
+                                    micActive = true
+                                    expanded = false
+                                    onMicTap()
+                                }
+                                .padding(6.dp)
                         ) {
-                            Icon(Icons.Rounded.Mic, contentDescription = "Mic", tint = Color(0xFF007AFF), modifier = Modifier.size(20.dp))
+                            Icon(
+                                Icons.Rounded.Mic,
+                                contentDescription = "Mic",
+                                tint = Color(0xFF007AFF),
+                                modifier = Modifier.size(20.dp)
+                            )
                             Spacer(Modifier.width(8.dp))
                             Text("Voice Command", fontSize = 12.sp, color = Color.Black)
                         }
@@ -209,7 +399,7 @@ class FloatingControlService : Service() {
             }
         }
     }
-    
+
     @Composable
     fun QuickAccessButton(name: String, onClick: () -> Unit) {
         Row(
@@ -220,7 +410,14 @@ class FloatingControlService : Service() {
                 .clickable { onClick() }
                 .padding(6.dp)
         ) {
-            Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(Color(0xFF007AFF)))
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(listOf(Color(0xFF007AFF), Color(0xFF5E5CE6)))
+                    )
+            )
             Spacer(Modifier.width(8.dp))
             Text(name, fontSize = 12.sp, color = Color.Black, maxLines = 1)
         }
@@ -229,10 +426,10 @@ class FloatingControlService : Service() {
     private class MyLifecycleOwner : LifecycleOwner, SavedStateRegistryOwner {
         private val lifecycleRegistry = LifecycleRegistry(this)
         private val savedStateRegistryController = SavedStateRegistryController.create(this)
-        
+
         override val lifecycle: Lifecycle get() = lifecycleRegistry
         override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
-        
+
         fun handleLifecycleEvent(event: Lifecycle.Event) = lifecycleRegistry.handleLifecycleEvent(event)
         fun performRestore(savedState: android.os.Bundle?) = savedStateRegistryController.performRestore(savedState)
     }
