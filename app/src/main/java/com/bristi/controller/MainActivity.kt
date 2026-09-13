@@ -3014,7 +3014,7 @@ fun JasicaScreen(
                     androidx.compose.material3.HorizontalDivider(color = Color.Black.copy(alpha=0.1f), thickness = 0.5.dp, modifier = Modifier.padding(start = 44.dp))
                     AppleMenuItem(icon = Icons.Rounded.History, text = "Chat History", onClick = { showMenu = false; onHistoryTap() })
                     androidx.compose.material3.HorizontalDivider(color = Color.Black.copy(alpha=0.1f), thickness = 0.5.dp, modifier = Modifier.padding(start = 44.dp))
-                    AppleMenuItem(icon = Icons.Rounded.Code, text = "Arduino Code", onClick = { showMenu = false; onArduinoCodeTap() })
+                    AppleMenuItemImage(painter = androidx.compose.ui.res.painterResource(id = R.drawable.arduino_ide), text = "Arduino Code", onClick = { showMenu = false; onArduinoCodeTap() })
                     androidx.compose.material3.HorizontalDivider(color = Color.Black.copy(alpha=0.1f), thickness = 0.5.dp, modifier = Modifier.padding(start = 44.dp))
                     AppleMenuItem(icon = Icons.Rounded.Settings, text = "Settings", onClick = { showMenu = false; onSettingsTap() })
                 }
@@ -4994,14 +4994,21 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
-                Text(
-                    "Settings",
-                    color = textPrimary,
-                    fontSize = 34.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = InterFontFamily,
-                    letterSpacing = (-1).sp
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = R.drawable.settings_header),
+                        contentDescription = "Settings Icon",
+                        modifier = Modifier.size(36.dp).padding(end = 8.dp)
+                    )
+                    Text(
+                        "Settings",
+                        color = textPrimary,
+                        fontSize = 34.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = InterFontFamily,
+                        letterSpacing = (-1).sp
+                    )
+                }
                 Text(
                     "Done",
                     color = Color(0xFF007AFF),
@@ -5582,7 +5589,10 @@ fun SettingsScreen(
                         showPasswordDialog = false
                         passwordError = false
                         passwordInput = ""
-                        sharedPrefs.edit().putBoolean("WATER_REMINDER_ENABLED", false).apply()
+                        waterReminderInput = false
+                        sharedPrefs.edit().putBoolean("WATER_REMINDER", false).apply()
+                        WaterReminderManager.stopAlarm(context)
+                        android.widget.Toast.makeText(context, "Water Reminder Disabled", android.widget.Toast.LENGTH_SHORT).show()
                     } else {
                         passwordError = true
                     }
@@ -7178,6 +7188,35 @@ data class UpdateNotification(
 )
 
 @Composable
+fun AppleMenuItemImage(
+    painter: androidx.compose.ui.graphics.painter.Painter,
+    text: String,
+    onClick: () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .pointerInput(Unit) {
+                androidx.compose.foundation.gestures.detectTapGestures(
+                    onPress = {
+                        isPressed = true
+                        tryAwaitRelease()
+                        isPressed = false
+                    },
+                    onTap = { onClick() }
+                )
+            }
+            .background(if (isPressed) Color.Black.copy(alpha=0.1f) else Color.Transparent)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        androidx.compose.foundation.Image(painter, contentDescription = null, modifier = Modifier.size(24.dp))
+        Spacer(Modifier.width(16.dp))
+        Text(text, color = Color.Black, fontSize = 16.sp, fontFamily = InterFontFamily)
+    }
+}
+
 fun AppleMenuItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     text: String,
