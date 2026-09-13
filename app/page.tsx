@@ -985,6 +985,22 @@ export default function HomePage() {
                     </div>
                 </div>
 
+                {/* Version Item 1.5 (Previous Flash-2.5) */}
+                <div className="flex flex-row justify-between items-center py-4 sm:py-5 px-5 sm:px-8 border-b border-zinc-200 group hover:bg-zinc-50/50 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="set-nav-icon bg-gradient-to-b from-[#F2F2F7] to-[#E5E5EA] border border-zinc-200/50 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)]"><img src="/jasica.png" alt="Jasica App" className="w-[24px] h-[24px] object-contain drop-shadow-sm" /></div>
+                        <div className="flex flex-col">
+                            <span className="text-zinc-900 font-semibold text-base sm:text-lg">JASICA Flash-2.5 (v1.2.13)</span>
+                            <span className="text-zinc-500 font-medium text-xs sm:text-sm">36.6 MB</span>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="/apks/JASICA%20Flash-2.5.apk" download="JASICA Flash-2.5.apk" onClick={handleDownload} className="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs sm:text-sm font-medium px-4 sm:px-5 py-2 sm:py-2.5 rounded-full transition-transform active:scale-95 whitespace-nowrap">
+                            Download
+                        </a>
+                    </div>
+                </div>
+
                 {/* Version Item 2 */}
                 <div className="flex flex-row justify-between items-center py-4 sm:py-5 px-5 sm:px-8 border-b border-zinc-200 group hover:bg-zinc-50/50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3 sm:gap-4">
