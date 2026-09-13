@@ -5399,7 +5399,7 @@ fun SettingsScreen(
                                             singleLine = true,
                                             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = Color(0xFF007AFF),
-                                                unfocusedBorderColor = Color.Transparent,
+                                                unfocusedBorderColor = cardBorder,
                                                 focusedContainerColor = cardBg,
                                                 unfocusedContainerColor = cardBg,
                                                 cursorColor = Color(0xFF007AFF)
@@ -5426,7 +5426,7 @@ fun SettingsScreen(
                                                     singleLine = true,
                                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = Color(0xFF007AFF),
-                                                unfocusedBorderColor = Color.Transparent,
+                                                unfocusedBorderColor = cardBorder,
                                                 focusedContainerColor = cardBg,
                                                 unfocusedContainerColor = cardBg,
                                                 cursorColor = Color(0xFF007AFF)
@@ -5449,7 +5449,7 @@ fun SettingsScreen(
                                                     singleLine = true,
                                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = Color(0xFF007AFF),
-                                                unfocusedBorderColor = Color.Transparent,
+                                                unfocusedBorderColor = cardBorder,
                                                 focusedContainerColor = cardBg,
                                                 unfocusedContainerColor = cardBg,
                                                 cursorColor = Color(0xFF007AFF)
@@ -5477,7 +5477,7 @@ fun SettingsScreen(
                                                     singleLine = true,
                                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = Color(0xFF007AFF),
-                                                unfocusedBorderColor = Color.Transparent,
+                                                unfocusedBorderColor = cardBorder,
                                                 focusedContainerColor = cardBg,
                                                 unfocusedContainerColor = cardBg,
                                                 cursorColor = Color(0xFF007AFF)
@@ -5499,7 +5499,7 @@ fun SettingsScreen(
                                                     singleLine = true,
                                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = Color(0xFF007AFF),
-                                                unfocusedBorderColor = Color.Transparent,
+                                                unfocusedBorderColor = cardBorder,
                                                 focusedContainerColor = cardBg,
                                                 unfocusedContainerColor = cardBg,
                                                 cursorColor = Color(0xFF007AFF)
