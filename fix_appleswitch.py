@@ -15,18 +15,18 @@ target = """                                Switch(
                                                 )
                                                 context.startActivity(intent)
                                             } else {
-                                                sharedPrefs.edit().putBoolean("QUICK_ACCESS", true).apply()
                                                 quickAccessEnabled = true
+                                                sharedPrefs.edit().putBoolean("QUICK_ACCESS", true).apply()
                                                 val serviceIntent = Intent(context, FloatingControlService::class.java)
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                                                     context.startForegroundService(serviceIntent)
                                                 } else {
                                                     context.startService(serviceIntent)
                                                 }
                                             }
                                         } else {
-                                            sharedPrefs.edit().putBoolean("QUICK_ACCESS", false).apply()
                                             quickAccessEnabled = false
+                                            sharedPrefs.edit().putBoolean("QUICK_ACCESS", false).apply()
                                             val serviceIntent = Intent(context, FloatingControlService::class.java)
                                             context.stopService(serviceIntent)
                                         }
@@ -45,18 +45,18 @@ replacement = """                                AppleSwitch(
                                                 )
                                                 context.startActivity(intent)
                                             } else {
-                                                sharedPrefs.edit().putBoolean("QUICK_ACCESS", true).apply()
                                                 quickAccessEnabled = true
+                                                sharedPrefs.edit().putBoolean("QUICK_ACCESS", true).apply()
                                                 val serviceIntent = Intent(context, FloatingControlService::class.java)
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                                                     context.startForegroundService(serviceIntent)
                                                 } else {
                                                     context.startService(serviceIntent)
                                                 }
                                             }
                                         } else {
-                                            sharedPrefs.edit().putBoolean("QUICK_ACCESS", false).apply()
                                             quickAccessEnabled = false
+                                            sharedPrefs.edit().putBoolean("QUICK_ACCESS", false).apply()
                                             val serviceIntent = Intent(context, FloatingControlService::class.java)
                                             context.stopService(serviceIntent)
                                         }
@@ -67,6 +67,6 @@ if target in text:
     text = text.replace(target, replacement)
     with open(path, "w", encoding="utf-8") as f:
         f.write(text)
-    print("Fixed Quick Access switch")
+    print("Fixed to AppleSwitch")
 else:
-    print("Could not find target")
+    print("Target not found")

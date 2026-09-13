@@ -5568,7 +5568,7 @@ fun SettingsScreen(
                             showDivider = false,
                             isDark = darkModeInput,
                             control = {
-                                Switch(
+                                AppleSwitch(
                                     checked = quickAccessEnabled,
                                     onCheckedChange = { isChecked ->
                                         if (isChecked) {
@@ -5594,8 +5594,7 @@ fun SettingsScreen(
                                             val serviceIntent = Intent(context, FloatingControlService::class.java)
                                             context.stopService(serviceIntent)
                                         }
-                                    },
-                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF007AFF))
+                                    }
                                 )
                             }
                         )
