@@ -30,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ComposeView
@@ -95,8 +97,7 @@ class FloatingControlService : Service() {
                     onClose = { stopSelf() },
                     onDeviceTap = { idx -> sendCommandBroadcast(idx) },
                     onMicTap = {
-                        playStartSound()
-                        sendMicBroadcast()
+                        showBottomVoiceBlob()
                     }
                 )
             }
@@ -149,13 +150,122 @@ class FloatingControlService : Service() {
         sendBroadcast(intent)
     }
 
-    private fun sendMicBroadcast() {
-        val intent = Intent("com.bristi.controller.START_MIC")
-        sendBroadcast(intent)
+    private var bottomBlobView: ComposeView? = null
+
+    private fun showBottomVoiceBlob() {
+        if (bottomBlobView != null) return
+        
+        playStartSound()
+        
+        bottomBlobView = ComposeView(this).apply {
+            setContent {
+                var visible by remember { mutableStateOf(false) }
+                LaunchedEffect(Unit) { visible = true }
+                
+                val transition = updateTransition(targetState = visible, label = "blob_transition")
+                val offsetY by transition.animateFloat(
+                    transitionSpec = { tween(400, easing = FastOutSlowInEasing) },
+                    label = "offsetY"
+                ) { if (it) 0f else 300f }
+                
+                val alpha by transition.animateFloat(
+                    transitionSpec = { tween(300) },
+                    label = "alpha"
+                ) { if (it) 1f else 0f }
+
+                // Continuous blob animation
+                val infiniteTransition = rememberInfiniteTransition()
+                val scaleX by infiniteTransition.animateFloat(
+                    initialValue = 1f, targetValue = 1.1f,
+                    animationSpec = infiniteRepeatable(tween(1500, easing = FastOutSlowInEasing), RepeatMode.Reverse)
+                )
+                val scaleY by infiniteTransition.animateFloat(
+                    initialValue = 1f, targetValue = 0.9f,
+                    animationSpec = infiniteRepeatable(tween(1200, easing = FastOutSlowInEasing), RepeatMode.Reverse)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .graphicsLayer {
+                            translationY = offsetY
+                            this.alpha = alpha
+                        },
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(bottom = 20.dp)
+                            .graphicsLayer {
+                                this.scaleX = scaleX
+                                this.scaleY = scaleY
+                            }
+                            .size(width = 180.dp, height = 100.dp)
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    listOf(Color(0xFF007AFF), Color(0xFF5E5CE6), Color(0xFFC643FC))
+                                ),
+                                shape = RoundedCornerShape(50.dp)
+                            )
+                            .clickable {
+                                // Launch MainActivity to handle Voice Command
+                                val intent = Intent(this@FloatingControlService, MainActivity::class.java).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                                    putExtra("START_MIC_FROM_WIDGET", true)
+                                }
+                                startActivity(intent)
+                                
+                                // Dismiss blob
+                                visible = false
+                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                    removeBottomBlob()
+                                }, 400)
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Rounded.Mic, contentDescription = "Tap to speak", tint = Color.White, modifier = Modifier.size(36.dp))
+                    }
+                }
+            }
+        }
+        
+        val lifecycleOwner = MyLifecycleOwner()
+        lifecycleOwner.performRestore(null)
+        lifecycleOwner.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        lifecycleOwner.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        lifecycleOwner.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+        bottomBlobView?.setViewTreeLifecycleOwner(lifecycleOwner)
+        bottomBlobView?.setViewTreeViewModelStoreOwner(object : ViewModelStoreOwner {
+            override val viewModelStore = ViewModelStore()
+        })
+        bottomBlobView?.setViewTreeSavedStateRegistryOwner(lifecycleOwner)
+
+        val blobParams = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            200 * resources.displayMetrics.density.toInt(),
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY else WindowManager.LayoutParams.TYPE_PHONE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+        }
+        
+        windowManager.addView(bottomBlobView, blobParams)
+    }
+    
+    private fun removeBottomBlob() {
+        bottomBlobView?.let {
+            if (it.isAttachedToWindow) {
+                windowManager.removeView(it)
+            }
+        }
+        bottomBlobView = null
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        removeBottomBlob()
         mediaPlayer?.release()
         mediaPlayer = null
         if (isViewAttached) {

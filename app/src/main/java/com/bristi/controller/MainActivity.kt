@@ -937,8 +937,27 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     //  Lifecycle
     // ─────────────────────────────────────────────────────────────────────────
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getBooleanExtra("START_MIC_FROM_WIDGET", false)) {
+            mainHandler.postDelayed({
+                if (appState.value != AppState.LISTENING) {
+                    startListening()
+                }
+            }, 300)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (intent.getBooleanExtra("START_MIC_FROM_WIDGET", false)) {
+            mainHandler.postDelayed({
+                if (appState.value != AppState.LISTENING) {
+                    startListening()
+                }
+            }, 1000)
+        }
 
         sharedPrefs = getSharedPreferences("JasicaSettings", Context.MODE_PRIVATE)
 
