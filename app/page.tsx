@@ -131,6 +131,19 @@ export default function HomePage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+
+  const toggleVideoPlay = () => {
+    if (videoRef.current) {
+      if (isVideoPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+    }
+  };
+
 
   const handleDownload = () => {
     setIsDownloading(true);
@@ -898,14 +911,27 @@ export default function HomePage() {
 
     <section id="promo-video" className="relative z-20 bg-[#f5f5f7] pt-24 md:pt-32 px-4 md:px-12 mt-[100vh] md:mt-[110vh]">
           <div className="max-w-5xl mx-auto">
-              <div className="rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl shadow-black/10 border border-zinc-200/80 bg-black aspect-video relative">
+              <div className="rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl shadow-black/10 border border-zinc-200/80 bg-black aspect-video relative group">
                   <video 
+                    ref={videoRef}
                     playsInline 
-                    controls
-                    className="w-full h-full object-cover"
+                    controls={isVideoPlaying}
+                    className="w-full h-full object-cover cursor-pointer"
+                    onPlay={() => setIsVideoPlaying(true)}
+                    onPause={() => setIsVideoPlaying(false)}
+                    onClick={toggleVideoPlay}
                   >
                       <source src="/A_fast_paced_cinematic_tech_p.mp4" type="video/mp4" />
                   </video>
+                  
+                  <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying ? 'opacity-0' : 'opacity-100'}`}>
+                      <button 
+                        onClick={toggleVideoPlay}
+                        className="pointer-events-auto w-20 h-20 md:w-24 md:h-24 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300"
+                      >
+                         <div className="w-0 h-0 border-y-[12px] border-y-transparent border-l-[20px] border-l-white ml-2 rounded-sm drop-shadow-md"></div>
+                      </button>
+                  </div>
               </div>
           </div>
       </section>
