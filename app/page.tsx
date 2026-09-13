@@ -156,6 +156,31 @@ export default function HomePage() {
     }
   };
 
+  const videoRef3 = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying3, setIsVideoPlaying3] = useState(false);
+  const videoRef4 = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying4, setIsVideoPlaying4] = useState(false);
+
+  const toggleVideoPlay3 = () => {
+    if (videoRef3.current) {
+      if (isVideoPlaying3) {
+        videoRef3.current.pause();
+      } else {
+        videoRef3.current.play();
+      }
+    }
+  };
+
+  const toggleVideoPlay4 = () => {
+    if (videoRef4.current) {
+      if (isVideoPlaying4) {
+        videoRef4.current.pause();
+      } else {
+        videoRef4.current.play();
+      }
+    }
+  };
+
 
   const handleDownload = () => {
     setIsDownloading(true);
@@ -973,6 +998,52 @@ export default function HomePage() {
                                 onClick={toggleVideoPlay2}
                                 className="pointer-events-auto w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300"
                               >
+                                 <div className="w-0 h-0 border-y-[10px] border-y-transparent border-l-[16px] border-l-white ml-1.5 rounded-sm drop-shadow-md"></div>
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* Video 3 */}
+                  <div className="flex flex-col mt-4 md:mt-8 lg:mt-0">
+                      <h3 className="text-2xl font-semibold text-zinc-900 mb-4 px-2">Real-World Magic</h3>
+                      <div className="rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-video relative group">
+                          <video 
+                            ref={videoRef3}
+                            playsInline 
+                            controls={isVideoPlaying3}
+                            className="w-full h-full object-cover cursor-pointer"
+                            onPlay={() => setIsVideoPlaying3(true)}
+                            onPause={() => setIsVideoPlaying3(false)}
+                            onClick={toggleVideoPlay3}
+                          >
+                              <source src="/A_cinematic_fast_paced_sec.mp4" type="video/mp4" />
+                          </video>
+                          <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying3 ? 'opacity-0' : 'opacity-100'}`}>
+                              <button onClick={toggleVideoPlay3} className="pointer-events-auto w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300">
+                                 <div className="w-0 h-0 border-y-[10px] border-y-transparent border-l-[16px] border-l-white ml-1.5 rounded-sm drop-shadow-md"></div>
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* Video 4 */}
+                  <div className="flex flex-col mt-4 md:mt-8 lg:mt-0">
+                      <h3 className="text-2xl font-semibold text-zinc-900 mb-4 px-2">Hyper-Realistic AI</h3>
+                      <div className="rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-video relative group">
+                          <video 
+                            ref={videoRef4}
+                            playsInline 
+                            controls={isVideoPlaying4}
+                            className="w-full h-full object-cover cursor-pointer"
+                            onPlay={() => setIsVideoPlaying4(true)}
+                            onPause={() => setIsVideoPlaying4(false)}
+                            onClick={toggleVideoPlay4}
+                          >
+                              <source src="/A_high_budget_cinematic_tech.mp4" type="video/mp4" />
+                          </video>
+                          <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying4 ? 'opacity-0' : 'opacity-100'}`}>
+                              <button onClick={toggleVideoPlay4} className="pointer-events-auto w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300">
                                  <div className="w-0 h-0 border-y-[10px] border-y-transparent border-l-[16px] border-l-white ml-1.5 rounded-sm drop-shadow-md"></div>
                               </button>
                           </div>
