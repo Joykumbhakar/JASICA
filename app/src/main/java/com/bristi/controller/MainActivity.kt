@@ -3904,7 +3904,7 @@ fun BottomMicButton(appState: AppState, onClick: () -> Unit) {
                     }
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.fluentui_system_icons_mic), // Assumes existing drawable
+                    painter = painterResource(id = R.drawable.mic), // Assumes existing drawable
                     contentDescription = "Microphone",
                     modifier = Modifier.size(34.dp),
                     contentScale = ContentScale.Fit
@@ -6217,7 +6217,7 @@ fun VoiceCalibrationScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.fluentui_system_icons_mic),
+                            painter = painterResource(id = R.drawable.mic),
                             contentDescription = "Microphone",
                             tint = if (isListening) Color.White else Color(0xFFF2F2F7),
                             modifier = Modifier.size(30.dp)
@@ -6311,9 +6311,9 @@ data class OnboardingPageInfo(val title: String, val subtitle: String, val iconR
 fun OnboardingScreen(hazeState: dev.chrisbanes.haze.HazeState? = null, onDismiss: () -> Unit) {
     val pages = listOf(
         OnboardingPageInfo("Welcome to Jasica", "Your intelligent voice assistant for complete digital and hardware control.", null, R.drawable.jasica),
-        OnboardingPageInfo("Voice Commands", "Say a command or tap the mic to control your LEDs and devices natively.", R.drawable.fluentui_system_icons_mic, null),
-        OnboardingPageInfo("Manual Override", "Access the quick-switch panel from the top right home icon to toggle hardware without speaking.", R.drawable.fluentui_system_icons_home, null),
-        OnboardingPageInfo("Stay Connected", "Pair your Bluetooth smart hub via the top right icon to get started.", R.drawable.fluentui_system_icons_phone_laptop, null)
+        OnboardingPageInfo("Voice Commands", "Say a command or tap the mic to control your LEDs and devices natively.", null, R.drawable.tour_voice),
+        OnboardingPageInfo("Manual Override", "Access the quick-switch panel from the top right home icon to toggle hardware without speaking.", null, R.drawable.tour_manual),
+        OnboardingPageInfo("Stay Connected", "Pair your Bluetooth smart hub via the top right icon to get started.", null, R.drawable.tour_connect)
     )
 
     val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { pages.size })
