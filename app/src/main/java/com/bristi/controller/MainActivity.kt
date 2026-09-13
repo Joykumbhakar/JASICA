@@ -4455,7 +4455,7 @@ fun AppleSwitch(
                             else if (isPressed) -3f
                             else 0f
 
-    val targetWidth = if (isPressed) 33.dp else 29.dp
+    val targetWidth = if (isPressed) 35.dp else 31.dp
     // 50% bigger on press — scale causes the knob to visually overflow the unclipped track
     val targetScale = if (isPressed) 1.5f else 1f
 
@@ -4469,7 +4469,7 @@ fun AppleSwitch(
     Box(
         modifier = modifier
             .minimumInteractiveComponentSize()
-            .width(49.dp)
+            .width(51.dp)
             .height(27.dp)
             // NO clip on outer Box — lets the knob visually overflow the track border on press
             .pointerInput(checked) {
