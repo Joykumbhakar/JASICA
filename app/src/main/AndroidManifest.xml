@@ -179,6 +179,15 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Accelerometer listener for shake gesture to toggle IoT device" />
         </service>
+
+        <service
+            android:name=".TiltService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Accelerometer listener for tilt gesture to toggle IoT devices" />
+        </service>
         
         <activity
             android:name=".WaterAlarmActivity"
