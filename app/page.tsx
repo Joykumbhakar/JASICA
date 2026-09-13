@@ -721,9 +721,9 @@ export default function HomePage() {
       renderer.setSize(width, height);
 
       if (width < 480) {
-        baseScale = 0.92;
-        basePosY = -1.75;
-        basePosX = 0.05;        // Optical center on mobile screens
+        baseScale = 0.88;
+        basePosY = -1.85;
+        basePosX = 0.38;        // Optical center on mobile screens
         baseRotY = -Math.PI / 6; // 45° angle
       } else if (width < 768) {
         baseScale = 1.05;
@@ -920,8 +920,8 @@ export default function HomePage() {
         )}
     </nav>
 
-    <div className="absolute top-[22vh] -mt-[5px] sm:mt-0 sm:top-[20vh] md:top-[18vh] left-0 w-full px-4 text-center z-0 pointer-events-none flex flex-col items-center">
-        <h1 className="text-[7.5rem] sm:text-[9rem] md:text-[12rem] lg:text-[16rem] font-bold tracking-apple-tighter leading-[0.8] animate-fade-up pb-2 whitespace-nowrap">
+    <div className="absolute top-[18vh] sm:top-[20vh] md:top-[18vh] left-0 w-full px-4 text-center z-0 pointer-events-none flex flex-col items-center">
+        <h1 className="text-[4.75rem] sm:text-[9rem] md:text-[12rem] lg:text-[16rem] font-bold tracking-apple-tighter leading-[0.8] animate-fade-up pb-2 whitespace-nowrap">
             <span className="text-black">Jasica</span>
             <span className="bg-gradient-to-b from-zinc-600 to-black bg-clip-text text-transparent">AI.</span>
         </h1>
@@ -1541,7 +1541,7 @@ export default function HomePage() {
 
     {/* Right-side iOS Style Creator Profile Pop-up (Shows for 24s) */}
     <div
-      className={`fixed top-24 right-4 md:top-auto md:bottom-8 md:right-8 z-[60] transition-all duration-500 ease-out transform ${
+      className={`fixed bottom-28 right-4 left-4 sm:left-auto sm:right-6 md:bottom-8 md:right-8 z-[60] transition-all duration-500 ease-out transform ${
         showCreatorPopup
           ? "translate-x-0 opacity-100 scale-100 pointer-events-auto"
           : "translate-x-[120%] opacity-0 scale-95 pointer-events-none"
