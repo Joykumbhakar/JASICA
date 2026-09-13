@@ -830,8 +830,8 @@ export default function HomePage() {
                     <span className="underline underline-offset-4 decoration-1 decoration-zinc-300">Features</span>
                 </a>
                 <a 
-                  href="/apks/JASICA%20Flash-2.5.apk" 
-                  download="JASICA Flash-2.5.apk" 
+                  href="/apks/JASICA%20Flash-2.5%20v1.2.14.09.2026-beta.apk" 
+                  download="JASICA Flash-2.5 v1.2.14.09.2026-beta.apk" 
                   onClick={handleDownload}
                   className="bg-black text-white text-xs font-medium px-4 py-1.5 rounded-full hover:bg-zinc-800 transition-all flex items-center gap-1.5 active:scale-95"
                 >
@@ -854,8 +854,8 @@ export default function HomePage() {
              <a href="#specs" onClick={() => setIsMobileMenuOpen(false)} className="text-black font-medium text-lg">Overview</a>
              <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="text-zinc-600 font-medium text-lg">Features</a>
              <a 
-               href="/apks/JASICA%20Flash-2.5.apk" 
-               download="JASICA Flash-2.5.apk" 
+               href="/apks/JASICA%20Flash-2.5%20v1.2.14.09.2026-beta.apk" 
+               download="JASICA Flash-2.5 v1.2.14.09.2026-beta.apk" 
                onClick={() => {
                  handleDownload();
                  setTimeout(() => setIsMobileMenuOpen(false), 600);
@@ -880,8 +880,8 @@ export default function HomePage() {
 
     <div className="fixed bottom-10 md:bottom-14 left-0 w-full flex justify-center z-50 pointer-events-none animate-fade-up delay-200">
         <a
-            href="/apks/JASICA%20Flash-2.5.apk"
-            download="JASICA Flash-2.5.apk"
+            href="/apks/JASICA%20Flash-2.5%20v1.2.14.09.2026-beta.apk"
+            download="JASICA Flash-2.5 v1.2.14.09.2026-beta.apk"
             onClick={handleDownload}
             className="pointer-events-auto bg-black hover:bg-zinc-800 text-white text-lg md:text-xl font-medium px-12 md:px-16 py-4 md:py-5 rounded-full cursor-pointer transition-all duration-200 flex items-center gap-3 shadow-2xl active:scale-95 min-w-[260px] justify-center"
         >
@@ -943,7 +943,7 @@ export default function HomePage() {
                         <span className="text-zinc-500 font-medium text-base sm:text-lg whitespace-nowrap">Direct Link</span>
                     </div>
                     <div className="sm:text-right w-full sm:w-2/3 flex justify-start sm:justify-end pl-11 sm:pl-0 mt-1 sm:mt-0">
-                        <a href="/apks/JASICA%20Flash-2.5.apk" download="JASICA Flash-2.5.apk" onClick={handleDownload} className="text-blue-600 font-semibold text-base sm:text-lg flex items-center gap-2 cursor-pointer group">
+                        <a href="/apks/JASICA%20Flash-2.5%20v1.2.14.09.2026-beta.apk" download="JASICA Flash-2.5 v1.2.14.09.2026-beta.apk" onClick={handleDownload} className="text-blue-600 font-semibold text-base sm:text-lg flex items-center gap-2 cursor-pointer group">
                             {isDownloading ? (
                                 <div className="w-4 h-4 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
                             ) : null}
@@ -974,11 +974,11 @@ export default function HomePage() {
                         <div className="set-nav-icon bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-200/50 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)]"><img src="/jasica.png" alt="Jasica App" className="w-[24px] h-[24px] object-contain drop-shadow-sm" /></div>
                         <div className="flex flex-col">
                             <span className="text-zinc-900 font-semibold text-base sm:text-lg">JASICA Flash-2.5</span>
-                            <span className="text-zinc-500 font-medium text-xs sm:text-sm flex flex-wrap items-center gap-1.5">36.6 MB &bull; Latest Release &bull; <a href="/release-notes" className="text-blue-600 hover:underline">Release Notes</a></span>
+                            <span className="text-zinc-500 font-medium text-xs sm:text-sm flex flex-wrap items-center gap-1.5">44.1 MB &bull; Latest Release &bull; <a href="/release-notes" className="text-blue-600 hover:underline">Release Notes</a></span>
                         </div>
                     </div>
                     <div className="relative flex items-center justify-center">
-                        <a href="/apks/JASICA%20Flash-2.5.apk" download="JASICA Flash-2.5.apk" onClick={handleDownload} className="relative z-10 bg-zinc-900 hover:bg-black text-white text-xs sm:text-sm font-medium px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-sm transition-transform active:scale-95 whitespace-nowrap">
+                        <a href="/apks/JASICA%20Flash-2.5%20v1.2.14.09.2026-beta.apk" download="JASICA Flash-2.5 v1.2.14.09.2026-beta.apk" onClick={handleDownload} className="relative z-10 bg-zinc-900 hover:bg-black text-white text-xs sm:text-sm font-medium px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-sm transition-transform active:scale-95 whitespace-nowrap">
                             Download
                         </a>
                         <span className="absolute -top-2.5 -right-3 z-20 bg-[#FF3B30] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[4px] shadow-sm rotate-[30deg] pointer-events-none tracking-widest border border-white/20">NEW</span>
@@ -1254,7 +1254,7 @@ export default function HomePage() {
                     <h3 className="text-zinc-900 font-semibold mb-3">Explore Jasica</h3>
                     <ul className="space-y-3 font-normal">
                         <li>
-                            <a href="/apks/JASICA%20Flash-2.5.apk" download="JASICA Flash-2.5.apk" onClick={handleDownload} className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer flex items-center gap-1.5 w-fit">
+                            <a href="/apks/JASICA%20Flash-2.5%20v1.2.14.09.2026-beta.apk" download="JASICA Flash-2.5 v1.2.14.09.2026-beta.apk" onClick={handleDownload} className="underline underline-offset-4 decoration-1 decoration-zinc-300 text-zinc-600 cursor-pointer flex items-center gap-1.5 w-fit">
                                 {isDownloading ? (
                                     <div className="w-3 h-3 border-2 border-zinc-400/30 border-t-zinc-400 rounded-full animate-spin" />
                                 ) : null}
