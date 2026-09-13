@@ -833,13 +833,13 @@ export default function HomePage() {
                   href="/apks/JASICA%20Flash-2.5%20v1.2.14.09.2026-beta.apk" 
                   download="JASICA Flash-2.5 v1.2.14.09.2026-beta.apk" 
                   onClick={handleDownload}
-                  className="bg-black text-white text-xs font-medium px-4 py-1.5 rounded-full hover:bg-zinc-800 transition-all flex items-center gap-1.5 active:scale-95"
+                  className="relative bg-black text-white text-xs font-medium px-4 py-1.5 rounded-full hover:bg-zinc-800 transition-all flex items-center gap-1.5 active:scale-95"
                 >
                   {isDownloading ? (
                     <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : null}
                   Download APK
-                </a>
+                <span className="absolute -top-1.5 -right-2 z-20 bg-[#FF3B30] text-white text-[8px] font-bold px-1 py-0.5 rounded-[4px] shadow-sm rotate-[30deg] pointer-events-none tracking-widest border border-white/20">NEW</span></a>
             </div>
 
             <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden p-2 text-zinc-600 focus:outline-none cursor-pointer">
@@ -883,7 +883,7 @@ export default function HomePage() {
             href="/apks/JASICA%20Flash-2.5%20v1.2.14.09.2026-beta.apk"
             download="JASICA Flash-2.5 v1.2.14.09.2026-beta.apk"
             onClick={handleDownload}
-            className="pointer-events-auto bg-black hover:bg-zinc-800 text-white text-lg md:text-xl font-medium px-12 md:px-16 py-4 md:py-5 rounded-full cursor-pointer transition-all duration-200 flex items-center gap-3 shadow-2xl active:scale-95 min-w-[260px] justify-center"
+            className="relative pointer-events-auto bg-black hover:bg-zinc-800 text-white text-lg md:text-xl font-medium px-12 md:px-16 py-4 md:py-5 rounded-full cursor-pointer transition-all duration-200 flex items-center gap-3 shadow-2xl active:scale-95 min-w-[260px] justify-center"
         >
             {isDownloading ? (
               <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -891,7 +891,7 @@ export default function HomePage() {
               <Download strokeWidth={1.5} className="w-6 h-6 svg-draw-path" />
             )}
             {isDownloading ? "Starting Download..." : "Download APK"}
-        </a>
+        <span className="absolute -top-2.5 -right-3 z-20 bg-[#FF3B30] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] shadow-sm rotate-[30deg] pointer-events-none tracking-widest border border-white/20">NEW</span></a>
     </div>
 
     <div id="canvas-container" ref={containerRef} />
