@@ -839,7 +839,7 @@ export default function HomePage() {
                     <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : null}
                   Download APK
-                <span className="absolute -top-1.5 -right-2 z-20 bg-[#FF3B30] text-white text-[8px] font-bold px-1 py-0.5 rounded-[4px] shadow-sm rotate-[30deg] pointer-events-none tracking-widest border border-white/20">NEW</span></a>
+                <span className="absolute -top-1 -right-3 z-20 bg-[#FF3B30] text-white text-[8px] font-bold px-3 py-0.5 rounded-[2px] shadow-sm rotate-[45deg] pointer-events-none tracking-widest">NEW</span></a>
             </div>
 
             <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden p-2 text-zinc-600 focus:outline-none cursor-pointer">
@@ -891,12 +891,28 @@ export default function HomePage() {
               <Download strokeWidth={1.5} className="w-6 h-6 svg-draw-path" />
             )}
             {isDownloading ? "Starting Download..." : "Download APK"}
-        <span className="absolute -top-2.5 -right-3 z-20 bg-[#FF3B30] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] shadow-sm rotate-[30deg] pointer-events-none tracking-widest border border-white/20">NEW</span></a>
+        <span className="absolute -top-2 -right-5 z-20 bg-[#FF3B30] text-white text-[10px] font-bold px-5 py-1 rounded-[3px] shadow-md rotate-[45deg] pointer-events-none tracking-widest">NEW</span></a>
     </div>
 
     <div id="canvas-container" ref={containerRef} />
 
-    <section id="specs" className="relative z-20 bg-[#f5f5f7] py-24 md:py-32 px-4 md:px-12 mt-[100vh] md:mt-[110vh]">
+    <section id="promo-video" className="relative z-20 bg-[#f5f5f7] pt-24 md:pt-32 px-4 md:px-12 mt-[100vh] md:mt-[110vh]">
+          <div className="max-w-5xl mx-auto">
+              <div className="rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl shadow-black/10 border border-zinc-200/80 bg-black aspect-video relative transform transition-transform hover:scale-[1.01] duration-500">
+                  <video 
+                    autoPlay 
+                    loop 
+                    muted 
+                    playsInline 
+                    className="w-full h-full object-cover"
+                  >
+                      <source src="/A_fast_paced_cinematic_tech_p.mp4" type="video/mp4" />
+                  </video>
+              </div>
+          </div>
+      </section>
+
+      <section id="specs" className="relative z-20 bg-[#f5f5f7] py-24 md:py-32 px-4 md:px-12">
         <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12 md:mb-16">
                 <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-black mb-4">System Specifications</h2>
@@ -981,7 +997,7 @@ export default function HomePage() {
                         <a href="/apks/JASICA%20Flash-2.5%20v1.2.14.09.2026-beta.apk" download="JASICA Flash-2.5 v1.2.14.09.2026-beta.apk" onClick={handleDownload} className="relative z-10 bg-zinc-900 hover:bg-black text-white text-xs sm:text-sm font-medium px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-sm transition-transform active:scale-95 whitespace-nowrap">
                             Download
                         </a>
-                        <span className="absolute -top-2.5 -right-3 z-20 bg-[#FF3B30] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[4px] shadow-sm rotate-[30deg] pointer-events-none tracking-widest border border-white/20">NEW</span>
+                        <span className="absolute -top-1.5 -right-4 z-20 bg-[#FF3B30] text-white text-[9px] font-bold px-4 py-0.5 rounded-[3px] shadow-md rotate-[45deg] pointer-events-none tracking-widest">NEW</span>
                     </div>
                 </div>
 
