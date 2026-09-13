@@ -982,7 +982,7 @@ export default function HomePage() {
                       
                       <ul className="space-y-6">
                           <li className="flex items-start gap-4 group cursor-default">
-                              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 mt-1 group-hover:bg-blue-100 transition-colors">
+                              <div className="set-nav-icon shrink-0 mt-1 bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-200/50 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)] text-blue-600 justify-center group-hover:brightness-95 transition-all">
                                   <SmartphoneCharging className="w-5 h-5 svg-draw-path" />
                               </div>
                               <div>
@@ -991,7 +991,7 @@ export default function HomePage() {
                               </div>
                           </li>
                           <li className="flex items-start gap-4 group cursor-default">
-                              <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 shrink-0 mt-1 group-hover:bg-purple-100 transition-colors">
+                              <div className="set-nav-icon shrink-0 mt-1 bg-gradient-to-b from-purple-50 to-purple-100 border border-purple-200/50 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)] text-purple-600 justify-center group-hover:brightness-95 transition-all">
                                   <Layers className="w-5 h-5 svg-draw-path" />
                               </div>
                               <div>
@@ -1000,7 +1000,7 @@ export default function HomePage() {
                               </div>
                           </li>
                           <li className="flex items-start gap-4 group cursor-default">
-                              <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 shrink-0 mt-1 group-hover:bg-rose-100 transition-colors">
+                              <div className="set-nav-icon shrink-0 mt-1 bg-gradient-to-b from-rose-50 to-rose-100 border border-rose-200/50 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)] text-rose-600 justify-center group-hover:brightness-95 transition-all">
                                   <BrainCircuit className="w-5 h-5 svg-draw-path" />
                               </div>
                               <div>
