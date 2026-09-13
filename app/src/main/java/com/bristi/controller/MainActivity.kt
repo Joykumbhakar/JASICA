@@ -6477,8 +6477,8 @@ fun OnboardingScreen(hazeState: dev.chrisbanes.haze.HazeState? = null, onDismiss
                             Image(
                                 painterResource(info.image),
                                 contentDescription = null,
-                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                                modifier = Modifier.size(220.dp).shadow(24.dp, RoundedCornerShape(40.dp)).clip(RoundedCornerShape(40.dp))
+                                contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                                modifier = Modifier.fillMaxWidth().heightIn(max = 260.dp).padding(horizontal = 16.dp)
                             )
                         } else if (info.iconRes != null) {
                             Box(
