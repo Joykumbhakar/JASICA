@@ -177,7 +177,12 @@ body {
 
 .group:hover .svg-draw-path path, 
 .group:hover .svg-draw-path polyline, 
-.group:hover .svg-draw-path line {
+.group:hover .svg-draw-path line,
+.group:hover .svg-draw-path circle,
+.group:hover .svg-draw-path rect,
+.group:hover .svg-draw-path polygon {
   stroke-dasharray: 120;
-  animation: redrawPath 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: redrawPath 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+
+
