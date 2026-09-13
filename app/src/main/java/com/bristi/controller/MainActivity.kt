@@ -5527,7 +5527,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Current Version Release Notes",
                             subtitle = "What's new in v1.2.13.09.2026-beta",
-                            icon = { Icon(Icons.AutoMirrored.Rounded.Article, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) },
+                            icon = { Icon(Icons.Rounded.Article, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) },
                             iconBgColor = Color(0xFF5856D6),
                             showDivider = false,
                             isDark = darkModeInput,

@@ -10,6 +10,13 @@ class WaterAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Log.d("WaterAlarmReceiver", "Water alarm triggered")
         
+        val prefs = context.getSharedPreferences("JasicaSettings", Context.MODE_PRIVATE)
+        val isEnabled = prefs.getBoolean("WATER_REMINDER", false)
+        if (!isEnabled) {
+            Log.d("WaterAlarmReceiver", "Water reminder is disabled. Aborting alarm.")
+            return
+        }
+        
         val fullScreenIntent = Intent(context, WaterAlarmActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
