@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
+import AnalyticsTracker from "./components/AnalyticsTracker";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,7 +24,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://jasicaai.vercel.app/",
-    title: "Jasica AI — Smart Home Controller",
+    title: "Jasica AI \u2014 Smart Home Controller",
     description: "Control your world with Jasica AI. Seamless smart home automation with persistent Bluetooth, gesture shortcuts, and a beautiful UI.",
     siteName: "Jasica AI",
     images: [
@@ -58,6 +60,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`scroll-smooth ${inter.variable}`}>
       <body className="bg-[#f5f5f7] text-[#1d1d1f] antialiased">
+        <Suspense fallback={null}>
+          <AnalyticsTracker />
+        </Suspense>
         {children}
       </body>
     </html>

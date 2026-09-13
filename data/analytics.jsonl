@@ -1,0 +1,28 @@
+{"type":"pageview","path":"/admin/settings","url":"http://localhost:3000/admin/settings","timestamp":"2026-09-13T23:51:37.950Z","serverTime":"2026-09-13T23:51:38.857Z"}
+{"type":"pageview","path":"/admin/settings","url":"http://localhost:3000/admin/settings","timestamp":"2026-09-13T23:51:37.947Z","serverTime":"2026-09-13T23:51:38.860Z"}
+{"type":"click","element":"button","text":"Change Admin Password","id":"No ID","href":"","path":"/admin/settings","timestamp":"2026-09-13T23:51:42.329Z","serverTime":"2026-09-13T23:51:42.346Z"}
+{"type":"click","element":"button","text":"Change Admin Password","id":"No ID","href":"","path":"/admin/settings","timestamp":"2026-09-13T23:51:43.449Z","serverTime":"2026-09-13T23:51:43.472Z"}
+{"type":"click","element":"button","text":"Change Admin Password","id":"No ID","href":"","path":"/admin/settings","timestamp":"2026-09-13T23:51:43.809Z","serverTime":"2026-09-13T23:51:43.825Z"}
+{"type":"click","element":"button","text":"Change Admin Password","id":"No ID","href":"","path":"/admin/settings","timestamp":"2026-09-13T23:51:44.241Z","serverTime":"2026-09-13T23:51:44.257Z"}
+{"type":"click","element":"button","text":"Change Admin Password","id":"No ID","href":"","path":"/admin/settings","timestamp":"2026-09-13T23:51:44.561Z","serverTime":"2026-09-13T23:51:44.577Z"}
+{"type":"click","element":"button","text":"Change Admin Password","id":"No ID","href":"","path":"/admin/settings","timestamp":"2026-09-13T23:51:45.065Z","serverTime":"2026-09-13T23:51:45.081Z"}
+{"type":"click","element":"button","text":"Change Admin Password","id":"No ID","href":"","path":"/admin/settings","timestamp":"2026-09-13T23:51:45.264Z","serverTime":"2026-09-13T23:51:45.283Z"}
+{"type":"click","element":"button","text":"Change Admin Password","id":"No ID","href":"","path":"/admin/settings","timestamp":"2026-09-13T23:51:45.281Z","serverTime":"2026-09-13T23:51:45.303Z"}
+{"type":"click","element":"a","text":"Analytics","id":"No ID","href":"http://localhost:3000/admin/analytics","path":"/admin/settings","timestamp":"2026-09-13T23:51:46.075Z","serverTime":"2026-09-13T23:51:46.100Z"}
+{"type":"pageview","path":"/admin/analytics","url":"http://localhost:3000/admin/analytics","timestamp":"2026-09-13T23:51:46.205Z","serverTime":"2026-09-13T23:51:46.601Z"}
+{"type":"click","element":"a","text":"Overview","id":"No ID","href":"http://localhost:3000/admin","path":"/admin/analytics","timestamp":"2026-09-13T23:51:53.370Z","serverTime":"2026-09-13T23:51:53.391Z"}
+{"type":"pageview","path":"/admin","url":"http://localhost:3000/admin","timestamp":"2026-09-13T23:51:53.501Z","serverTime":"2026-09-13T23:51:53.576Z"}
+{"type":"click","element":"a","text":"APK Management","id":"No ID","href":"http://localhost:3000/admin/apks","path":"/admin","timestamp":"2026-09-13T23:51:59.457Z","serverTime":"2026-09-13T23:51:59.478Z"}
+{"type":"pageview","path":"/admin/apks","url":"http://localhost:3000/admin/apks","timestamp":"2026-09-13T23:51:59.578Z","serverTime":"2026-09-13T23:52:00.017Z"}
+{"type":"click","element":"a","text":"Analytics","id":"No ID","href":"http://localhost:3000/admin/analytics","path":"/admin/apks","timestamp":"2026-09-13T23:52:03.897Z","serverTime":"2026-09-13T23:52:03.926Z"}
+{"type":"pageview","path":"/admin/analytics","url":"http://localhost:3000/admin/analytics","timestamp":"2026-09-13T23:52:03.906Z","serverTime":"2026-09-13T23:52:03.972Z"}
+{"type":"click","element":"button","text":"Icon/Image Button","id":"No ID","href":"","path":"/","timestamp":"2026-09-13T23:52:09.788Z","serverTime":"2026-09-13T23:52:09.809Z"}
+{"type":"click","element":"button","text":"Icon/Image Button","id":"No ID","href":"","path":"/","timestamp":"2026-09-13T23:52:10.827Z","serverTime":"2026-09-13T23:52:10.846Z"}
+{"type":"click","element":"button","text":"Icon/Image Button","id":"No ID","href":"","path":"/admin/analytics","timestamp":"2026-09-13T23:52:22.630Z","serverTime":"2026-09-13T23:52:22.649Z"}
+{"type":"click","element":"button","text":"Icon/Image Button","id":"No ID","href":"","path":"/admin/analytics","timestamp":"2026-09-13T23:52:23.476Z","serverTime":"2026-09-13T23:52:23.498Z"}
+{"type":"click","element":"button","text":"Icon/Image Button","id":"No ID","href":"","path":"/admin/analytics","timestamp":"2026-09-13T23:52:26.109Z","serverTime":"2026-09-13T23:52:26.128Z"}
+{"type":"click","element":"button","text":"Icon/Image Button","id":"No ID","href":"","path":"/admin/analytics","timestamp":"2026-09-13T23:52:29.172Z","serverTime":"2026-09-13T23:52:29.203Z"}
+{"type":"click","element":"button","text":"Icon/Image Button","id":"No ID","href":"","path":"/admin/analytics","timestamp":"2026-09-13T23:52:30.116Z","serverTime":"2026-09-13T23:52:30.137Z"}
+{"type":"click","element":"button","text":"Icon/Image Button","id":"No ID","href":"","path":"/admin/analytics","timestamp":"2026-09-13T23:52:37.477Z","serverTime":"2026-09-13T23:52:37.492Z"}
+{"type":"click","element":"a","text":"APK Management","id":"No ID","href":"http://localhost:3000/admin/apks","path":"/admin/analytics","timestamp":"2026-09-13T23:52:38.198Z","serverTime":"2026-09-13T23:52:38.223Z"}
+{"type":"pageview","path":"/admin/apks","url":"http://localhost:3000/admin/apks","timestamp":"2026-09-13T23:52:38.287Z","serverTime":"2026-09-13T23:52:38.362Z"}

@@ -723,7 +723,7 @@ export default function HomePage() {
       if (width < 480) {
         baseScale = 0.88;
         basePosY = -1.85;
-        basePosX = 0.38;        // Optical center on mobile screens
+        basePosX = 0.00;        // Centered on mobile screens
         baseRotY = -Math.PI / 6; // 45° angle
       } else if (width < 768) {
         baseScale = 1.05;
