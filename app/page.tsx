@@ -951,7 +951,7 @@ export default function HomePage() {
                   
                   {/* Video Side */}
                   <div className="w-full lg:w-1/2">
-                      <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-2xl shadow-black/10 border border-zinc-200/80 bg-black aspect-[4/3] md:aspect-video relative group">
+                      <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-2xl shadow-black/10 border border-zinc-200/80 bg-black aspect-video relative group">
                           <video 
                             ref={videoRef}
                             playsInline 
@@ -1375,7 +1375,7 @@ export default function HomePage() {
                 {/* Video 2: Motion Graphics Intro */}
                 <div className="flex flex-col">
                     <h3 className="text-xl font-semibold text-zinc-900 mb-3 px-2">The Neural Core</h3>
-                    <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-[4/3] md:aspect-video relative group">
+                    <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-video relative group">
                         <video 
                           ref={videoRef2}
                           playsInline 
@@ -1398,7 +1398,7 @@ export default function HomePage() {
                 {/* Video 3: Cinematic Fast Paced */}
                 <div className="flex flex-col">
                     <h3 className="text-xl font-semibold text-zinc-900 mb-3 px-2">Smart Gestures</h3>
-                    <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-[4/3] md:aspect-video relative group">
+                    <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-video relative group">
                         <video 
                           ref={videoRef3}
                           playsInline 
@@ -1421,7 +1421,7 @@ export default function HomePage() {
                 {/* Video 4: High Budget Cinematic */}
                 <div className="flex flex-col">
                     <h3 className="text-xl font-semibold text-zinc-900 mb-3 px-2">Hyper-Realistic AI</h3>
-                    <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-[4/3] md:aspect-video relative group">
+                    <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-video relative group">
                         <video 
                           ref={videoRef4}
                           playsInline 
