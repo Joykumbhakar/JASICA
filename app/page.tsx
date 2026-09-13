@@ -784,44 +784,14 @@ export default function HomePage() {
         </svg>
 
         {/* Unique Jasica AI Core Logo */}
-        <svg
-          viewBox="0 0 24 24"
-          width="36"
-          height="36"
-          stroke="currentColor"
-          strokeWidth="1.35"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-black relative z-10"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <clipPath id="loader-sphere-clip">
-            <circle cx="12" cy="12" r="9.5" />
-          </clipPath>
-          <g clipPath="url(#loader-sphere-clip)" className="animate-jasica-wave">
-            <path d="M -2 6 C 6 14, 14 -2, 26 6" />
-            <path d="M -2 12 C 6 20, 14 4, 26 12" />
-            <path d="M -2 18 C 6 26, 14 10, 26 18" />
-          </g>
-        </svg>
+        <img src="/jasica.png" alt="Jasica AI Logo" className="w-9 h-9 object-contain relative z-10" />
       </div>
     </div>
 
     <nav className="fixed top-0 left-0 w-full bg-white/70 backdrop-blur-lg border-b border-zinc-200 z-50 flex flex-col">
         <div className="h-14 flex items-center justify-between px-4 md:px-8 w-full">
             <div className="font-semibold text-lg tracking-tight flex items-center gap-2 text-black">
-                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.25" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-                    <circle cx="12" cy="12" r="10" />
-                    <clipPath id="nav-sphere-clip">
-                        <circle cx="12" cy="12" r="9.5" />
-                    </clipPath>
-                    <g clipPath="url(#nav-sphere-clip)">
-                        <path d="M -2 6 C 6 14, 14 -2, 26 6" />
-                        <path d="M -2 12 C 6 20, 14 4, 26 12" />
-                        <path d="M -2 18 C 6 26, 14 10, 26 18" />
-                    </g>
-                </svg>
+                <img src="/jasica.png" alt="Jasica AI Logo" className="w-6 h-6 object-contain" />
                 Jasica AI
             </div>
             
@@ -1249,17 +1219,7 @@ export default function HomePage() {
     <footer className="relative z-20 bg-[#f5f5f7] py-10 md:py-12 px-4 md:px-12 text-xs text-zinc-500 border-t border-zinc-300">
         <div className="max-w-4xl mx-auto">
             <div className="flex items-center gap-2 mb-6">
-                <svg viewBox="0 0 24 24" width="24" height="24" className="text-zinc-800">
-                    <circle cx="12" cy="12" r="10" fill="currentColor" />
-                    <clipPath id="footer-sphere-clip">
-                        <circle cx="12" cy="12" r="9.5" />
-                    </clipPath>
-                    <g clipPath="url(#footer-sphere-clip)" stroke="#f5f5f7" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M -2 6 C 6 14, 14 -2, 26 6" />
-                        <path d="M -2 12 C 6 20, 14 4, 26 12" />
-                        <path d="M -2 18 C 6 26, 14 10, 26 18" />
-                    </g>
-                </svg>
+                <img src="/jasica.png" alt="Jasica AI Logo" className="w-6 h-6 object-contain" />
                 <span className="font-semibold text-base text-zinc-900 tracking-tight">Jasica AI</span>
             </div>
 
