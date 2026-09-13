@@ -2766,10 +2766,9 @@ fun JasicaScreen(
 
                     // Bluetooth Icon
                     IconButton(onClick = onBtIconTap) {
-                        Icon(
+                        Image(
                             painter = painterResource(id = R.drawable.bluetooth_icon),
-                            contentDescription = if (isBtConnected) "Bluetooth Connected" else "Bluetooth Disconnected",
-                            tint = if (isBtConnected) JasicaWhite else JasicaWhite.copy(alpha = 0.4f)
+                            contentDescription = if (isBtConnected) "Bluetooth Connected" else "Bluetooth Disconnected"
                         )
                     }
 
@@ -5196,8 +5195,8 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Use Portfolio API Key",
                             subtitle = "Automatically load dynamic API keys from cloud",
-                            icon = { Image(painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_maclaps), contentDescription = null, modifier = Modifier.size(24.dp)) },
-                            iconBgColor = Color(0xFFAF52DE),
+                            icon = { Image(painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_maclaps), contentDescription = null, modifier = Modifier.size(28.dp)) },
+                            iconBgColor = Color.Transparent,
                             showDivider = !adminKeyInput,
                             isDark = darkModeInput,
                             control = {
