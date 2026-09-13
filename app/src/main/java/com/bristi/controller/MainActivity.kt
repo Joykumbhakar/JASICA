@@ -5144,7 +5144,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "AI Model Engine",
                             subtitle = "Current: $selectedModel",
-                            icon = { androidx.compose.foundation.Image(painter = androidx.compose.ui.res.painterResource(id = R.drawable.robot), contentDescription = null, modifier = Modifier.size(24.dp)) },
+                            icon = { Icon(painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_ai_waves), contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) },
                             iconBgColor = Color(0xFF34C759),
                             showDivider = true,
                             isDark = darkModeInput,
@@ -5648,9 +5648,10 @@ fun SettingsScreen(
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password),
                         colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF007AFF),
-                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedContainerColor = if (darkModeInput) Color(0xFF2C2C2E) else Color(0xFFF2F2F7),
+                            unfocusedContainerColor = if (darkModeInput) Color(0xFF2C2C2E) else Color(0xFFF2F2F7),
+                            cursorColor = Color(0xFF007AFF)
                         ),
                         modifier = Modifier.fillMaxWidth().height(50.dp)
                     )
