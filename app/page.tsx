@@ -485,10 +485,7 @@ export default function HomePage() {
     screenMesh.position.z = phoneDepth / 2 + 0.058;
     phoneGroup.add(screenMesh);
 
-    const islandGeom = new THREE.ExtrudeGeometry(createRoundedRectShape(0.84, 0.24, 0.12), { depth: 0.01, bevelEnabled: false, curveSegments: 16 });
-    const islandMesh = new THREE.Mesh(islandGeom, new THREE.MeshBasicMaterial({ color: 0x000000 }));
-    islandMesh.position.set(0, phoneHeight / 2 - 0.25, phoneDepth / 2 + 0.062);
-    phoneGroup.add(islandMesh);
+    
 
     const backMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(createRoundedRectShape(phoneWidth - 0.06, phoneHeight - 0.06, cornerRadius - 0.02), { depth: 0.015, bevelEnabled: false, curveSegments: 24 }), materials.backGlass);
     backMesh.position.z = -phoneDepth / 2 - 0.055;
@@ -1390,6 +1387,7 @@ export default function HomePage() {
     </div>
   );
 }
+
 
 
 
