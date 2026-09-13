@@ -102,11 +102,7 @@ body {
   100% { opacity: 0; }
 }
 
-@media (max-width: 640px) {
-  .mobile-title-scale {
-    font-size: 15vw !important;
-  }
-}
+
 
 /* Custom scrollbar to match the sleek design */
 ::-webkit-scrollbar {
