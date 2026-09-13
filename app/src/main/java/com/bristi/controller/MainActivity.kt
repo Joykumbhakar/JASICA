@@ -5400,8 +5400,8 @@ fun SettingsScreen(
                                             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = Color(0xFF007AFF),
                                                 unfocusedBorderColor = Color.Transparent,
-                                                focusedContainerColor = fieldBg,
-                                                unfocusedContainerColor = fieldBg,
+                                                focusedContainerColor = cardBg,
+                                                unfocusedContainerColor = cardBg,
                                                 cursorColor = Color(0xFF007AFF)
                                             )
                                         )
@@ -5427,8 +5427,8 @@ fun SettingsScreen(
                                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = Color(0xFF007AFF),
                                                 unfocusedBorderColor = Color.Transparent,
-                                                focusedContainerColor = fieldBg,
-                                                unfocusedContainerColor = fieldBg,
+                                                focusedContainerColor = cardBg,
+                                                unfocusedContainerColor = cardBg,
                                                 cursorColor = Color(0xFF007AFF)
                                             )
                                                 )
@@ -5450,8 +5450,8 @@ fun SettingsScreen(
                                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = Color(0xFF007AFF),
                                                 unfocusedBorderColor = Color.Transparent,
-                                                focusedContainerColor = fieldBg,
-                                                unfocusedContainerColor = fieldBg,
+                                                focusedContainerColor = cardBg,
+                                                unfocusedContainerColor = cardBg,
                                                 cursorColor = Color(0xFF007AFF)
                                             )
                                                 )
@@ -5478,8 +5478,8 @@ fun SettingsScreen(
                                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = Color(0xFF007AFF),
                                                 unfocusedBorderColor = Color.Transparent,
-                                                focusedContainerColor = fieldBg,
-                                                unfocusedContainerColor = fieldBg,
+                                                focusedContainerColor = cardBg,
+                                                unfocusedContainerColor = cardBg,
                                                 cursorColor = Color(0xFF007AFF)
                                             )
                                                 )
@@ -5500,8 +5500,8 @@ fun SettingsScreen(
                                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = Color(0xFF007AFF),
                                                 unfocusedBorderColor = Color.Transparent,
-                                                focusedContainerColor = fieldBg,
-                                                unfocusedContainerColor = fieldBg,
+                                                focusedContainerColor = cardBg,
+                                                unfocusedContainerColor = cardBg,
                                                 cursorColor = Color(0xFF007AFF)
                                             )
                                                 )
