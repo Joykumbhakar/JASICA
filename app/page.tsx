@@ -944,13 +944,7 @@ export default function HomePage() {
                 {/* Version Item 1 */}
                 <div className="flex flex-row justify-between items-center py-4 sm:py-5 px-5 sm:px-8 border-b border-zinc-200 group hover:bg-zinc-50/50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3 sm:gap-4">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-[10px] sm:rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
-                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6 svg-draw-path">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <polyline points="7 10 12 15 17 10" />
-                                <line x1="12" y1="15" x2="12" y2="3" />
-                            </svg>
-                        </div>
+                        <img src="/jasica.png" alt="Jasica App" className="w-10 h-10 sm:w-12 sm:h-12 rounded-[10px] sm:rounded-xl object-cover shrink-0 shadow-sm border border-zinc-200/50" />
                         <div className="flex flex-col">
                             <span className="text-zinc-900 font-semibold text-base sm:text-lg">JASICA Flash-2.5</span>
                             <span className="text-zinc-500 font-medium text-xs sm:text-sm">36.6 MB &bull; Latest Release</span>
@@ -967,12 +961,7 @@ export default function HomePage() {
                 {/* Version Item 2 */}
                 <div className="flex flex-row justify-between items-center py-4 sm:py-5 px-5 sm:px-8 border-b border-zinc-200 group hover:bg-zinc-50/50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3 sm:gap-4">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-[10px] sm:rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-500 shrink-0">
-                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6 svg-draw-path">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                            </svg>
-                        </div>
+                        <img src="/jasica.png" alt="Jasica App" className="w-10 h-10 sm:w-12 sm:h-12 rounded-[10px] sm:rounded-xl object-cover shrink-0 shadow-sm border border-zinc-200/50" />
                         <div className="flex flex-col">
                             <span className="text-zinc-900 font-semibold text-base sm:text-lg">JASICA 2.0</span>
                             <span className="text-zinc-500 font-medium text-xs sm:text-sm">31.8 MB</span>
@@ -988,12 +977,7 @@ export default function HomePage() {
                 {/* Version Item 3 */}
                 <div className="flex flex-row justify-between items-center py-4 sm:py-5 px-5 sm:px-8 group hover:bg-zinc-50/50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3 sm:gap-4">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-[10px] sm:rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-500 shrink-0">
-                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6 svg-draw-path">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                            </svg>
-                        </div>
+                        <img src="/jasica.png" alt="Jasica App" className="w-10 h-10 sm:w-12 sm:h-12 rounded-[10px] sm:rounded-xl object-cover shrink-0 shadow-sm border border-zinc-200/50" />
                         <div className="flex flex-col">
                             <span className="text-zinc-900 font-semibold text-base sm:text-lg">J.A.R.V.I.S 1.0</span>
                             <span className="text-zinc-500 font-medium text-xs sm:text-sm">21.8 MB</span>
