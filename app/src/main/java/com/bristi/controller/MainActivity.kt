@@ -4298,7 +4298,7 @@ fun LiquidGlassKnob(
                 .padding(start = 2.dp, end = 2.dp, top = 1.dp)
                 .fillMaxWidth()
                 .fillMaxHeight(0.48f)
-                .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomStart = 10.dp, bottomEnd = 10.dp))
+                .clip(RoundedCornerShape(50.dp))
                 .background(
                     Brush.verticalGradient(
                         0.0f to Color.White.copy(alpha = 0.95f),
@@ -4312,7 +4312,7 @@ fun LiquidGlassKnob(
                 .padding(start = 2.dp, end = 2.dp, bottom = 1.dp)
                 .fillMaxWidth()
                 .fillMaxHeight(0.35f)
-                .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp, bottomStart = 12.dp, bottomEnd = 12.dp))
+                .clip(RoundedCornerShape(50.dp))
                 .background(
                     Brush.verticalGradient(
                         0.0f to Color.Transparent,
@@ -4421,12 +4421,12 @@ fun AppleSlider(
         Box(
             modifier = Modifier
                 .offset { IntOffset(thumbOffsetX.roundToInt(), 0) }
-                .size(width = thumbWidth, height = 18.dp),
+                .size(width = thumbWidth, height = 23.dp),
             contentAlignment = Alignment.Center
         ) {
             LiquidGlassKnob(
                 width = thumbWidth,
-                height = 18.dp,
+                height = 23.dp,
                 scale = thumbScale,
                 baseAlpha = 0.9f,
                 hazeState = hazeState
@@ -4455,7 +4455,7 @@ fun AppleSwitch(
                             else if (isPressed) -3f
                             else 0f
 
-    val targetWidth = if (isPressed) 28.dp else 24.dp
+    val targetWidth = if (isPressed) 33.dp else 29.dp
     // 50% bigger on press — scale causes the knob to visually overflow the unclipped track
     val targetScale = if (isPressed) 1.5f else 1f
 
@@ -4469,8 +4469,8 @@ fun AppleSwitch(
     Box(
         modifier = modifier
             .minimumInteractiveComponentSize()
-            .width(44.dp)
-            .height(22.dp)
+            .width(49.dp)
+            .height(27.dp)
             // NO clip on outer Box — lets the knob visually overflow the track border on press
             .pointerInput(checked) {
                 detectTapGestures(
@@ -4500,11 +4500,11 @@ fun AppleSwitch(
                 .align(Alignment.CenterStart)
                 .padding(top = 2.dp, bottom = 2.dp)
                 .offset(x = (thumbTranslationX + 2).dp)
-                .size(width = thumbWidth, height = 18.dp)
+                .size(width = thumbWidth, height = 23.dp)
         ) {
             LiquidGlassKnob(
                 width = thumbWidth,
-                height = 18.dp,
+                height = 23.dp,
                 scale = thumbScale,
                 baseAlpha = 0.1f,
                 hazeState = hazeState
