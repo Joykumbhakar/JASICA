@@ -201,6 +201,32 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private var btAdapter: BluetoothAdapter? = null
     private var bleScanner: BluetoothLeScanner? = null
     private var discoveryReceiver: BroadcastReceiver? = null
+    
+    private val quickAccessReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.action) {
+                "com.bristi.controller.SEND_QUICK_COMMAND" -> {
+                    val idx = intent.getIntExtra("device_index", -1)
+                    if (idx != -1) {
+                        val devId = idx.toString()
+                        val isOn = deviceStates[devId] == true
+                        
+                        val pinOn = sharedPrefs.getString("DEV_${devId}_PIN_ON", null) ?: when(idx) { 1->"A"; 2->"B"; 3->"C"; 4->"D"; else->return }
+                        val pinOff = sharedPrefs.getString("DEV_${devId}_PIN_OFF", null) ?: when(idx) { 1->"a"; 2->"b"; 3->"c"; 4->"d"; else->return }
+                        
+                        val command = if (isOn) pinOff else pinOn
+                        
+                        processCommandAndSync(command)
+                    }
+                }
+                "com.bristi.controller.START_MIC" -> {
+                    if (appState.value != AppState.LISTENING) {
+                        startListening()
+                    }
+                }
+            }
+        }
+    }
     private var pendingDevice: BluetoothDevice? = null
 
     // Classic Connection State
@@ -915,6 +941,27 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         super.onCreate(savedInstanceState)
 
         sharedPrefs = getSharedPreferences("JasicaSettings", Context.MODE_PRIVATE)
+
+        // Start Quick Access Service if enabled
+        if (sharedPrefs.getBoolean("QUICK_ACCESS", false) && android.provider.Settings.canDrawOverlays(this)) {
+            val serviceIntent = Intent(this, FloatingControlService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent)
+            } else {
+                startService(serviceIntent)
+            }
+        }
+        
+        // Register Quick Access Receiver
+        val filter = IntentFilter().apply {
+            addAction("com.bristi.controller.SEND_QUICK_COMMAND")
+            addAction("com.bristi.controller.START_MIC")
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(quickAccessReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(quickAccessReceiver, filter)
+        }
         val buildKeys = BuildConfig.GEMINI_API_KEYS
         if (buildKeys.isNotBlank()) {
             availableApiKeys.clear()
@@ -5509,6 +5556,52 @@ fun SettingsScreen(
                     }
                 }
 
+                // Quick Access Group
+                Box {
+                    AppleSettingsGroup(title = "System", isDark = darkModeInput) {
+                        var quickAccessEnabled by remember { mutableStateOf(sharedPrefs.getBoolean("QUICK_ACCESS", false)) }
+                        AppleSettingsRow(
+                            title = "Quick Access Widget",
+                            subtitle = "Floating icon for instant device control anywhere",
+                            icon = null,
+                            customIcon = R.drawable.ic_ai_waves,
+                            showDivider = false,
+                            isDark = darkModeInput,
+                            rightContent = {
+                                Switch(
+                                    checked = quickAccessEnabled,
+                                    onCheckedChange = { isChecked ->
+                                        if (isChecked) {
+                                            if (!android.provider.Settings.canDrawOverlays(context)) {
+                                                val intent = android.content.Intent(
+                                                    android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                                    android.net.Uri.parse("package:${context.packageName}")
+                                                )
+                                                context.startActivity(intent)
+                                            } else {
+                                                quickAccessEnabled = true
+                                                sharedPrefs.edit().putBoolean("QUICK_ACCESS", true).apply()
+                                                val serviceIntent = Intent(context, FloatingControlService::class.java)
+                                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                                    context.startForegroundService(serviceIntent)
+                                                } else {
+                                                    context.startService(serviceIntent)
+                                                }
+                                            }
+                                        } else {
+                                            quickAccessEnabled = false
+                                            sharedPrefs.edit().putBoolean("QUICK_ACCESS", false).apply()
+                                            val serviceIntent = Intent(context, FloatingControlService::class.java)
+                                            context.stopService(serviceIntent)
+                                        }
+                                    },
+                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF007AFF))
+                                )
+                            }
+                        )
+                    }
+                }
+                
                 // Updates Group
                 Box {
                     AppleSettingsGroup(title = "Updates & Info", isDark = darkModeInput) {
