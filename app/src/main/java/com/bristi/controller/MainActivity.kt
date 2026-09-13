@@ -511,6 +511,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
         // ── Media / App shortcuts ────────────────────────────────────────────
         commands.add(LocalCommand(listOf("play","song"), anyOf = listOf("fav","favorite","favourite","sad","sad song","favorite song"), command = "SYS_YT_FAV", confirmationText = "ঠিক আছে বস, আজ মন খারাপ বুঝি যে স্যাড গান চালাতে বলছো? যাই হোক, আমি ইউটিউব থেকে তোমার পছন্দের গানটা চালিয়ে দিচ্ছি!"))
+        commands.add(LocalCommand(listOf("play", "saikat", "song"), anyOf = listOf("saikat", "saikat's", "shaikat"), command = "SYS_YT_SAIKAT", confirmationText = "ঠিক আছে, আমি সৈকতের প্রিয় গান সরি দীপান্বিতা প্লে করছি!"))
+
         commands.add(LocalCommand(listOf("song"), anyOf = listOf("fav","favorite","favourite","sad","sad song"), command = "SYS_YT_FAV", confirmationText = "ঠিক আছে বস, আজ মন খারাপ বুঝি যে স্যাড গান চালাতে বলছো? যাই হোক, আমি ইউটিউব থেকে তোমার পছন্দের গানটা চালিয়ে দিচ্ছি!"))
         commands.add(LocalCommand(listOf("sad","song"), command = "SYS_YT_FAV", confirmationText = "ঠিক আছে বস, আজ মন খারাপ বুঝি যে স্যাড গান চালাতে বলছো? যাই হোক, আমি ইউটিউব থেকে তোমার পছন্দের গানটা চালিয়ে দিচ্ছি!"))
         commands.add(LocalCommand(listOf("youtube"), anyOf = listOf("fav","favorite","favourite","play","sad","song"), command = "SYS_YT_FAV", confirmationText = "ঠিক আছে বস, আজ মন খারাপ বুঝি যে স্যাড গান চালাতে বলছো? যাই হোক, আমি ইউটিউব থেকে তোমার পছন্দের গানটা চালিয়ে দিচ্ছি!"))
@@ -1154,6 +1156,11 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     private fun processCommandAndSync(command: String) {
         // Intercept System intents before hardware syncing
+
+        if (command == "SYS_YT_SAIKAT") {
+            playSaikatSongOnYouTube()
+            return
+        }
         if (command == "SYS_YT_FAV") {
             playFavoriteSongOnYouTube()
             return
@@ -1205,6 +1212,22 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
         // Fire the hardware action via Bluetooth
         sendCommandOverBluetooth(command)
+    }
+
+
+    private fun playSaikatSongOnYouTube() {
+        val videoId = "lhV2bCBo-8k"
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=$videoId")).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            setPackage("com.google.android.youtube") // Force open in YouTube app
+        }
+        try {
+            startActivity(intent)
+        } catch (e: Exception) {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=$videoId")).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            })
+        }
     }
 
     private fun playFavoriteSongOnYouTube() {
