@@ -1073,19 +1073,19 @@ export default function HomePage() {
                             Powered by Jasica 1.0, she isn't just an assistant—she's an emotionally aware companion with a custom persona dedicated to Bristi. Fluent in English and Bengali, she remembers your context and is always ready with hands-free Wake Word activation.
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-3 md:gap-y-4 gap-x-6">
-                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs group hover:scale-[1.03] transition-all cursor-pointer hover:shadow-sm">
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs group transition-all cursor-pointer hover:shadow-sm">
                                 <BrainCircuit strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0 svg-draw-path" />
                                 <span className="text-zinc-800 font-medium text-sm">Conversation Memory</span>
                             </div>
-                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs group hover:scale-[1.03] transition-all cursor-pointer hover:shadow-sm">
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs group transition-all cursor-pointer hover:shadow-sm">
                                 <Languages strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0 svg-draw-path" />
                                 <span className="text-zinc-800 font-medium text-sm">Bilingual TTS</span>
                             </div>
-                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs group hover:scale-[1.03] transition-all cursor-pointer hover:shadow-sm">
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs group transition-all cursor-pointer hover:shadow-sm">
                                 <Mic strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0 svg-draw-path" />
                                 <span className="text-zinc-800 font-medium text-sm">Voice Calibration</span>
                             </div>
-                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs group hover:scale-[1.03] transition-all cursor-pointer hover:shadow-sm">
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs group transition-all cursor-pointer hover:shadow-sm">
                                 <WifiOff strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0 svg-draw-path" />
                                 <span className="text-zinc-800 font-medium text-sm">Offline Parser</span>
                             </div>
@@ -1112,27 +1112,27 @@ export default function HomePage() {
                     </div>
                     
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3">
-                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:scale-[1.05] hover:shadow-sm transition-all cursor-pointer">
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:shadow-sm transition-all cursor-pointer">
                             <Monitor strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0 svg-draw-path" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">PC Hub</span>
                         </div>
-                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:scale-[1.05] hover:shadow-sm transition-all cursor-pointer">
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:shadow-sm transition-all cursor-pointer">
                             <Lightbulb strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0 svg-draw-path" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">RGB Light</span>
                         </div>
-                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:scale-[1.05] hover:shadow-sm transition-all cursor-pointer">
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:shadow-sm transition-all cursor-pointer">
                             <Plug strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0 svg-draw-path" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">Smart Plug</span>
                         </div>
-                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:scale-[1.05] hover:shadow-sm transition-all cursor-pointer">
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:shadow-sm transition-all cursor-pointer">
                             <Wind strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0 svg-draw-path" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">AC Unit</span>
                         </div>
-                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:scale-[1.05] hover:shadow-sm transition-all cursor-pointer">
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:shadow-sm transition-all cursor-pointer">
                             <Fan strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0 svg-draw-path" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">Room Fan</span>
                         </div>
-                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:scale-[1.05] hover:shadow-sm transition-all cursor-pointer">
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:shadow-sm transition-all cursor-pointer">
                             <Code strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0 svg-draw-path" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">Arduino Gen</span>
                         </div>
@@ -1152,7 +1152,7 @@ export default function HomePage() {
                             A dedicated background service ensures you drink water every 30 minutes.
                         </p>
                     </div>
-                    <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-5 border border-zinc-200 md:border-cyan-200/80 flex flex-col items-center justify-center text-center h-full min-h-[100px] md:min-h-[120px] shadow-2xs group hover:scale-[1.03] transition-all cursor-pointer hover:shadow-sm">
+                    <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-5 border border-zinc-200 md:border-cyan-200/80 flex flex-col items-center justify-center text-center h-full min-h-[100px] md:min-h-[120px] shadow-2xs group transition-all cursor-pointer hover:shadow-sm">
                         <SmartphoneCharging strokeWidth={1.5} className="w-6 h-6 md:w-7 md:h-7 text-[#06B6D4] mb-2 svg-draw-path" />
                         <span className="text-sm font-medium text-zinc-900 block mb-1">Lock Screen Override</span>
                         <span className="text-xs text-zinc-500 font-normal">Wakes device & vibrates</span>
