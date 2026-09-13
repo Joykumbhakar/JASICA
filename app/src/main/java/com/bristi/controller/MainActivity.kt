@@ -5827,7 +5827,12 @@ fun SettingsScreen(
                                     onValueChangeFinished = {
                                         sharedPrefs.edit().putInt("SHAKE_SENSITIVITY", shakeSensitivity).apply()
                                     },
-                                    valueRange = 0f..100f
+                                    valueRange = 0f..100f,
+                                    colors = androidx.compose.material3.SliderDefaults.colors(
+                                        thumbColor = Color.White,
+                                        activeTrackColor = Color(0xFF007AFF),
+                                        inactiveTrackColor = if (darkModeInput) Color(0xFF38383A) else Color(0xFFE5E5EA)
+                                    )
                                 )
                             }
                         }
@@ -5884,14 +5889,15 @@ fun SettingsScreen(
                             }
 
                             @androidx.compose.runtime.Composable
-                            fun TiltDeviceRow(direction: String, currentValue: Int, onValueChange: (Int) -> Unit) {
+                            fun TiltDeviceRow(direction: String, iconVector: androidx.compose.ui.graphics.vector.ImageVector, bgColor: Color, currentValue: Int, onValueChange: (Int) -> Unit) {
                                 var expanded by remember { mutableStateOf(false) }
                                 val selectedName = deviceNames.find { it.first == currentValue }?.second ?: "None"
                                 
                                 AppleSettingsRow(
                                     title = direction,
                                     subtitle = "Currently: $selectedName",
-                                    iconBgColor = Color.Transparent,
+                                    icon = { Icon(iconVector, contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White) },
+                                    iconBgColor = bgColor,
                                     showDivider = true,
                                     isDark = darkModeInput,
                                     control = {
@@ -5921,19 +5927,19 @@ fun SettingsScreen(
                                 )
                             }
 
-                            TiltDeviceRow(direction = "Tilt Left", currentValue = tiltLeftDevice) { 
+                            TiltDeviceRow(direction = "Tilt Left", iconVector = androidx.compose.material.icons.Icons.Rounded.ArrowBack, bgColor = Color(0xFF007AFF), currentValue = tiltLeftDevice) { 
                                 tiltLeftDevice = it
                                 sharedPrefs.edit().putInt("TILT_LEFT_DEVICE", it).apply()
                             }
-                            TiltDeviceRow(direction = "Tilt Right", currentValue = tiltRightDevice) { 
+                            TiltDeviceRow(direction = "Tilt Right", iconVector = androidx.compose.material.icons.Icons.Rounded.ArrowForward, bgColor = Color(0xFF34C759), currentValue = tiltRightDevice) { 
                                 tiltRightDevice = it
                                 sharedPrefs.edit().putInt("TILT_RIGHT_DEVICE", it).apply()
                             }
-                            TiltDeviceRow(direction = "Tilt Front", currentValue = tiltFrontDevice) { 
+                            TiltDeviceRow(direction = "Tilt Front", iconVector = androidx.compose.material.icons.Icons.Rounded.ArrowUpward, bgColor = Color(0xFFFF9500), currentValue = tiltFrontDevice) { 
                                 tiltFrontDevice = it
                                 sharedPrefs.edit().putInt("TILT_FRONT_DEVICE", it).apply()
                             }
-                            TiltDeviceRow(direction = "Tilt Back", currentValue = tiltBackDevice) { 
+                            TiltDeviceRow(direction = "Tilt Back", iconVector = androidx.compose.material.icons.Icons.Rounded.ArrowDownward, bgColor = Color(0xFFFF2D55), currentValue = tiltBackDevice) { 
                                 tiltBackDevice = it
                                 sharedPrefs.edit().putInt("TILT_BACK_DEVICE", it).apply()
                             }
