@@ -921,7 +921,7 @@ export default function HomePage() {
     </nav>
 
     <div className="absolute top-[22vh] mt-[30px] sm:mt-0 sm:top-[20vh] md:top-[18vh] left-0 w-full px-4 text-center z-0 pointer-events-none flex flex-col items-center">
-        <h1 className="mobile-title-scale text-[7rem] sm:text-[9rem] md:text-[12rem] lg:text-[16rem] font-bold tracking-apple-tighter leading-[0.8] animate-fade-up pb-2 whitespace-nowrap">
+        <h1 className="mobile-title-scale text-[6.5rem] sm:text-[9rem] md:text-[12rem] lg:text-[16rem] font-bold tracking-apple-tighter leading-[0.8] animate-fade-up pb-2 flex flex-col md:flex-row items-center justify-center">
             <span className="text-black">Jasica</span>
             <span className="bg-gradient-to-b from-zinc-600 to-black bg-clip-text text-transparent">AI.</span>
         </h1>
@@ -1541,7 +1541,7 @@ export default function HomePage() {
 
     {/* Right-side iOS Style Creator Profile Pop-up (Shows for 24s) */}
     <div
-      className={`fixed bottom-24 right-4 md:bottom-8 md:right-8 z-50 transition-all duration-500 ease-out transform ${
+      className={`fixed top-24 right-4 md:top-auto md:bottom-8 md:right-8 z-[60] transition-all duration-500 ease-out transform ${
         showCreatorPopup
           ? "translate-x-0 opacity-100 scale-100 pointer-events-auto"
           : "translate-x-[120%] opacity-0 scale-95 pointer-events-none"
