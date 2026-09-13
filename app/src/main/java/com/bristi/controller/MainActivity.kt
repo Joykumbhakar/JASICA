@@ -7206,7 +7206,6 @@ data class UpdateNotification(
 )
 
 @Composable
-@Composable
 fun AppleMenuItemImage(
     painter: androidx.compose.ui.graphics.painter.Painter,
     text: String,
