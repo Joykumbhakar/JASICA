@@ -900,9 +900,6 @@ export default function HomePage() {
           <div className="max-w-5xl mx-auto">
               <div className="rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl shadow-black/10 border border-zinc-200/80 bg-black aspect-video relative">
                   <video 
-                    autoPlay 
-                    loop 
-                    muted 
                     playsInline 
                     controls
                     className="w-full h-full object-cover"
