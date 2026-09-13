@@ -3336,8 +3336,7 @@ fun DeviceControlCard(
                 androidx.compose.foundation.Image(
                     painter = androidx.compose.ui.res.painterResource(id = R.drawable.robot),
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(if (isChecked) activeAccent else subTextColor)
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
@@ -5145,7 +5144,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "AI Model Engine",
                             subtitle = "Current: $selectedModel",
-                            icon = { Icon(Icons.Rounded.SmartToy, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) },
+                            icon = { androidx.compose.foundation.Image(painter = androidx.compose.ui.res.painterResource(id = R.drawable.robot), contentDescription = null, modifier = Modifier.size(24.dp)) },
                             iconBgColor = Color(0xFF34C759),
                             showDivider = true,
                             isDark = darkModeInput,
@@ -5330,7 +5329,7 @@ fun SettingsScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                        LucideIconBox(backgroundColor = Color(0xFF636366)) { Icon(Icons.Rounded.SmartToy, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) }
+                                        LucideIconBox(backgroundColor = Color(0xFF636366)) { androidx.compose.foundation.Image(painter = androidx.compose.ui.res.painterResource(id = R.drawable.robot), contentDescription = null, modifier = Modifier.size(24.dp)) }
                                         Spacer(Modifier.width(14.dp))
                                         Column {
                                             Text(name, color = textPrimary, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFamily = InterFontFamily)
