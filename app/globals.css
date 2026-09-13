@@ -168,3 +168,16 @@ body {
   animation: jasicaWaveGlow 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+
+/* SVG Line Drawing Animations */
+@keyframes redrawPath {
+  0% { stroke-dashoffset: 120; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.group:hover .svg-draw-path path, 
+.group:hover .svg-draw-path polyline, 
+.group:hover .svg-draw-path line {
+  stroke-dasharray: 120;
+  animation: redrawPath 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
