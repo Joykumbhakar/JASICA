@@ -961,7 +961,7 @@ export default function HomePage() {
                             onPause={() => setIsVideoPlaying(false)}
                             onClick={toggleVideoPlay}
                           >
-                              <source src="/A_fast_paced_cinematic_tech_p.mp4" type="video/mp4" />
+                              <source src="/A_cinematic_fast_paced_sec.mp4" type="video/mp4" />
                           </video>
                           
                           <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying ? 'opacity-0' : 'opacity-100'}`}>
@@ -1397,7 +1397,7 @@ export default function HomePage() {
 
                 {/* Video 3: Cinematic Fast Paced */}
                 <div className="flex flex-col">
-                    <h3 className="text-xl font-semibold text-zinc-900 mb-3 px-2">Real-World Magic</h3>
+                    <h3 className="text-xl font-semibold text-zinc-900 mb-3 px-2">Smart Gestures</h3>
                     <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-[4/3] md:aspect-video relative group">
                         <video 
                           ref={videoRef3}
@@ -1408,7 +1408,7 @@ export default function HomePage() {
                           onPause={() => setIsVideoPlaying3(false)}
                           onClick={toggleVideoPlay3}
                         >
-                            <source src="/A_cinematic_fast_paced_sec.mp4" type="video/mp4" />
+                            <source src="/A_fast_paced_cinematic_tech_p.mp4" type="video/mp4" />
                         </video>
                         <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying3 ? 'opacity-0' : 'opacity-100'}`}>
                             <button onClick={toggleVideoPlay3} className="pointer-events-auto w-14 h-14 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300">
