@@ -970,6 +970,16 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 startService(serviceIntent)
             }
         }
+
+        // Start Double Tap Back service if enabled
+        if (sharedPrefs.getBoolean("DOUBLE_TAP_BACK", false)) {
+            val dtIntent = Intent(this, DoubleTapService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(dtIntent)
+            } else {
+                startService(dtIntent)
+            }
+        }
         
         // Register Quick Access Receiver
         val filter = IntentFilter().apply {
@@ -5618,6 +5628,83 @@ fun SettingsScreen(
                                 )
                             }
                         )
+
+                        // ── Double Tap Back to Toggle Device ─────────────────────
+                        var doubleTapEnabled by remember { mutableStateOf(sharedPrefs.getBoolean("DOUBLE_TAP_BACK", false)) }
+                        var doubleTapDeviceIndex by remember { mutableStateOf(sharedPrefs.getInt("DOUBLE_TAP_DEVICE_INDEX", 1)) }
+
+                        AppleSettingsRow(
+                            title = "Double Tap Back",
+                            subtitle = "Tap the back of your phone twice to toggle a device",
+                            icon = { Icon(Icons.Rounded.TouchApp, contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White) },
+                            iconBgColor = Color(0xFF5856D6),
+                            showDivider = doubleTapEnabled,
+                            isDark = darkModeInput,
+                            control = {
+                                AppleSwitch(
+                                    checked = doubleTapEnabled,
+                                    onCheckedChange = { isChecked ->
+                                        doubleTapEnabled = isChecked
+                                        sharedPrefs.edit().putBoolean("DOUBLE_TAP_BACK", isChecked).apply()
+                                        val serviceIntent = Intent(context, DoubleTapService::class.java)
+                                        if (isChecked) {
+                                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                                context.startForegroundService(serviceIntent)
+                                            } else {
+                                                context.startService(serviceIntent)
+                                            }
+                                        } else {
+                                            context.stopService(serviceIntent)
+                                        }
+                                    }
+                                )
+                            }
+                        )
+
+                        if (doubleTapEnabled) {
+                            val deviceNames = remember(sharedPrefs) {
+                                DEFAULT_DEVICES.mapIndexed { index, dev ->
+                                    val name = sharedPrefs.getString("DEV_${dev.id}_NAME", dev.defaultName) ?: dev.defaultName
+                                    Pair(index + 1, name)
+                                }
+                            }
+                            var expandedPicker by remember { mutableStateOf(false) }
+                            val selectedName = deviceNames.find { it.first == doubleTapDeviceIndex }?.second ?: "Device $doubleTapDeviceIndex"
+
+                            AppleSettingsRow(
+                                title = "Target Device",
+                                subtitle = "Currently: $selectedName",
+                                icon = { Icon(Icons.Rounded.Devices, contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White) },
+                                iconBgColor = Color(0xFFFF9500),
+                                showDivider = false,
+                                isDark = darkModeInput,
+                                control = {
+                                    Box {
+                                        Text(
+                                            selectedName,
+                                            color = Color(0xFF007AFF),
+                                            fontSize = 14.sp,
+                                            modifier = Modifier.clickable { expandedPicker = true }
+                                        )
+                                        DropdownMenu(
+                                            expanded = expandedPicker,
+                                            onDismissRequest = { expandedPicker = false }
+                                        ) {
+                                            deviceNames.forEach { (idx, name) ->
+                                                DropdownMenuItem(
+                                                    text = { Text(name) },
+                                                    onClick = {
+                                                        doubleTapDeviceIndex = idx
+                                                        sharedPrefs.edit().putInt("DOUBLE_TAP_DEVICE_INDEX", idx).apply()
+                                                        expandedPicker = false
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
                 

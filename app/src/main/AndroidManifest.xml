@@ -161,6 +161,15 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Floating window overlay for quick hardware control" />
         </service>
+
+        <service
+            android:name=".DoubleTapService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Accelerometer listener for double-tap back gesture to toggle IoT device" />
+        </service>
         
         <activity
             android:name=".WaterAlarmActivity"
