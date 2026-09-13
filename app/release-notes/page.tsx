@@ -15,9 +15,9 @@ export default function ReleaseNotes() {
           <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight mb-4">🤖 JASICA Flash-2.5 — Release Notes</h1>
           
           <div className="flex flex-wrap items-center gap-3 mb-10 text-sm">
-            <span className="bg-zinc-100 text-zinc-800 px-3 py-1 rounded-full font-medium border border-zinc-200">Version 1.2.13.09.2026-beta</span>
-            <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium border border-blue-200/60">versionCode 12</span>
-            <span className="text-zinc-500">Sept 13, 2026 &bull; Channel: Beta</span>
+            <span className="bg-zinc-100 text-zinc-800 px-3 py-1 rounded-full font-medium border border-zinc-200">Version 1.2.14.09.2026-beta</span>
+            <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium border border-blue-200/60">versionCode 13</span>
+            <span className="text-zinc-500">Sept 14, 2026 &bull; Channel: Beta</span>
           </div>
 
           <section className="mb-10">
@@ -160,7 +160,7 @@ export default function ReleaseNotes() {
 
           <section className="bg-zinc-50 border border-zinc-200 rounded-xl p-6 text-sm text-zinc-600">
             <h3 className="font-semibold text-zinc-800 mb-2">📦 Download</h3>
-            <p><strong>Branch:</strong> <code className="bg-white border border-zinc-200 px-1 py-0.5 rounded">main</code> &bull; <strong>Commit:</strong> <code className="bg-white border border-zinc-200 px-1 py-0.5 rounded">35b2f2f</code></p>
+            <p><strong>Branch:</strong> <code className="bg-white border border-zinc-200 px-1 py-0.5 rounded">main</code> &bull; <strong>Commit:</strong> <code className="bg-white border border-zinc-200 px-1 py-0.5 rounded">fdf5556</code></p>
             <p className="mt-1">Build: <code>assembleDebug</code> — APK located at <code>app/build/outputs/apk/debug/app-debug.apk</code></p>
           </section>
           

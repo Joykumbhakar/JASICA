@@ -21,8 +21,8 @@ android {
         applicationId = "com.bristi.controller"
         minSdk = 23
         targetSdk = 36
-        versionCode = 12
-        versionName = "1.2.13.09.2026-beta"
+        versionCode = 13
+        versionName = "1.2.14.09.2026-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GEMINI_API_KEY", "\"${localProps.getProperty("GEMINI_API_KEY", "")}\"")
