@@ -1015,88 +1015,7 @@ export default function HomePage() {
           </div>
       </section>
 
-    <section id="showcase" className="relative z-20 bg-[#f5f5f7] py-16 md:py-24 px-4 md:px-12">
-        <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-10 md:mb-16">
-                <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-black mb-4">Cinematic Showcase</h2>
-                <p className="text-lg md:text-xl text-zinc-500 font-normal max-w-2xl mx-auto">Experience the magic of Jasica AI in high-fidelity motion.</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                
-                {/* Video 2: Motion Graphics Intro */}
-                <div className="flex flex-col">
-                    <h3 className="text-xl font-semibold text-zinc-900 mb-3 px-2">The Neural Core</h3>
-                    <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-[4/3] md:aspect-video relative group">
-                        <video 
-                          ref={videoRef2}
-                          playsInline 
-                          controls={isVideoPlaying2}
-                          className="w-full h-full object-cover cursor-pointer"
-                          onPlay={() => setIsVideoPlaying2(true)}
-                          onPause={() => setIsVideoPlaying2(false)}
-                          onClick={toggleVideoPlay2}
-                        >
-                            <source src="/A_highly_stylized_premium_mot.mp4" type="video/mp4" />
-                        </video>
-                        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying2 ? 'opacity-0' : 'opacity-100'}`}>
-                            <button onClick={toggleVideoPlay2} className="pointer-events-auto w-14 h-14 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300">
-                               <div className="w-0 h-0 border-y-[8px] border-y-transparent border-l-[14px] border-l-white ml-1 rounded-sm drop-shadow-md"></div>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Video 3: Cinematic Fast Paced */}
-                <div className="flex flex-col">
-                    <h3 className="text-xl font-semibold text-zinc-900 mb-3 px-2">Real-World Magic</h3>
-                    <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-[4/3] md:aspect-video relative group">
-                        <video 
-                          ref={videoRef3}
-                          playsInline 
-                          controls={isVideoPlaying3}
-                          className="w-full h-full object-cover cursor-pointer"
-                          onPlay={() => setIsVideoPlaying3(true)}
-                          onPause={() => setIsVideoPlaying3(false)}
-                          onClick={toggleVideoPlay3}
-                        >
-                            <source src="/A_cinematic_fast_paced_sec.mp4" type="video/mp4" />
-                        </video>
-                        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying3 ? 'opacity-0' : 'opacity-100'}`}>
-                            <button onClick={toggleVideoPlay3} className="pointer-events-auto w-14 h-14 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300">
-                               <div className="w-0 h-0 border-y-[8px] border-y-transparent border-l-[14px] border-l-white ml-1 rounded-sm drop-shadow-md"></div>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Video 4: High Budget Cinematic */}
-                <div className="flex flex-col">
-                    <h3 className="text-xl font-semibold text-zinc-900 mb-3 px-2">Hyper-Realistic AI</h3>
-                    <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-[4/3] md:aspect-video relative group">
-                        <video 
-                          ref={videoRef4}
-                          playsInline 
-                          controls={isVideoPlaying4}
-                          className="w-full h-full object-cover cursor-pointer"
-                          onPlay={() => setIsVideoPlaying4(true)}
-                          onPause={() => setIsVideoPlaying4(false)}
-                          onClick={toggleVideoPlay4}
-                        >
-                            <source src="/A_high_budget_cinematic_tech.mp4" type="video/mp4" />
-                        </video>
-                        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying4 ? 'opacity-0' : 'opacity-100'}`}>
-                            <button onClick={toggleVideoPlay4} className="pointer-events-auto w-14 h-14 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300">
-                               <div className="w-0 h-0 border-y-[8px] border-y-transparent border-l-[14px] border-l-white ml-1 rounded-sm drop-shadow-md"></div>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </section>
-
+    
     <section id="specs"  className="relative z-20 bg-[#f5f5f7] py-24 md:py-32 px-4 md:px-12">
         <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12 md:mb-16">
@@ -1436,6 +1355,88 @@ export default function HomePage() {
                         <div className="flex items-center justify-between py-2.5 group hover:px-2 transition-all cursor-pointer">
                              <span className="text-sm font-medium text-zinc-800">Cloud Configuration Sync</span>
                              <Check strokeWidth={1.5} className="w-4 h-4 text-[#10B981] svg-draw-path" />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="showcase" className="relative z-20 bg-[#f5f5f7] py-16 md:py-24 px-4 md:px-12">
+        <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-10 md:mb-16">
+                <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-black mb-4">Cinematic Showcase</h2>
+                <p className="text-lg md:text-xl text-zinc-500 font-normal max-w-2xl mx-auto">Experience the magic of Jasica AI in high-fidelity motion.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+                
+                {/* Video 2: Motion Graphics Intro */}
+                <div className="flex flex-col">
+                    <h3 className="text-xl font-semibold text-zinc-900 mb-3 px-2">The Neural Core</h3>
+                    <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-[4/3] md:aspect-video relative group">
+                        <video 
+                          ref={videoRef2}
+                          playsInline 
+                          controls={isVideoPlaying2}
+                          className="w-full h-full object-cover cursor-pointer"
+                          onPlay={() => setIsVideoPlaying2(true)}
+                          onPause={() => setIsVideoPlaying2(false)}
+                          onClick={toggleVideoPlay2}
+                        >
+                            <source src="/A_highly_stylized_premium_mot.mp4" type="video/mp4" />
+                        </video>
+                        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying2 ? 'opacity-0' : 'opacity-100'}`}>
+                            <button onClick={toggleVideoPlay2} className="pointer-events-auto w-14 h-14 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300">
+                               <div className="w-0 h-0 border-y-[8px] border-y-transparent border-l-[14px] border-l-white ml-1 rounded-sm drop-shadow-md"></div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Video 3: Cinematic Fast Paced */}
+                <div className="flex flex-col">
+                    <h3 className="text-xl font-semibold text-zinc-900 mb-3 px-2">Real-World Magic</h3>
+                    <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-[4/3] md:aspect-video relative group">
+                        <video 
+                          ref={videoRef3}
+                          playsInline 
+                          controls={isVideoPlaying3}
+                          className="w-full h-full object-cover cursor-pointer"
+                          onPlay={() => setIsVideoPlaying3(true)}
+                          onPause={() => setIsVideoPlaying3(false)}
+                          onClick={toggleVideoPlay3}
+                        >
+                            <source src="/A_cinematic_fast_paced_sec.mp4" type="video/mp4" />
+                        </video>
+                        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying3 ? 'opacity-0' : 'opacity-100'}`}>
+                            <button onClick={toggleVideoPlay3} className="pointer-events-auto w-14 h-14 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300">
+                               <div className="w-0 h-0 border-y-[8px] border-y-transparent border-l-[14px] border-l-white ml-1 rounded-sm drop-shadow-md"></div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Video 4: High Budget Cinematic */}
+                <div className="flex flex-col">
+                    <h3 className="text-xl font-semibold text-zinc-900 mb-3 px-2">Hyper-Realistic AI</h3>
+                    <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-xl shadow-black/5 border border-zinc-200/80 bg-black aspect-[4/3] md:aspect-video relative group">
+                        <video 
+                          ref={videoRef4}
+                          playsInline 
+                          controls={isVideoPlaying4}
+                          className="w-full h-full object-cover cursor-pointer"
+                          onPlay={() => setIsVideoPlaying4(true)}
+                          onPause={() => setIsVideoPlaying4(false)}
+                          onClick={toggleVideoPlay4}
+                        >
+                            <source src="/A_high_budget_cinematic_tech.mp4" type="video/mp4" />
+                        </video>
+                        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${isVideoPlaying4 ? 'opacity-0' : 'opacity-100'}`}>
+                            <button onClick={toggleVideoPlay4} className="pointer-events-auto w-14 h-14 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-xl border border-white/20 text-white shadow-2xl hover:bg-black/30 hover:scale-105 transition-all duration-300">
+                               <div className="w-0 h-0 border-y-[8px] border-y-transparent border-l-[14px] border-l-white ml-1 rounded-sm drop-shadow-md"></div>
+                            </button>
                         </div>
                     </div>
                 </div>
