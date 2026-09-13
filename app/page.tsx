@@ -974,7 +974,7 @@ export default function HomePage() {
                         <div className="set-nav-icon bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-200/50 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)]"><img src="/jasica.png" alt="Jasica App" className="w-[24px] h-[24px] object-contain drop-shadow-sm" /></div>
                         <div className="flex flex-col">
                             <span className="text-zinc-900 font-semibold text-base sm:text-lg">JASICA Flash-2.5</span>
-                            <span className="text-zinc-500 font-medium text-xs sm:text-sm">36.6 MB &bull; Latest Release</span>
+                            <span className="text-zinc-500 font-medium text-xs sm:text-sm flex flex-wrap items-center gap-1.5">36.6 MB &bull; Latest Release &bull; <a href="/release-notes" className="text-blue-600 hover:underline">Release Notes</a></span>
                         </div>
                     </div>
                     <div className="relative flex items-center justify-center">
