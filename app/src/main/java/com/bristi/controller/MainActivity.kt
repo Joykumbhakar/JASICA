@@ -4139,7 +4139,7 @@ fun LucideIconBox(
             .size(30.dp)
             .shadow(
                 elevation = 2.dp,
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(12.dp),
                 ambientColor = Color.Black.copy(alpha = 0.12f),
                 spotColor = Color.Black.copy(alpha = 0.12f)
             )
@@ -4148,7 +4148,7 @@ fun LucideIconBox(
             .border(
                 width = 0.5.dp,
                 color = Color.White.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(12.dp)
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -5368,13 +5368,14 @@ fun SettingsScreen(
                                             placeholder = { Text(dev.defaultName, color = textSecondary.copy(0.4f)) },
                                             textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontSize = 14.sp, fontFamily = InterFontFamily),
                                             modifier = Modifier.fillMaxWidth(),
-                                            shape = RoundedCornerShape(8.dp),
+                                            shape = RoundedCornerShape(12.dp),
                                             singleLine = true,
                                             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = Color(0xFF007AFF),
-                                                unfocusedBorderColor = cardBorder,
-                                                focusedContainerColor = cardBg,
-                                                unfocusedContainerColor = cardBg
+                                                unfocusedBorderColor = Color.Transparent,
+                                                focusedContainerColor = fieldBg,
+                                                unfocusedContainerColor = fieldBg,
+                                                cursorColor = Color(0xFF007AFF)
                                             )
                                         )
 
@@ -5394,14 +5395,15 @@ fun SettingsScreen(
                                                     placeholder = { Text(dev.defaultOnCmd, color = textSecondary.copy(0.4f)) },
                                                     textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontSize = 14.sp, fontFamily = InterFontFamily),
                                                     modifier = Modifier.fillMaxWidth(),
-                                                    shape = RoundedCornerShape(8.dp),
+                                                    shape = RoundedCornerShape(12.dp),
                                                     singleLine = true,
                                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                                        focusedBorderColor = Color(0xFF007AFF),
-                                                        unfocusedBorderColor = cardBorder,
-                                                        focusedContainerColor = cardBg,
-                                                        unfocusedContainerColor = cardBg
-                                                    )
+                                                focusedBorderColor = Color(0xFF007AFF),
+                                                unfocusedBorderColor = Color.Transparent,
+                                                focusedContainerColor = fieldBg,
+                                                unfocusedContainerColor = fieldBg,
+                                                cursorColor = Color(0xFF007AFF)
+                                            )
                                                 )
                                             }
                                             Column(modifier = Modifier.weight(1f)) {
@@ -5416,14 +5418,15 @@ fun SettingsScreen(
                                                     placeholder = { Text(dev.defaultOffCmd, color = textSecondary.copy(0.4f)) },
                                                     textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontSize = 14.sp, fontFamily = InterFontFamily),
                                                     modifier = Modifier.fillMaxWidth(),
-                                                    shape = RoundedCornerShape(8.dp),
+                                                    shape = RoundedCornerShape(12.dp),
                                                     singleLine = true,
                                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                                        focusedBorderColor = Color(0xFF007AFF),
-                                                        unfocusedBorderColor = cardBorder,
-                                                        focusedContainerColor = cardBg,
-                                                        unfocusedContainerColor = cardBg
-                                                    )
+                                                focusedBorderColor = Color(0xFF007AFF),
+                                                unfocusedBorderColor = Color.Transparent,
+                                                focusedContainerColor = fieldBg,
+                                                unfocusedContainerColor = fieldBg,
+                                                cursorColor = Color(0xFF007AFF)
+                                            )
                                                 )
                                             }
                                         }
@@ -5443,14 +5446,15 @@ fun SettingsScreen(
                                                     },
                                                     textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontSize = 14.sp, fontFamily = InterFontFamily),
                                                     modifier = Modifier.fillMaxWidth(),
-                                                    shape = RoundedCornerShape(8.dp),
+                                                    shape = RoundedCornerShape(12.dp),
                                                     singleLine = true,
                                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                                        focusedBorderColor = Color(0xFF007AFF),
-                                                        unfocusedBorderColor = cardBorder,
-                                                        focusedContainerColor = cardBg,
-                                                        unfocusedContainerColor = cardBg
-                                                    )
+                                                focusedBorderColor = Color(0xFF007AFF),
+                                                unfocusedBorderColor = Color.Transparent,
+                                                focusedContainerColor = fieldBg,
+                                                unfocusedContainerColor = fieldBg,
+                                                cursorColor = Color(0xFF007AFF)
+                                            )
                                                 )
                                             }
                                             Column(modifier = Modifier.weight(1f)) {
@@ -5464,14 +5468,15 @@ fun SettingsScreen(
                                                     },
                                                     textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontSize = 14.sp, fontFamily = InterFontFamily),
                                                     modifier = Modifier.fillMaxWidth(),
-                                                    shape = RoundedCornerShape(8.dp),
+                                                    shape = RoundedCornerShape(12.dp),
                                                     singleLine = true,
                                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                                        focusedBorderColor = Color(0xFF007AFF),
-                                                        unfocusedBorderColor = cardBorder,
-                                                        focusedContainerColor = cardBg,
-                                                        unfocusedContainerColor = cardBg
-                                                    )
+                                                focusedBorderColor = Color(0xFF007AFF),
+                                                unfocusedBorderColor = Color.Transparent,
+                                                focusedContainerColor = fieldBg,
+                                                unfocusedContainerColor = fieldBg,
+                                                cursorColor = Color(0xFF007AFF)
+                                            )
                                                 )
                                             }
                                         }
@@ -5638,7 +5643,7 @@ fun SettingsScreen(
                         placeholder = { Text("Password", color = textSecondary.copy(alpha=0.5f), fontFamily = InterFontFamily) },
                         isError = passwordError,
                         textStyle = androidx.compose.ui.text.TextStyle(color = textPrimary, fontFamily = InterFontFamily),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(12.dp),
                         singleLine = true,
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password),
                         colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
