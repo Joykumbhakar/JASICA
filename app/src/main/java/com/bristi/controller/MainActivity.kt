@@ -5480,15 +5480,21 @@ fun SettingsScreen(
 
         // Apple Style Restart Dialog
         if (showRestartDialog) {
-            AppleRestartDialog(
-                onDismiss = {
+            AppleDialog(
+                title = "Restart Required",
+                message = "Your new settings have been saved. An app restart is recommended to apply all configurations.",
+                primaryButtonText = "Restart Now",
+                onPrimaryClick = {
                     showRestartDialog = false
-                    onDismiss()
+                    context.startActivity(android.content.Intent(context, MainActivity::class.java).apply {
+                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    })
+                    Runtime.getRuntime().exit(0)
                 },
-                onRestart = {
-                    showRestartDialog = false
-                    restartApp(context)
-                }
+                secondaryButtonText = "Later",
+                onSecondaryClick = { showRestartDialog = false },
+                layout = "horizontal",
+                onDismiss = { showRestartDialog = false }
             )
         }
 
