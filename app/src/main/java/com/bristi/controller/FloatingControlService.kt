@@ -180,17 +180,8 @@ class FloatingControlService : Service() {
         val dev3 = prefs.getString("DEV_3_NAME", "Device 3") ?: "Device 3"
         val dev4 = prefs.getString("DEV_4_NAME", "Device 4") ?: "Device 4"
 
-        // Pulse animation for the main orb
-        val infiniteTransition = rememberInfiniteTransition(label = "orbPulse")
-        val orbScale by infiniteTransition.animateFloat(
-            initialValue = 1f, targetValue = 1.08f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(900, easing = FastOutSlowInEasing),
-                repeatMode = RepeatMode.Reverse
-            ), label = "orbScale"
-        )
-
         // Mic orb animations
+        val infiniteTransition = rememberInfiniteTransition(label = "orbPulse")
         val orbRing1 by infiniteTransition.animateFloat(
             initialValue = 0.7f, targetValue = 1.4f,
             animationSpec = infiniteRepeatable(
@@ -288,7 +279,6 @@ class FloatingControlService : Service() {
                 // Main Jasica orb button
                 Box(
                     modifier = Modifier
-                        .scale(if (expanded) 1f else orbScale)
                         .size(56.dp)
                         .clip(CircleShape)
                         .background(
