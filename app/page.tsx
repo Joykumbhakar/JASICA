@@ -891,7 +891,7 @@ export default function HomePage() {
             {isDownloading ? (
               <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <Download strokeWidth={1.5} className="w-6 h-6" />
+              <Download strokeWidth={1.5} className="w-6 h-6 svg-draw-path" />
             )}
             {isDownloading ? "Starting Download..." : "Download APK"}
         </a>
@@ -908,40 +908,40 @@ export default function HomePage() {
 
             <div className="border border-zinc-200 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden bg-white max-w-3xl mx-auto shadow-sm">
                 
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-5 sm:py-6 px-6 sm:px-8 border-b border-zinc-200">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-5 sm:py-6 px-6 sm:px-8 border-b border-zinc-200 group hover:bg-zinc-50/50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3 w-full sm:w-1/3 mb-1 sm:mb-0 shrink-0">
                         <div className="w-8 h-8 rounded-[8px] bg-[#007AFF] flex items-center justify-center text-white shrink-0">
-                            <LayoutTemplate strokeWidth={1.5} className="w-4 h-4" />
+                            <LayoutTemplate strokeWidth={1.5} className="w-4 h-4 svg-draw-path" />
                         </div>
                         <span className="text-zinc-500 font-medium text-base sm:text-lg whitespace-nowrap">App Name</span>
                     </div>
                     <div className="text-zinc-900 font-semibold text-base sm:text-lg sm:text-right w-full sm:w-2/3 pl-11 sm:pl-0 mt-1 sm:mt-0">Jasica AI</div>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-5 sm:py-6 px-6 sm:px-8 border-b border-zinc-200">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-5 sm:py-6 px-6 sm:px-8 border-b border-zinc-200 group hover:bg-zinc-50/50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3 w-full sm:w-1/3 mb-1 sm:mb-0 shrink-0">
                         <div className="w-8 h-8 rounded-[8px] bg-[#34C759] flex items-center justify-center text-white shrink-0">
-                            <Layers strokeWidth={1.5} className="w-4 h-4" />
+                            <Layers strokeWidth={1.5} className="w-4 h-4 svg-draw-path" />
                         </div>
                         <span className="text-zinc-500 font-medium text-base sm:text-lg whitespace-nowrap">Platform</span>
                     </div>
                     <div className="text-zinc-900 font-semibold text-base sm:text-lg sm:text-right w-full sm:w-2/3 pl-11 sm:pl-0 mt-1 sm:mt-0">Android OS (6.0+)</div>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-5 sm:py-6 px-6 sm:px-8 border-b border-zinc-200">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-5 sm:py-6 px-6 sm:px-8 border-b border-zinc-200 group hover:bg-zinc-50/50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3 w-full sm:w-1/3 mb-1 sm:mb-0 shrink-0">
                         <div className="w-8 h-8 rounded-[8px] bg-[#8E8E93] flex items-center justify-center text-white shrink-0">
-                            <BrainCircuit strokeWidth={1.5} className="w-4 h-4" />
+                            <BrainCircuit strokeWidth={1.5} className="w-4 h-4 svg-draw-path" />
                         </div>
                         <span className="text-zinc-500 font-medium text-base sm:text-lg whitespace-nowrap">AI Engine</span>
                     </div>
                     <div className="text-zinc-900 font-semibold text-base sm:text-lg sm:text-right w-full sm:w-2/3 pl-11 sm:pl-0 mt-1 sm:mt-0">Jasica 1.0</div>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-5 sm:py-6 px-6 sm:px-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-5 sm:py-6 px-6 sm:px-8 group hover:bg-zinc-50/50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3 w-full sm:w-1/3 mb-1 sm:mb-0 shrink-0">
                         <div className="w-8 h-8 rounded-[8px] bg-[#5856D6] flex items-center justify-center text-white shrink-0">
-                            <DownloadCloud strokeWidth={1.5} className="w-4 h-4" />
+                            <DownloadCloud strokeWidth={1.5} className="w-4 h-4 svg-draw-path" />
                         </div>
                         <span className="text-zinc-500 font-medium text-base sm:text-lg whitespace-nowrap">Direct Link</span>
                     </div>
@@ -953,7 +953,7 @@ export default function HomePage() {
                             <span className="underline underline-offset-4 decoration-1">
                                 {isDownloading ? "Starting Download..." : "Download App (.apk)"}
                             </span>
-                            {!isDownloading && <ChevronRight strokeWidth={1.5} className="w-4 h-4 text-blue-600 group-hover:translate-x-0.5 transition-transform" />}
+                            {!isDownloading && <ChevronRight strokeWidth={1.5} className="w-4 h-4 text-blue-600 group-hover:translate-x-0.5 transition-transform svg-draw-path" />}
                         </a>
                     </div>
                 </div>
@@ -1053,10 +1053,10 @@ export default function HomePage() {
                 {/* 1. AI Voice Assistant */}
                 <div className="col-span-1 md:col-span-6 py-10 md:p-12 md:bg-gradient-to-br md:from-[#EDE9FE] md:via-[#F5F3FF] md:to-[#FAF5FF] md:border md:border-[#DDD6FE] md:rounded-[2rem] flex flex-col md:flex-row gap-6 md:gap-10 items-start md:items-center overflow-hidden md:shadow-sm">
                     <div className="flex-1 w-full">
-                        <div className="flex items-center gap-3.5 mb-3 md:mb-4">
+                        <div className="flex items-center gap-3.5 mb-3 md:mb-4 group cursor-pointer">
                             <h3 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-black tracking-tight">Meet Jasica.</h3>
                             <div className="w-10 h-10 rounded-[12px] bg-[#5856D6] flex items-center justify-center text-white shrink-0 shadow-sm">
-                                <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="1.25" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="1.25" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 svg-draw-path">
                                     <circle cx="12" cy="12" r="10" />
                                     <clipPath id="card-sphere-clip">
                                         <circle cx="12" cy="12" r="9.5" />
@@ -1073,20 +1073,20 @@ export default function HomePage() {
                             Powered by Jasica 1.0, she isn't just an assistant—she's an emotionally aware companion with a custom persona dedicated to Bristi. Fluent in English and Bengali, she remembers your context and is always ready with hands-free Wake Word activation.
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-3 md:gap-y-4 gap-x-6">
-                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs">
-                                <BrainCircuit strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0" />
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs group hover:scale-[1.03] transition-all cursor-pointer hover:shadow-sm">
+                                <BrainCircuit strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0 svg-draw-path" />
                                 <span className="text-zinc-800 font-medium text-sm">Conversation Memory</span>
                             </div>
-                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs">
-                                <Languages strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0" />
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs group hover:scale-[1.03] transition-all cursor-pointer hover:shadow-sm">
+                                <Languages strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0 svg-draw-path" />
                                 <span className="text-zinc-800 font-medium text-sm">Bilingual TTS</span>
                             </div>
-                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs">
-                                <Mic strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0" />
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs group hover:scale-[1.03] transition-all cursor-pointer hover:shadow-sm">
+                                <Mic strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0 svg-draw-path" />
                                 <span className="text-zinc-800 font-medium text-sm">Voice Calibration</span>
                             </div>
-                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs">
-                                <WifiOff strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0" />
+                            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-xs py-2.5 px-3.5 rounded-xl border border-zinc-200 md:border-purple-200/60 shadow-2xs group hover:scale-[1.03] transition-all cursor-pointer hover:shadow-sm">
+                                <WifiOff strokeWidth={1.5} className="w-5 h-5 text-purple-600 shrink-0 svg-draw-path" />
                                 <span className="text-zinc-800 font-medium text-sm">Offline Parser</span>
                             </div>
                         </div>
@@ -1096,10 +1096,10 @@ export default function HomePage() {
                 {/* 2. Smart Home & Hardware */}
                 <div className="col-span-1 md:col-span-4 py-10 md:p-10 md:bg-gradient-to-br md:from-[#FFF7ED] md:via-[#FFEDD5] md:to-[#FEF3C7] md:border md:border-[#FED7AA] md:rounded-[2rem] flex flex-col justify-between md:shadow-sm">
                     <div>
-                        <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-3 mb-3 group cursor-pointer">
                             <h3 className="text-xl sm:text-2xl font-semibold text-black tracking-tight">Smart Hardware Control</h3>
                             <div className="w-9 h-9 rounded-[10px] bg-[#FF9500] flex items-center justify-center text-white shrink-0 shadow-sm">
-                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 svg-draw-path">
                                     <rect x="5" y="5" width="14" height="14" rx="3" ry="3" />
                                     <rect x="9" y="9" width="6" height="6" rx="1" ry="1" />
                                     <path d="M12 2v3M12 19v3M2 12h3M19 12h3M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M19 9h3M2 15h3M19 15h3" />
@@ -1112,28 +1112,28 @@ export default function HomePage() {
                     </div>
                     
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3">
-                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs">
-                            <Monitor strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0" />
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:scale-[1.05] hover:shadow-sm transition-all cursor-pointer">
+                            <Monitor strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0 svg-draw-path" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">PC Hub</span>
                         </div>
-                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs">
-                            <Lightbulb strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0" />
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:scale-[1.05] hover:shadow-sm transition-all cursor-pointer">
+                            <Lightbulb strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0 svg-draw-path" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">RGB Light</span>
                         </div>
-                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs">
-                            <Plug strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0" />
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:scale-[1.05] hover:shadow-sm transition-all cursor-pointer">
+                            <Plug strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0 svg-draw-path" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">Smart Plug</span>
                         </div>
-                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs">
-                            <Wind strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0" />
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:scale-[1.05] hover:shadow-sm transition-all cursor-pointer">
+                            <Wind strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0 svg-draw-path" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">AC Unit</span>
                         </div>
-                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs">
-                            <Fan strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0" />
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:scale-[1.05] hover:shadow-sm transition-all cursor-pointer">
+                            <Fan strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0 svg-draw-path" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">Room Fan</span>
                         </div>
-                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs">
-                            <Code strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0" />
+                        <div className="bg-white/90 backdrop-blur-xs border border-zinc-200 md:border-orange-200/70 rounded-full px-3 md:px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xs group hover:scale-[1.05] hover:shadow-sm transition-all cursor-pointer">
+                            <Code strokeWidth={1.5} className="w-4 h-4 text-orange-500 shrink-0 svg-draw-path" />
                             <span className="text-xs md:text-sm font-medium text-zinc-800 truncate">Arduino Gen</span>
                         </div>
                     </div>
@@ -1142,18 +1142,18 @@ export default function HomePage() {
                 {/* 3. Health & Wellness (Water / Hydration) */}
                 <div className="col-span-1 md:col-span-2 py-10 md:p-10 md:bg-gradient-to-br md:from-[#E0F7FA] md:via-[#E0F2FE] md:to-[#F0FDFA] md:border md:border-[#A5F3FC] md:rounded-[2rem] flex flex-col justify-between md:shadow-sm">
                     <div>
-                        <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-3 mb-3 group cursor-pointer">
                             <h3 className="text-xl sm:text-2xl font-semibold text-black tracking-tight">Stay Hydrated</h3>
                             <div className="w-9 h-9 rounded-[10px] bg-[#06B6D4] flex items-center justify-center text-white shrink-0 shadow-sm">
-                                <Droplet strokeWidth={1.5} className="w-5 h-5 text-white" />
+                                <Droplet strokeWidth={1.5} className="w-5 h-5 text-white svg-draw-path" />
                             </div>
                         </div>
                         <p className="text-base text-zinc-600 leading-relaxed font-normal mb-6 md:mb-8">
                             A dedicated background service ensures you drink water every 30 minutes.
                         </p>
                     </div>
-                    <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-5 border border-zinc-200 md:border-cyan-200/80 flex flex-col items-center justify-center text-center h-full min-h-[100px] md:min-h-[120px] shadow-2xs">
-                        <SmartphoneCharging strokeWidth={1.5} className="w-6 h-6 md:w-7 md:h-7 text-[#06B6D4] mb-2" />
+                    <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-5 border border-zinc-200 md:border-cyan-200/80 flex flex-col items-center justify-center text-center h-full min-h-[100px] md:min-h-[120px] shadow-2xs group hover:scale-[1.03] transition-all cursor-pointer hover:shadow-sm">
+                        <SmartphoneCharging strokeWidth={1.5} className="w-6 h-6 md:w-7 md:h-7 text-[#06B6D4] mb-2 svg-draw-path" />
                         <span className="text-sm font-medium text-zinc-900 block mb-1">Lock Screen Override</span>
                         <span className="text-xs text-zinc-500 font-normal">Wakes device & vibrates</span>
                     </div>
@@ -1162,10 +1162,10 @@ export default function HomePage() {
                 {/* 4. System Shortcuts */}
                 <div className="col-span-1 md:col-span-3 py-10 md:p-10 md:bg-gradient-to-br md:from-[#EFF6FF] md:via-[#E0F2FE] md:to-[#F0F9FF] md:border md:border-[#BFDBFE] md:rounded-[2rem] flex flex-col justify-between md:shadow-sm">
                     <div>
-                        <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-3 mb-3 group cursor-pointer">
                             <h3 className="text-xl sm:text-2xl font-semibold text-black tracking-tight">System Integration</h3>
                             <div className="w-9 h-9 rounded-[10px] bg-[#007AFF] flex items-center justify-center text-white shrink-0 shadow-sm">
-                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 svg-draw-path">
                                     <rect x="3" y="3" width="18" height="18" rx="5" ry="5" />
                                     <polygon points="10,8 16,12 10,16" />
                                 </svg>
@@ -1216,10 +1216,10 @@ export default function HomePage() {
                 {/* 5. UI, UX & Customization */}
                 <div className="col-span-1 md:col-span-3 py-10 md:p-10 md:bg-gradient-to-br md:from-[#F0FDF4] md:via-[#ECFDF5] md:to-[#F0FDFA] md:border md:border-[#BBF7D0] md:rounded-[2rem] flex flex-col justify-between md:shadow-sm">
                     <div>
-                        <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-3 mb-3 group cursor-pointer">
                             <h3 className="text-xl sm:text-2xl font-semibold text-black tracking-tight">Fluid Experience</h3>
                             <div className="w-9 h-9 rounded-[10px] bg-[#10B981] flex items-center justify-center text-white shrink-0 shadow-sm">
-                                <Paintbrush strokeWidth={1.5} className="w-5 h-5" />
+                                <Paintbrush strokeWidth={1.5} className="w-5 h-5 svg-draw-path" />
                             </div>
                         </div>
                         <p className="text-base text-zinc-600 leading-relaxed font-normal mb-6 md:mb-8">
@@ -1227,17 +1227,17 @@ export default function HomePage() {
                         </p>
                     </div>
                     <div className="space-y-1">
-                        <div className="flex items-center justify-between py-2.5 border-b border-zinc-200 md:border-emerald-200/60">
+                        <div className="flex items-center justify-between py-2.5 border-b border-zinc-200 md:border-emerald-200/60 group hover:px-2 transition-all cursor-pointer">
                              <span className="text-sm font-medium text-zinc-800">Animated Voice UI</span>
-                             <Check strokeWidth={1.5} className="w-4 h-4 text-[#10B981]" />
+                             <Check strokeWidth={1.5} className="w-4 h-4 text-[#10B981] svg-draw-path" />
                         </div>
-                        <div className="flex items-center justify-between py-2.5 border-b border-zinc-200 md:border-emerald-200/60">
+                        <div className="flex items-center justify-between py-2.5 border-b border-zinc-200 md:border-emerald-200/60 group hover:px-2 transition-all cursor-pointer">
                              <span className="text-sm font-medium text-zinc-800">Dynamic App Icons</span>
-                             <Check strokeWidth={1.5} className="w-4 h-4 text-[#10B981]" />
+                             <Check strokeWidth={1.5} className="w-4 h-4 text-[#10B981] svg-draw-path" />
                         </div>
-                        <div className="flex items-center justify-between py-2.5">
+                        <div className="flex items-center justify-between py-2.5 group hover:px-2 transition-all cursor-pointer">
                              <span className="text-sm font-medium text-zinc-800">Cloud Configuration Sync</span>
-                             <Check strokeWidth={1.5} className="w-4 h-4 text-[#10B981]" />
+                             <Check strokeWidth={1.5} className="w-4 h-4 text-[#10B981] svg-draw-path" />
                         </div>
                     </div>
                 </div>
@@ -1333,7 +1333,7 @@ export default function HomePage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2 font-medium text-zinc-600">
-                    <Globe strokeWidth={1.5} className="w-4 h-4" />
+                    <Globe strokeWidth={1.5} className="w-4 h-4 svg-draw-path" />
                     <span>India</span>
                 </div>
             </div>
