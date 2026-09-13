@@ -189,9 +189,9 @@ body {
 
 /* Version History Icon Wrapper */
 .set-nav-icon {
-    width: 24px;
-    height: 24px;
-    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -205,4 +205,5 @@ body {
 .set-nav-icon img {
     filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.12));
 }
+
 

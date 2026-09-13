@@ -944,7 +944,7 @@ export default function HomePage() {
                 {/* Version Item 1 */}
                 <div className="flex flex-row justify-between items-center py-4 sm:py-5 px-5 sm:px-8 border-b border-zinc-200 group hover:bg-zinc-50/50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3 sm:gap-4">
-                        <div className="set-nav-icon bg-[#F0F8FF] border border-[#E1F0FF]"><img src="/jasica.png" alt="Jasica App" className="w-[16px] h-[16px] object-contain" /></div>
+                        <div className="set-nav-icon bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-200/50 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)]"><img src="/jasica.png" alt="Jasica App" className="w-full h-full p-[6px] object-contain drop-shadow-sm" /></div>
                         <div className="flex flex-col">
                             <span className="text-zinc-900 font-semibold text-base sm:text-lg">JASICA Flash-2.5</span>
                             <span className="text-zinc-500 font-medium text-xs sm:text-sm">36.6 MB &bull; Latest Release</span>
@@ -961,7 +961,7 @@ export default function HomePage() {
                 {/* Version Item 2 */}
                 <div className="flex flex-row justify-between items-center py-4 sm:py-5 px-5 sm:px-8 border-b border-zinc-200 group hover:bg-zinc-50/50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3 sm:gap-4">
-                        <div className="set-nav-icon bg-[#F4F4F5] border border-[#E4E4E7]"><img src="/jasica.png" alt="Jasica App" className="w-[16px] h-[16px] object-contain" /></div>
+                        <div className="set-nav-icon bg-gradient-to-b from-[#F2F2F7] to-[#E5E5EA] border border-zinc-200/50 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)]"><img src="/jasica.png" alt="Jasica App" className="w-full h-full p-[6px] object-contain drop-shadow-sm" /></div>
                         <div className="flex flex-col">
                             <span className="text-zinc-900 font-semibold text-base sm:text-lg">JASICA 2.0</span>
                             <span className="text-zinc-500 font-medium text-xs sm:text-sm">31.8 MB</span>
@@ -977,7 +977,7 @@ export default function HomePage() {
                 {/* Version Item 3 */}
                 <div className="flex flex-row justify-between items-center py-4 sm:py-5 px-5 sm:px-8 group hover:bg-zinc-50/50 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3 sm:gap-4">
-                        <div className="set-nav-icon bg-[#F4F4F5] border border-[#E4E4E7]"><img src="/jasica.png" alt="Jasica App" className="w-[16px] h-[16px] object-contain" /></div>
+                        <div className="set-nav-icon bg-gradient-to-b from-[#F2F2F7] to-[#E5E5EA] border border-zinc-200/50 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)]"><img src="/jasica.png" alt="Jasica App" className="w-full h-full p-[6px] object-contain drop-shadow-sm" /></div>
                         <div className="flex flex-col">
                             <span className="text-zinc-900 font-semibold text-base sm:text-lg">J.A.R.V.I.S 1.0</span>
                             <span className="text-zinc-500 font-medium text-xs sm:text-sm">21.8 MB</span>
