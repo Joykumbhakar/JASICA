@@ -33,7 +33,7 @@ class NotificationHelper(private val context: Context) {
 
     fun showWaterAlarmNotification(fullScreenPendingIntent: PendingIntent) {
         val builder = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_ai_waves)
             .setContentTitle("Drink Water!")
             .setContentText("It's time to drink water. Stay hydrated!")
             .setPriority(NotificationCompat.PRIORITY_HIGH)

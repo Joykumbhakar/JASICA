@@ -3050,13 +3050,13 @@ fun JasicaScreen(
                     .background(Color.White)
             ) {
                 Column {
-                    AppleMenuItem(icon = Icons.Rounded.Home, text = "Manual Controls", onClick = { showMenu = false; onManualControlsTap() })
+                    AppleMenuItemImage(painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_home_custom), text = "Manual Controls", onClick = { showMenu = false; onManualControlsTap() })
                     androidx.compose.material3.HorizontalDivider(color = Color.Black.copy(alpha=0.1f), thickness = 0.5.dp, modifier = Modifier.padding(start = 44.dp))
-                    AppleMenuItem(icon = Icons.Rounded.History, text = "Chat History", onClick = { showMenu = false; onHistoryTap() })
+                    AppleMenuItemImage(painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_messages_custom), text = "Chat History", onClick = { showMenu = false; onHistoryTap() })
                     androidx.compose.material3.HorizontalDivider(color = Color.Black.copy(alpha=0.1f), thickness = 0.5.dp, modifier = Modifier.padding(start = 44.dp))
                     AppleMenuItemImage(painter = androidx.compose.ui.res.painterResource(id = R.drawable.arduino_ide), text = "Arduino Code", onClick = { showMenu = false; onArduinoCodeTap() })
                     androidx.compose.material3.HorizontalDivider(color = Color.Black.copy(alpha=0.1f), thickness = 0.5.dp, modifier = Modifier.padding(start = 44.dp))
-                    AppleMenuItem(icon = Icons.Rounded.Settings, text = "Settings", onClick = { showMenu = false; onSettingsTap() })
+                    AppleMenuItemImage(painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_settings_custom), text = "Settings", onClick = { showMenu = false; onSettingsTap() })
                 }
             }
         }
@@ -5196,7 +5196,7 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Use Portfolio API Key",
                             subtitle = "Automatically load dynamic API keys from cloud",
-                            icon = { Icon(Icons.Rounded.VpnKey, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White) },
+                            icon = { Image(painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_maclaps), contentDescription = null, modifier = Modifier.size(24.dp)) },
                             iconBgColor = Color(0xFFAF52DE),
                             showDivider = !adminKeyInput,
                             isDark = darkModeInput,
