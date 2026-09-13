@@ -920,8 +920,8 @@ export default function HomePage() {
         )}
     </nav>
 
-    <div className="absolute top-[22vh] mt-[35px] sm:mt-0 sm:top-[20vh] md:top-[18vh] left-0 w-full px-4 text-center z-0 pointer-events-none flex flex-col items-center">
-        <h1 className="mobile-title-scale text-[5.75rem] sm:text-[9rem] md:text-[12rem] lg:text-[16rem] font-bold tracking-apple-tighter leading-[0.8] animate-fade-up pb-2 whitespace-nowrap">
+    <div className="absolute top-[22vh] mt-[25px] sm:mt-0 sm:top-[20vh] md:top-[18vh] left-0 w-full px-4 text-center z-0 pointer-events-none flex flex-col items-center">
+        <h1 className="mobile-title-scale text-[7rem] sm:text-[9rem] md:text-[12rem] lg:text-[16rem] font-bold tracking-apple-tighter leading-[0.8] animate-fade-up pb-2 whitespace-nowrap">
             <span className="text-black">Jasica</span>
             <span className="bg-gradient-to-b from-zinc-600 to-black bg-clip-text text-transparent">AI.</span>
         </h1>
