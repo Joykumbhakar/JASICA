@@ -5564,7 +5564,8 @@ fun SettingsScreen(
                         AppleSettingsRow(
                             title = "Quick Access Widget",
                             subtitle = "Floating icon for instant device control anywhere",
-                            icon = { androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(id = R.drawable.ic_ai_waves), contentDescription = null, modifier = Modifier.size(24.dp)) },
+                            icon = { Icon(painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_ai_waves), contentDescription = null, modifier = Modifier.size(22.dp), tint = Color.White) },
+                            iconBgColor = Color(0xFF007AFF),
                             showDivider = false,
                             isDark = darkModeInput,
                             control = {
