@@ -904,6 +904,7 @@ export default function HomePage() {
                     loop 
                     muted 
                     playsInline 
+                    controls
                     className="w-full h-full object-cover"
                   >
                       <source src="/A_fast_paced_cinematic_tech_p.mp4" type="video/mp4" />
