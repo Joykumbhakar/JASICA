@@ -26,3 +26,5 @@
 {"type":"click","element":"button","text":"Icon/Image Button","id":"No ID","href":"","path":"/admin/analytics","timestamp":"2026-09-13T23:52:37.477Z","serverTime":"2026-09-13T23:52:37.492Z"}
 {"type":"click","element":"a","text":"APK Management","id":"No ID","href":"http://localhost:3000/admin/apks","path":"/admin/analytics","timestamp":"2026-09-13T23:52:38.198Z","serverTime":"2026-09-13T23:52:38.223Z"}
 {"type":"pageview","path":"/admin/apks","url":"http://localhost:3000/admin/apks","timestamp":"2026-09-13T23:52:38.287Z","serverTime":"2026-09-13T23:52:38.362Z"}
+{"type":"pageview","path":"/","url":"http://localhost:3000/","timestamp":"2026-09-14T13:21:48.835Z","serverTime":"2026-09-14T13:21:52.257Z"}
+{"type":"pageview","path":"/","url":"http://localhost:3000/","timestamp":"2026-09-14T13:21:48.834Z","serverTime":"2026-09-14T13:21:52.262Z"}
