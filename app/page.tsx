@@ -920,8 +920,8 @@ export default function HomePage() {
         )}
     </nav>
 
-    <div className="absolute top-[18vh] sm:top-[20vh] md:top-[18vh] left-0 w-full px-4 text-center z-0 pointer-events-none flex flex-col items-center">
-        <h1 className="text-[4.75rem] sm:text-[9rem] md:text-[12rem] lg:text-[16rem] font-bold tracking-apple-tighter leading-[0.8] animate-fade-up pb-2 whitespace-nowrap">
+    <div className="absolute top-[12vh] sm:top-[20vh] md:top-[18vh] left-0 w-full px-4 text-center z-0 pointer-events-none flex flex-col items-center">
+        <h1 className="text-[5.5rem] sm:text-[9rem] md:text-[12rem] lg:text-[16rem] font-bold tracking-apple-tighter leading-[0.8] animate-fade-up pb-2 whitespace-nowrap">
             <span className="text-black">Jasica</span>
             <span className="bg-gradient-to-b from-zinc-600 to-black bg-clip-text text-transparent">AI.</span>
         </h1>
@@ -1541,13 +1541,13 @@ export default function HomePage() {
 
     {/* Right-side iOS Style Creator Profile Pop-up (Shows for 24s) */}
     <div
-      className={`fixed bottom-28 right-4 left-4 sm:left-auto sm:right-6 md:bottom-8 md:right-8 z-[60] transition-all duration-500 ease-out transform ${
+      className={`fixed bottom-32 right-4 left-4 sm:left-auto sm:right-6 md:bottom-8 md:right-8 z-[60] transition-all duration-500 ease-out transform flex justify-center sm:block ${
         showCreatorPopup
           ? "translate-x-0 opacity-100 scale-100 pointer-events-auto"
           : "translate-x-[120%] opacity-0 scale-95 pointer-events-none"
       }`}
     >
-      <div className="bg-white/95 backdrop-blur-2xl border border-zinc-200/90 shadow-[0_20px_60px_rgba(0,0,0,0.18)] rounded-2xl md:rounded-[24px] p-4 md:p-5 max-w-[320px] sm:max-w-sm flex flex-col gap-3 relative">
+      <div className="bg-white/95 backdrop-blur-2xl border border-zinc-200/90 shadow-[0_20px_60px_rgba(0,0,0,0.18)] rounded-2xl md:rounded-[24px] p-4 md:p-5 w-full max-w-[320px] sm:max-w-sm flex flex-col gap-3 relative mx-auto sm:mx-0">
         {/* Close Button */}
         <button
           onClick={() => setShowCreatorPopup(false)}
